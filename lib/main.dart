@@ -5,7 +5,7 @@ import 'core/theme/app_theme.dart';
 import 'core/config/env.dart';
 import 'core/widgets/network_overlay.dart';
 import 'core/services/network_service.dart';
-import 'features/home/presentation/pages/splash_page.dart';
+import 'core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,11 +35,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'GameHub',
       theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      home: const NetworkOverlay(child: SplashPage()),
+      routerConfig: AppRouter.router,
+      builder: (context, child) {
+        return NetworkOverlay(child: child!);
+      },
     );
   }
 }

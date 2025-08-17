@@ -7,6 +7,7 @@ class AppColors {
   static const Color primaryLight = Color(0xFF8B7FF0);
 
   // Background Colors
+  static const Color bgPrimary = Color(0xFF0A0E1A);
   static const Color bgDark = Color(0xFF0A0E1A);
   static const Color bgCard = Color(0xFF1A1F2E);
   static const Color bgCardLight = Color(0xFF242938);

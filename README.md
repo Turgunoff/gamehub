@@ -76,12 +76,21 @@ lib/
 - **Local Storage**: Hive
 - **Architecture**: Clean Architecture
 
+## 🔐 Authentication System
+
+### Simple Email Authentication
+
+- **Email Login**: Email orqali tizimga kirish
+- **Social Login**: Google va Discord orqali kirish
+- **Clean UI**: Oddiy va tushunarli interfeys
+- **Flexible**: Turli xil login usullari
+
 ## 📱 Features
 
 ### MVP (3 oy)
 
 - [x] Project structure setup
-- [ ] Authentication system
+- [x] Authentication system (Simple Email + Social)
 - [ ] Basic tournament system
 - [ ] Team management
 - [ ] Chat functionality
@@ -111,8 +120,30 @@ flutter pub add flutter_bloc go_router supabase_flutter hive
 ### Supabase setup
 
 - Database schema
-- Authentication
+- Authentication (Email OTP enabled)
 - Real-time subscriptions
+
+## 🎯 Keyingi Qadamlar
+
+### 1. Authentication Implementation
+
+- [ ] Email login logic ni implement qilish
+- [ ] Google login ni qo'shish
+- [ ] Discord login ni qo'shish
+- [ ] Supabase integration
+
+### 2. Core Features
+
+- [ ] Home page yaratish
+- [ ] Navigation drawer qo'shish
+- [ ] User profile management
+- [ ] Tournament system
+
+### 3. Testing
+
+- [ ] Authentication flow test qilish
+- [ ] Error handling test qilish
+- [ ] UI/UX test qilish
 
 ## 📚 Documentation
 
@@ -134,5 +165,6 @@ MIT License - see LICENSE file for details
 ---
 
 **Development Status**: 🚧 In Progress  
-**Version**: 0.1.0  
-**Last Updated**: August 2025
+**Version**: 0.3.0  
+**Last Updated**: August 2025  
+**Current Focus**: Simple authentication system completed, implementing login logic

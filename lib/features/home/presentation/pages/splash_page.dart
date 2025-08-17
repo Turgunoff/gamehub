@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/network_service.dart';
+import '../../../../core/services/onboarding_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -31,8 +33,22 @@ class _SplashPageState extends State<SplashPage> {
       // Wait for splash animation
       await Future.delayed(const Duration(seconds: 3));
 
-      // Navigate to home or auth
-      // Navigator.pushReplacement(...)
+      // Check onboarding status
+      final isOnboardingCompleted = await OnboardingService.isOnboardingCompleted();
+      final isFirstLaunch = await OnboardingService.isFirstLaunch();
+
+      if (mounted) {
+        if (isFirstLaunch) {
+          // App birinchi marta ochilgan - onboarding ga o'tish
+          context.go('/onboarding');
+        } else if (isOnboardingCompleted) {
+          // Onboarding tugagan - auth yoki home ga o'tish
+          context.go('/auth');
+        } else {
+          // Onboarding tugamagan - onboarding ga o'tish
+          context.go('/onboarding');
+        }
+      }
     }
 
     setState(() {
@@ -74,14 +90,15 @@ class _SplashPageState extends State<SplashPage> {
 
             // App Name
             Text(
-                  'GAMEHUB',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.headlineLarge?.copyWith(letterSpacing: 3),
-                )
-                .animate()
-                .fadeIn(delay: 400.ms, duration: 600.ms)
-                .slideY(begin: 0.3, end: 0),
+              'GAMEHUB',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                letterSpacing: 3,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+            ).animate()
+              .fadeIn(delay: 400.ms, duration: 600.ms)
+              .slideY(begin: 0.3, end: 0),
 
             const SizedBox(height: 8),
 
