@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/onboarding_service.dart';
-import '../../../../shared/widgets/onboarding_slide.dart';
 import '../../../../shared/constants/onboarding_data.dart';
+import '../../../../shared/widgets/onboarding_slide.dart';
+import '../../../../core/services/onboarding_service.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -23,23 +23,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
     super.dispose();
   }
 
-  void _nextPage() {
-    if (_currentPage < onboardingSlides.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      _goToAuth();
-    }
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentPage = page;
+    });
   }
 
-  Future<void> _goToAuth() async {
-    // Onboarding tugatilgan deb belgilash
+  Future<void> _completeOnboarding() async {
+    // Onboarding ni tugatish
     await OnboardingService.markOnboardingCompleted();
     await OnboardingService.markAppLaunched();
 
-    // Navigate to auth page using GoRouter
+    // Auth page ga o'tish
     if (mounted) {
       context.go('/auth');
     }
@@ -56,18 +51,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
+                onPageChanged: _onPageChanged,
                 itemCount: onboardingSlides.length,
                 itemBuilder: (context, index) {
+                  final slide = onboardingSlides[index];
                   return OnboardingSlide(
-                    title: onboardingSlides[index].title,
-                    description: onboardingSlides[index].description,
-                    icon: onboardingSlides[index].icon,
-                    image: onboardingSlides[index].image,
+                    title: slide.title,
+                    description: slide.description,
+                    icon: slide.icon,
+                    image: slide.image,
                   );
                 },
               ),
@@ -81,65 +73,79 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   // Page Indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(onboardingSlides.length, (index) {
-                      final isActive = _currentPage == index;
-                      return Container(
+                    children: List.generate(
+                      onboardingSlides.length,
+                      (index) => Container(
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: isActive ? 24 : 8,
+                        width: _currentPage == index ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: isActive
+                          color: _currentPage == index
                               ? AppColors.primary
                               : AppColors.textTertiary.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                      );
-                    }),
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 32),
 
-                  // Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _nextPage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  // Action Buttons
+                  Row(
+                    children: [
+                      // Skip Button
+                      if (_currentPage < onboardingSlides.length - 1)
+                        Expanded(
+                          child: TextButton(
+                            onPressed: _completeOnboarding,
+                            child: Text(
+                              'O\'tkazib yuborish',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Next/Get Started Button
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_currentPage < onboardingSlides.length - 1) {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            } else {
+                              _completeOnboarding();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            _currentPage < onboardingSlides.length - 1
+                                ? 'Keyingi'
+                                : 'Boshlash',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
-                      child: Text(
-                        _currentPage == onboardingSlides.length - 1
-                            ? 'Boshlash'
-                            : 'Keyingi',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Skip Button
-                  if (_currentPage < onboardingSlides.length - 1)
-                    TextButton(
-                      onPressed: _goToAuth,
-                      child: Text(
-                        'O\'tkazib yuborish',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

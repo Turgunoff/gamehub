@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/network_service.dart';
 import '../../../../core/services/onboarding_service.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -13,47 +14,42 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-  final NetworkService _networkService = NetworkService();
-  bool _isChecking = true;
-
   @override
   void initState() {
     super.initState();
+    // 3 sekund kutish va auth state ni tekshirish
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Initialize network service
-    await _networkService.initialize();
+    // Auth state ni tekshirish
+    context.read<AuthBloc>().add(AuthCheckRequested());
 
-    // Check connection
-    final hasConnection = await _networkService.checkConnection();
+    // 3 sekund kutish
+    await Future.delayed(const Duration(seconds: 3));
 
-    if (hasConnection) {
-      // Wait for splash animation
-      await Future.delayed(const Duration(seconds: 3));
-
-      // Check onboarding status
-      final isOnboardingCompleted = await OnboardingService.isOnboardingCompleted();
-      final isFirstLaunch = await OnboardingService.isFirstLaunch();
-
-      if (mounted) {
-        if (isFirstLaunch) {
-          // App birinchi marta ochilgan - onboarding ga o'tish
-          context.go('/onboarding');
-        } else if (isOnboardingCompleted) {
-          // Onboarding tugagan - auth yoki home ga o'tish
-          context.go('/auth');
-        } else {
-          // Onboarding tugamagan - onboarding ga o'tish
-          context.go('/onboarding');
-        }
-      }
+    // Agar widget hali mounted bo'lsa, navigation qilish
+    if (mounted) {
+      _handleNavigation();
     }
+  }
 
-    setState(() {
-      _isChecking = false;
-    });
+  void _handleNavigation() {
+    final authState = context.read<AuthBloc>().state;
+
+    if (authState is AuthAuthenticated) {
+      // User auth bo'lsa dashboard ga o'tish
+      context.go('/dashboard');
+    } else if (authState is AuthUnauthenticated) {
+      // User auth bo'lmasa onboarding yoki auth ga o'tish
+      _checkOnboardingAndNavigate();
+    } else if (authState is AuthError) {
+      // Xatolik bo'lsa auth ga o'tish
+      context.go('/auth');
+    } else {
+      // AuthLoading yoki AuthInitial holatida onboarding/auth ga o'tish
+      _checkOnboardingAndNavigate();
+    }
   }
 
   @override
@@ -90,15 +86,16 @@ class _SplashPageState extends State<SplashPage> {
 
             // App Name
             Text(
-              'GAMEHUB',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                letterSpacing: 3,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-            ).animate()
-              .fadeIn(delay: 400.ms, duration: 600.ms)
-              .slideY(begin: 0.3, end: 0),
+                  'GAMEHUB',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    letterSpacing: 3,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                )
+                .animate()
+                .fadeIn(delay: 400.ms, duration: 600.ms)
+                .slideY(begin: 0.3, end: 0),
 
             const SizedBox(height: 8),
 
@@ -113,26 +110,34 @@ class _SplashPageState extends State<SplashPage> {
 
             const SizedBox(height: 60),
 
-            // Loading or Network Status
-            if (_isChecking)
-              CircularProgressIndicator(
-                color: AppColors.primary,
-                strokeWidth: 2,
-              ).animate().fadeIn(delay: 800.ms)
-            else if (!_networkService.hasConnection)
-              Column(
-                children: [
-                  Icon(Icons.wifi_off, color: AppColors.error, size: 32),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Internet aloqasi yo\'q',
-                    style: TextStyle(color: AppColors.error, fontSize: 14),
-                  ),
-                ],
-              ).animate().fadeIn(),
+            // Loading Indicator
+            CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 2,
+            ).animate().fadeIn(delay: 800.ms),
           ],
         ),
       ),
     );
+  }
+
+  void _checkOnboardingAndNavigate() async {
+    // Onboarding status ni tekshirish
+    final isOnboardingCompleted =
+        await OnboardingService.isOnboardingCompleted();
+    final isFirstLaunch = await OnboardingService.isFirstLaunch();
+
+    if (mounted) {
+      if (isFirstLaunch) {
+        // App birinchi marta ochilgan - onboarding ga o'tish
+        context.go('/onboarding');
+      } else if (isOnboardingCompleted) {
+        // Onboarding tugagan - auth ga o'tish
+        context.go('/auth');
+      } else {
+        // Onboarding tugamagan - onboarding ga o'tish
+        context.go('/onboarding');
+      }
+    }
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/auth_button.dart';
 import '../../../../shared/widgets/auth_text_field.dart';
+import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,7 +17,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,247 +24,250 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // TODO: Implement login logic with Supabase
-      // For now, just simulate login
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // TODO: Navigate to home page
-        context.go('/home');
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Xatolik: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    // AuthBloc orqali OTP yuborish
+    context.read<AuthBloc>().add(AuthOTPSent(_emailController.text.trim()));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthOTPSentState) {
+            // OTP yuborilganda OTP verification page ga o'tish
+            context.push('/otp-verification', extra: state.email);
+          } else if (state is AuthError) {
+            // Xatolik bo'lsa SnackBar ko'rsatish
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Xatolik: ${state.message}'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 40),
 
-                // Logo/Title Section
-                Column(
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
-                      ),
-                      child: const Icon(
-                        Icons.games_rounded,
-                        size: 60,
-                        color: Colors.white,
-                      ),
-                    ).animate().scale(
-                      begin: const Offset(0.8, 0.8),
-                      end: const Offset(1.0, 1.0),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOutBack,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    Text(
-                      'GameHub Pro',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 32,
-                          ),
-                    ).animate().fadeIn(
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 200),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Gaming jamiyatiga qo\'shiling',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 16,
-                      ),
-                    ).animate().fadeIn(
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 400),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 48),
-
-                // Email Field
-                AuthTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'example@email.com',
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email kiriting';
-                        }
-                        if (!value.contains('@')) {
-                          return 'To\'g\'ri email kiriting';
-                        }
-                        return null;
-                      },
-                    )
-                    .animate()
-                    .fadeIn(
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 600),
-                    )
-                    .slideY(
-                      begin: 0.3,
-                      end: 0,
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 600),
-                    ),
-
-                const SizedBox(height: 32),
-
-                // Login Button
-                AuthButton(
-                      text: 'Kirish',
-                      onPressed: _isLoading ? null : _login,
-                      isLoading: _isLoading,
-                    )
-                    .animate()
-                    .fadeIn(
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 800),
-                    )
-                    .slideY(
-                      begin: 0.3,
-                      end: 0,
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 800),
-                    ),
-
-                const SizedBox(height: 32),
-
-                // Divider
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 1,
-                        color: AppColors.textTertiary.withOpacity(0.3),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'yoki',
-                        style: TextStyle(
-                          color: AppColors.textTertiary,
-                          fontSize: 14,
+                  // Logo/Title Section
+                  Column(
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.primaryGradient,
                         ),
+                        child: const Icon(
+                          Icons.games_rounded,
+                          size: 60,
+                          color: Colors.white,
+                        ),
+                      ).animate().scale(
+                        begin: const Offset(0.8, 0.8),
+                        end: const Offset(1.0, 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutBack,
                       ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        height: 1,
-                        color: AppColors.textTertiary.withOpacity(0.3),
+
+                      const SizedBox(height: 24),
+
+                      Text(
+                        'GameHub Pro',
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 32,
+                            ),
+                      ).animate().fadeIn(
+                        duration: const Duration(milliseconds: 800),
+                        delay: const Duration(milliseconds: 200),
                       ),
-                    ),
-                  ],
-                ).animate().fadeIn(
-                  duration: const Duration(milliseconds: 800),
-                  delay: const Duration(milliseconds: 1000),
-                ),
 
-                const SizedBox(height: 24),
+                      const SizedBox(height: 8),
 
-                // Social Login Buttons
-                Row(
-                      children: [
-                        Expanded(
-                          child: AuthButton(
-                            text: 'Google',
-                            onPressed: () async {
-                              // TODO: Implement Google login
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Google login - Coming Soon!'),
-                                  backgroundColor: Colors.blue,
+                      Text(
+                        'Gaming jamiyatiga qo\'shiling',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ).animate().fadeIn(
+                        duration: const Duration(milliseconds: 800),
+                        delay: const Duration(milliseconds: 400),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Email orqali 6 xonali kod yuboring. Yangi foydalanuvchilar avtomatik ro\'yxatdan o\'tadi',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              );
-                            },
-                            backgroundColor: Colors.white,
-                            textColor: Colors.black87,
-                            icon: Icons.g_mobiledata_rounded,
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: AuthButton(
-                            text: 'Discord',
-                            onPressed: () async {
-                              // TODO: Implement Discord login
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Discord login - Coming Soon!'),
-                                  backgroundColor: Colors.blue,
-                                ),
-                              );
-                            },
-                            backgroundColor: const Color(0xFF5865F2),
-                            textColor: Colors.white,
-                            icon: Icons.discord_rounded,
-                          ),
-                        ),
-                      ],
-                    )
-                    .animate()
-                    .fadeIn(
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 1200),
-                    )
-                    .slideY(
-                      begin: 0.3,
-                      end: 0,
-                      duration: const Duration(milliseconds: 800),
-                      delay: const Duration(milliseconds: 1200),
-                    ),
+                      ).animate().fadeIn(
+                        duration: const Duration(milliseconds: 800),
+                        delay: const Duration(milliseconds: 600),
+                      ),
+                    ],
+                  ),
 
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 48),
+
+                  // Email Field
+                  AuthTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    hint: 'example@email.com',
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email kiriting';
+                      }
+                      if (!value.contains('@')) {
+                        return 'To\'g\'ri email kiriting';
+                      }
+                      return null;
+                    },
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 800),
+                    delay: const Duration(milliseconds: 800),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Send OTP Button
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      return AuthButton(
+                        text: 'Kod yuborish',
+                        onPressed: state is AuthLoading ? null : _sendOTP,
+                        isLoading: state is AuthLoading,
+                      ).animate().fadeIn(
+                        duration: const Duration(milliseconds: 800),
+                        delay: const Duration(milliseconds: 1000),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Divider
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          color: AppColors.textTertiary.withOpacity(0.3),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'yoki',
+                          style: TextStyle(
+                            color: AppColors.textTertiary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          color: AppColors.textTertiary.withOpacity(0.3),
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 800),
+                    delay: const Duration(milliseconds: 1200),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Social Login Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AuthButton(
+                          text: 'Google',
+                          onPressed: () async {
+                            // TODO: Implement Google login
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Google login - Coming Soon!'),
+                                backgroundColor: Colors.blue,
+                              ),
+                            );
+                          },
+                          backgroundColor: Colors.white,
+                          textColor: Colors.black87,
+                          icon: Icons.g_mobiledata_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: AuthButton(
+                          text: 'Discord',
+                          onPressed: () async {
+                            // TODO: Implement Discord login
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Discord login - Coming Soon!'),
+                                backgroundColor: Colors.blue,
+                              ),
+                            );
+                          },
+                          backgroundColor: const Color(0xFF5865F2),
+                          textColor: Colors.white,
+                          icon: Icons.discord_rounded,
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 800),
+                    delay: const Duration(milliseconds: 1400),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

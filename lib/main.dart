@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'core/theme/app_theme.dart';
 import 'core/config/env.dart';
-import 'core/widgets/network_overlay.dart';
-import 'core/services/network_service.dart';
 import 'core/router/app_router.dart';
+import 'core/widgets/network_overlay.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Status bar style
+  //Status bar style
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
+    SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
     ),
   );
 
-  // Initialize Network Service
-  await NetworkService().initialize();
-
-  // Initialize Supabase
   await Supabase.initialize(
     url: Environment.supabaseUrl,
     anonKey: Environment.supabaseAnonKey,
@@ -35,14 +31,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'GameHub',
-      theme: AppTheme.darkTheme,
-      debugShowCheckedModeBanner: false,
-      routerConfig: AppRouter.router,
-      builder: (context, child) {
-        return NetworkOverlay(child: child!);
-      },
+    return MultiBlocProvider(
+      providers: [BlocProvider<AuthBloc>(create: (context) => AuthBloc())],
+      child: MaterialApp.router(
+        title: 'GameHub Pro',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        routerConfig: AppRouter.router,
+        builder: (context, child) {
+          return NetworkOverlay(child: child!);
+        },
+      ),
     );
   }
 }
