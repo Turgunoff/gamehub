@@ -132,7 +132,6 @@ class _HomeContent extends StatelessWidget {
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -330,7 +329,7 @@ class _HomeContent extends StatelessWidget {
                         const Icon(
                           Icons.sports_esports,
                           color: Colors.white,
-                          size: 28,
+                          size: 32,
                         ),
                         const SizedBox(width: 16),
                         // FIND MATCH Text
