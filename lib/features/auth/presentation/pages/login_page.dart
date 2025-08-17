@@ -110,46 +110,10 @@ class _LoginPageState extends State<LoginPage> {
                         duration: const Duration(milliseconds: 800),
                         delay: const Duration(milliseconds: 400),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Email orqali 6 xonali kod yuboring. Yangi foydalanuvchilar avtomatik ro\'yxatdan o\'tadi',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn(
-                        duration: const Duration(milliseconds: 800),
-                        delay: const Duration(milliseconds: 600),
-                      ),
                     ],
                   ),
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 16),
 
                   // Email Field
                   AuthTextField(

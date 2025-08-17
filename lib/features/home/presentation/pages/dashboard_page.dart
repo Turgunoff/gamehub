@@ -40,27 +40,6 @@ class DashboardPage extends StatelessWidget {
                 // Welcome Section
                 Column(
                   children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
-                      ),
-                      child: const Icon(
-                        Icons.dashboard_rounded,
-                        size: 60,
-                        color: Colors.white,
-                      ),
-                    ).animate().scale(
-                      begin: const Offset(0.8, 0.8),
-                      end: const Offset(1.0, 1.0),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOutBack,
-                    ),
-
-                    const SizedBox(height: 32),
-
                     Text(
                       'GameHub Pro Dashboard',
                       style: Theme.of(context).textTheme.headlineMedium

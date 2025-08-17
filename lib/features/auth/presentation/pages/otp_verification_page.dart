@@ -28,6 +28,27 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
   late AnimationController _countdownController;
   Timer? _countdownTimer; // Timer ni saqlash uchun
 
+  // Email manzilini formatlash funksiyasi
+  String _formatEmail(String email) {
+    if (email.isEmpty) return email;
+
+    final parts = email.split('@');
+    if (parts.length != 2) return email;
+
+    final username = parts[0];
+    final domain = parts[1];
+
+    if (username.length <= 3) {
+      // Username juda qisqa bo'lsa, faqat domen qismini yashirish
+      return '${username}***@${domain}';
+    } else {
+      // Username o'rtasini yashirish
+      final visibleChars = username.substring(0, 3);
+      final hiddenChars = '*' * (username.length - 3);
+      return '${visibleChars}${hiddenChars}@${domain}';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -166,14 +187,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
       },
       child: Scaffold(
         backgroundColor: AppColors.bgPrimary,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => context.pop(),
-          ),
-        ),
+
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -222,7 +236,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
                     const SizedBox(height: 12),
 
                     Text(
-                      '${widget.email} ga yuborilgan 6 xonali kodni kiriting',
+                      '${_formatEmail(widget.email)} ga kod yuborildi',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppColors.textSecondary,
@@ -258,7 +272,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
                   ],
                 ),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 16),
 
                 // OTP Input Field
                 Container(
@@ -269,7 +283,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage>
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: 24,
                       fontWeight: FontWeight.w700,
                       color: AppColors.bgPrimary,
                       letterSpacing: 8,
