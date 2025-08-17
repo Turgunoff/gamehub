@@ -55,128 +55,136 @@ class _HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: AppColors.bgDark,
+      extendBodyBehindAppBar: false,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Row(
+          children: [
+            // Profile Picture with Level Badge
+            Stack(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppColors.primaryGradient,
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      '25',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            // Username and Currency
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'ProGamer',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.monetization_on,
+                        color: Colors.amber,
+                        size: 12,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        '2,450',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // Notifications
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.notifications,
+                  color: AppColors.textSecondary,
+                  size: 24,
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '3',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Section
-            Row(
-              children: [
-                // Profile Picture with Level Badge
-                Stack(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        size: 30,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'LVL 25',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                // Username and Currency
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ProGamer',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.monetization_on,
-                            color: Colors.amber,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '2,450',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Notifications
-                Stack(
-                  children: [
-                    Icon(
-                      Icons.notifications,
-                      color: AppColors.textSecondary,
-                      size: 24,
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '3',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
             // Statistics Cards
             Row(
               children: [
@@ -277,15 +285,23 @@ class _HomeContent extends StatelessWidget {
             // Find Match Button
             Container(
               width: double.infinity,
-              height: 56,
+              height: 100,
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF6B46C1), // Deep purple-blue
+                    Color(0xFF06B6D4), // Vibrant cyan-blue
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: const Color(0xFF06B6D4).withOpacity(0.4),
+                    blurRadius: 25,
+                    spreadRadius: 5,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
@@ -299,37 +315,54 @@ class _HomeContent extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                 ),
-                child: Row(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.games, color: Colors.white, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      'FIND MATCH',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Game Controller Icon
+                        const Icon(
+                          Icons.sports_esports,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 16),
+                        // FIND MATCH Text
+                        Column(
+                          children: [
+                            Text(
+                              'FIND MATCH',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            Text(
+                              '1,234 online',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 12),
-
-            // Online Players
-            Center(
-              child: Text(
-                '1,234 players online',
-                style: TextStyle(color: AppColors.textTertiary, fontSize: 14),
-              ),
-            ),
-
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             // Upcoming Tournaments
             Row(
@@ -412,8 +445,6 @@ class _HomeContent extends StatelessWidget {
             _buildMatchResult('vs ProSquad', '1-2', '-15 pts', false),
             const SizedBox(height: 12),
             _buildMatchResult('vs Noobs', '2-1', '+20 pts', true),
-
-            const SizedBox(height: 100), // Bottom navigation bar uchun space
           ],
         ),
       ),
