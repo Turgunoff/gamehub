@@ -56,5 +56,6 @@ class NetworkService {
 
   void dispose() {
     _connectionController.close();
+    
   }
 }
