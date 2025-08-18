@@ -5,6 +5,7 @@ import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/home/presentation/pages/dashboard_page.dart';
+import '../../features/tournaments/presentation/pages/tournaments_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -26,6 +27,10 @@ class AppRouter {
       GoRoute(
         path: '/dashboard',
         builder: (context, state) => const DashboardPage(),
+      ),
+      GoRoute(
+        path: '/tournaments',
+        builder: (context, state) => const TournamentsPage(),
       ),
     ],
   );
