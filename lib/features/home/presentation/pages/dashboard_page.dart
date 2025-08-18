@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../shared/widgets/bottom_nav_bar.dart';
 import '../../../tournaments/presentation/pages/tournaments_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -19,10 +20,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final List<Widget> _pages = [
     const _HomeContent(),
-    const _TournamentsContent(),
+    const TournamentsPage(),
     const _CreateContent(),
     const _TeamsContent(),
-    const _ProfileContent(),
+    const ProfilePage(),
   ];
 
   @override
@@ -544,7 +545,7 @@ class _HomeContent extends StatelessWidget {
               children: [
                 // Participant avatars
                 ...List.generate(
-                  5,
+                  3,
                   (index) => Container(
                     margin: const EdgeInsets.only(left: 4),
                     width: 24,

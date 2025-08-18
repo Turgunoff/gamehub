@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/tournament.dart';
 import '../widgets/tournament_card.dart';
+import 'tournament_details_page.dart';
 
 class TournamentsPage extends StatefulWidget {
   const TournamentsPage({super.key});
@@ -204,11 +205,11 @@ class _TournamentsPageState extends State<TournamentsPage> {
   }
 
   void _onViewTournamentDetails(Tournament tournament) {
-    // TODO: Implement view tournament details logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Viewing details for ${tournament.title}...'),
-        backgroundColor: AppColors.primary,
+    if (!mounted) return;
+    // Navigate to details with the selected tournament as extra
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TournamentDetailsPage(tournament: tournament),
       ),
     );
   }
