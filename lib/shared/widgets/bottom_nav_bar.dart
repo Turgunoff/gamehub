@@ -8,7 +8,7 @@ class GameHubBottomNavBar extends StatefulWidget {
   const GameHubBottomNavBar({
     super.key,
     required this.currentIndex,
-    required this.onTap,
+    required this.onTap, 
   });
 
   @override
