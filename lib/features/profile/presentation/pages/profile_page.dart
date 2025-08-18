@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gamehub/core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -10,7 +12,7 @@ class ProfilePage extends StatelessWidget {
       backgroundColor: AppColors.bgPrimary,
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(),
+          _buildSliverAppBar(context),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -34,7 +36,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSliverAppBar() {
+  Widget _buildSliverAppBar(BuildContext context) {
     return SliverAppBar(
       expandedHeight: 280,
       pinned: true,
@@ -51,7 +53,10 @@ class ProfilePage extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.only(right: 4),
-              child: _roundIconButton(Icons.settings, () {}),
+              child: _roundIconButton(Icons.settings, () async {
+                await AuthService.signOut();
+                context.go('/');
+              }),
             ),
           ],
         ),
