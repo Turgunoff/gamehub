@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+
+import '../../core/theme/app_colors.dart';
 
 class GameHubBottomNavBar extends StatefulWidget {
   final int currentIndex;
@@ -8,7 +9,7 @@ class GameHubBottomNavBar extends StatefulWidget {
   const GameHubBottomNavBar({
     super.key,
     required this.currentIndex,
-    required this.onTap, 
+    required this.onTap,
   });
 
   @override

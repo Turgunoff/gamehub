@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gamehub/core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -49,7 +52,9 @@ class ProfilePage extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 4),
-              child: _roundIconButton(Icons.share_outlined, () {}),
+              child: _roundIconButton(Icons.settings, () async {
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+              }),
             ),
             Padding(
               padding: const EdgeInsets.only(right: 4),
