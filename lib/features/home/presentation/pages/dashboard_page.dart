@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../shared/widgets/bottom_nav_bar.dart';
+import '../../../teams/presentation/teams_page.dart';
 import '../../../tournaments/presentation/pages/tournaments_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
@@ -681,34 +682,13 @@ class _CreateContent extends StatelessWidget {
   }
 }
 
-// Teams Content
+// _TeamsContent class ni yangilang:
 class _TeamsContent extends StatelessWidget {
   const _TeamsContent();
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Text(
-              'Teams',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 28,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Jamoalar ro\'yxati va boshqaruvi tez orada',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const TeamsPage(); // Import qilishni unutmang
   }
 }
 
