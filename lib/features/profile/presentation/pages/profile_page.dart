@@ -52,15 +52,8 @@ class ProfilePage extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 4),
-              child: _roundIconButton(Icons.settings, () async {
+              child: _roundIconButton(Icons.logout, () async {
                 context.read<AuthBloc>().add(AuthLogoutRequested());
-              }),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: _roundIconButton(Icons.settings, () async {
-                await AuthService.signOut();
-                context.go('/');
               }),
             ),
           ],
