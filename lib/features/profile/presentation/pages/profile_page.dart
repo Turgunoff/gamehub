@@ -55,7 +55,7 @@ class ProfilePage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 40), // Balance
+          const SizedBox(width: 40),
           const Text(
             'Profile',
             style: TextStyle(
