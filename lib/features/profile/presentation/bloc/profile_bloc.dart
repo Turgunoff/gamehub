@@ -1,8 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
+  final _supabase = Supabase.instance.client;
+
   ProfileBloc() : super(ProfileInitial()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfile>(_onUpdateProfile);
@@ -16,27 +19,52 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(ProfileLoading());
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Fetch user profile from Supabase
+      final data = await _supabase
+          .from('users')
+          .select()
+          .eq('id', event.userId)
+          .single();
+
+      // Parse win_rate from string to double
+      final winRateStr = data['win_rate']?.toString() ?? '0.00';
+      final winRate = double.tryParse(winRateStr) ?? 0.0;
 
       emit(
-        const ProfileLoaded(
-          name: 'Alex Thompson',
-          username: '@alexthompson',
-          bio: 'Playing PUBG Mobile',
-          level: 25,
-          isOnline: true,
-          winRate: 65,
-          kdRatio: 3.2,
-          matches: 342,
-          totalPlaytime: 124,
-          tournamentsWon: 12,
-          friendsCount: 463,
-          onlineFriends: 23,
+        ProfileLoaded(
+          id: data['id'] ?? '',
+          email: data['email'] ?? '',
+          username: data['username'] ?? '',
+          fullName: data['full_name'] ?? '',
+          avatarUrl: data['avatar_url'],
+          bio: data['bio'] ?? '',
+          skillLevel: data['skill_level'] ?? 'beginner',
+          reputationScore: data['reputation_score'] ?? 100,
+          isVerified: data['is_verified'] ?? false,
+          isPremium: data['is_premium'] ?? false,
+          totalMatches: data['total_matches'] ?? 0,
+          wins: data['wins'] ?? 0,
+          losses: data['losses'] ?? 0,
+          draws: data['draws'] ?? 0,
+          winRate: winRate,
+          tournamentsParticipated: data['tournaments_participated'] ?? 0,
+          tournamentWins: data['tournament_wins'] ?? 0,
+          country: data['country'],
+          city: data['city'],
+          language: data['language'] ?? 'en',
+          timezone: data['timezone'] ?? 'UTC+5',
+          profileCompletionPercentage: data['profile_completion_percentage'] ?? 0,
+          createdAt: DateTime.parse(data['created_at']),
+          lastActiveAt: data['last_active_at'] != null
+              ? DateTime.parse(data['last_active_at'])
+              : null,
+          collectiveStrength: data['collective_strength'] ?? 0,
+          collectiveStrengthProof: data['collective_strength_proof'],
+          collectiveStrengthVerified: data['collective_strength_verified'] ?? false,
         ),
       );
     } catch (e) {
-      emit(ProfileError(e.toString()));
+      emit(ProfileError('Failed to load profile: ${e.toString()}'));
     }
   }
 
@@ -46,13 +74,28 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ) async {
     if (state is ProfileLoaded) {
       final currentState = state as ProfileLoaded;
-      emit(
-        currentState.copyWith(
-          name: event.name,
-          username: event.username,
-          bio: event.bio,
-        ),
-      );
+
+      try {
+        // Update profile in Supabase
+        await _supabase
+            .from('users')
+            .update({
+              'full_name': event.name,
+              'username': event.username,
+              'bio': event.bio,
+            })
+            .eq('id', currentState.id);
+
+        emit(
+          currentState.copyWith(
+            fullName: event.name,
+            username: event.username,
+            bio: event.bio,
+          ),
+        );
+      } catch (e) {
+        emit(ProfileError('Failed to update profile: ${e.toString()}'));
+      }
     }
   }
 
@@ -64,9 +107,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final currentState = state as ProfileLoaded;
       emit(
         currentState.copyWith(
-          winRate: event.winRate,
-          kdRatio: event.kdRatio,
-          matches: event.matches,
+          winRate: event.winRate.toDouble(),
+          totalMatches: event.matches,
         ),
       );
     }

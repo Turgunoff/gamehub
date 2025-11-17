@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart' as auth;
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../../shared/widgets/bottom_nav_bar.dart';
 import '../../../teams/presentation/teams_page.dart';
 import '../../../tournaments/presentation/pages/tournaments_page.dart';
@@ -28,10 +32,24 @@ class _DashboardPageState extends State<DashboardPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Load profile when dashboard is first opened (login paytida)
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      final profileBloc = context.read<ProfileBloc>();
+      // Only load if not already loaded
+      if (profileBloc.state is! ProfileLoaded) {
+        profileBloc.add(LoadProfile(userId));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
+    return BlocListener<auth.AuthBloc, auth.AuthState>(
       listener: (context, state) {
-        if (state is AuthUnauthenticated) {
+        if (state is auth.AuthUnauthenticated) {
           // Logout tugaganda splash page ga qaytish
           context.go('/');
         }

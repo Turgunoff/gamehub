@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'core/services/network_service.dart';
 import 'core/widgets/network_overlay.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +41,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [BlocProvider<AuthBloc>(create: (context) => AuthBloc())],
+      providers: [
+        BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
+        BlocProvider<ProfileBloc>(create: (context) => ProfileBloc()),
+      ],
       child: MaterialApp.router(
         title: 'GameHub Pro',
         debugShowCheckedModeBanner: false,
