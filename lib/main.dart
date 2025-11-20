@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gamehub/core/theme/app_theme.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/env.dart';
 import 'core/router/app_router.dart';
 import 'core/services/network_service.dart';
@@ -25,11 +24,6 @@ void main() async {
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
-  );
-
-  await Supabase.initialize(
-    url: Environment.supabaseUrl,
-    anonKey: Environment.supabaseAnonKey,
   );
 
   runApp(const MyApp());

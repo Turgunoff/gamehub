@@ -1,7 +1,7 @@
 name: gamehub
-description: "A new Flutter project."
+description: "CyberPitch - Esports Tournament Platform"
 publish_to: "none"
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: ^3.8.1
@@ -10,41 +10,58 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Core
-  flutter_bloc: ^9.1.1
-  supabase_flutter: ^2.9.1
-  go_router: ^16.1.0
-  get_it: ^8.2.0
-  equatable: ^2.0.7
+  # --- 1. Architecture & State Management ---
+  flutter_bloc: ^8.1.6 # State Management
+  get_it: ^7.7.0 # Dependency Injection
+  injectable: ^2.3.2 # GetIt uchun generator (Code Gen)
+  equatable: ^2.0.5 # Obyektlarni solishtirish
+  go_router: ^14.0.0 # Navigatsiya
 
-  # UI
-  flutter_animate: ^4.5.2
-  google_fonts: ^6.2.1
-  flutter_screenutil: ^5.9.3
-  gap: ^3.0.1
-  image_picker: ^1.1.2
-  country_picker: ^2.0.27
+  # --- 2. Network & API ---
+  dio: ^5.4.3+1 # HTTP Client (Http o'rniga)
+  connectivity_plus: ^6.0.3 # Internet borligini tekshirish
+  # internet_connection_checker_plus shart emas, connectivity_plus + dio interceptor yetadi.
 
-  # Icons
-  phosphor_flutter:
-    ^2.1.0
-
-    # Network
-  connectivity_plus: ^6.0.5
-  internet_connection_checker_plus: ^2.7.2
-
-  # Settings
-  app_settings: ^5.1.1
-  hive: ^2.2.3
+  # --- 3. Storage (Local DB) ---
+  hive: ^2.2.3 # Kesh va oddiy data uchun
   hive_flutter: ^1.1.0
-  http: ^1.5.0
-  dio: ^5.9.0
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.2.3 # Juda oddiy sozlamalar uchun (token, theme)
+
+  # --- 4. UI Components ---
+  flutter_screenutil: ^5.9.3 # Responsivlik (Har xil ekranlar uchun)
+  flutter_svg: ^2.0.10+1 # SVG Ikonkalar (Phosphor o'rniga)
+  cached_network_image: ^3.3.1 # User avatarlari va jamoa logolari uchun
+  flutter_animate: ^4.5.0 # Animatsiyalar
+  gap: ^3.0.1 # Bo'sh joy tashlash (SizedBox o'rniga)
+
+  # --- 5. Forms & Inputs ---
+  image_picker: ^1.1.2 # Rasm yuklash (Skrinshot)
+  pinput: ^5.0.0 # SMS kod (OTP) kiritish uchun (Juda muhim)
+  mask_text_input_formatter: ^2.9.0 # Telefon raqam formati (+998 ##...)
+  # country_picker shart emas, agar faqat O'zbekiston/MDH bo'lsa.
+  # Lekin xalqaro bo'lsa qoldiring.
+
+  # --- 6. Localization & Utils ---
+  easy_localization: ^3.0.8 # Tilni boshqarish
+  intl: ^0.20.2 # Sana va vaqt formatlari
+  logger: ^2.3.0 # Chiroyli loglar (print o'rniga)
+
+  # --- 7. Code Generation (Annotations) ---
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+  # --- Code Generators ---
+  build_runner: ^2.4.9 # Generatorlarni yurgizish uchun
+  freezed: ^2.5.2 # Model generatsiyasi
+  json_serializable: ^6.8.0 # JSON parsing
+  injectable_generator: ^2.6.1 # DI generatsiyasi
+  # easy_localization_generator: ^0.3.3 # Eski, easy_localization o'zi yetadi
+  flutter_gen_runner: ^5.5.0+1 # Assets (Rasm/Font) generatsiyasi
 
 flutter:
   uses-material-design: true
@@ -78,5 +95,9 @@ flutter:
         - asset: assets/fonts/Orbitron-Black.ttf
           weight: 900
 
+  # Assets yo'llari
   assets:
     - assets/fonts/
+    - assets/icons/ # SVG ikonkalaringiz shu yerda bo'ladi
+    - assets/images/
+    - assets/translations/ # Til fayllari (uz-UZ.json va h.k)
