@@ -101,3 +101,9 @@ flutter:
     - assets/icons/ # SVG ikonkalaringiz shu yerda bo'ladi
     - assets/images/
     - assets/translations/ # Til fayllari (uz-UZ.json va h.k)
+
+# BU QISM MUHIM:
+flutter_gen:
+  output: lib/core/gen/assets/ # Fayl shu yerga tushadi
+  integrations:
+    flutter_svg: true # SVG larni qo'llab-quvvatlash

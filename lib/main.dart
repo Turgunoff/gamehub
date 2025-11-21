@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'GameHub Pro',
+        title: context.locale.toString() == 'uz' ? 'CyberPitch' : 'CyberPitch',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         darkTheme: AppTheme.darkTheme,

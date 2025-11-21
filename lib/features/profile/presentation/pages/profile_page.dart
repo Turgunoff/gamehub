@@ -1,133 +1,1167 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:gamehub/core/theme/app_colors.dart'; // O'zingizdagi path
-import 'package:gamehub/features/profile/presentation/bloc/profile_bloc.dart';
-import 'package:gamehub/features/profile/presentation/bloc/profile_state.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:ui';
+import 'dart:math' as math;
 
-class ProfilePage extends StatelessWidget {
+import 'package:go_router/go_router.dart';
+
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage>
+    with TickerProviderStateMixin {
+  late AnimationController _glowController;
+  late AnimationController _rotationController;
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _glowController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 20),
+      vsync: this,
+    )..repeat();
+
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _glowController.dispose();
+    _rotationController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary, // Dark color
-      appBar: AppBar(
-        title: const Text("Mening Profilim"),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
+      backgroundColor: const Color(0xFF0A0E1A),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Animated Background
+          _buildAnimatedBackground(),
+
+          // Main Content
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // Custom App Bar with parallax effect
+              _buildSliverAppBar(),
+
+              // Profile Content
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    // Stats Cards
+                    _buildStatsSection(),
+
+                    // PES Info Cards
+                    _buildPESInfoCards(),
+
+                    // Performance Chart
+                    _buildPerformanceChart(),
+
+                    // Achievements
+                    _buildAchievementsSection(),
+
+                    // Recent Activity
+                    _buildRecentActivity(),
+
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Floating Action Button
+          _buildFloatingEditButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return Stack(
+      children: [
+        // Gradient Background
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF0A0E1A), Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
+            ),
+          ),
+        ),
+
+        // Animated Mesh Gradient
+        AnimatedBuilder(
+          animation: _rotationController,
+          builder: (context, child) {
+            return RepaintBoundary(
+              child: CustomPaint(
+                painter: MeshGradientPainter(
+                  animation: _rotationController.value,
+                  scrollOffset: _scrollOffset,
+                ),
+                child: Container(),
+              ),
+            );
+          },
+        ),
+
+        // Floating Particles
+        ...List.generate(5, (index) {
+          return Positioned(
+            top: 100.0 + (index * 150),
+            left: 50.0 + (index * 80),
+            child: _buildFloatingParticle(index),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildFloatingParticle(int index) {
+    return AnimatedBuilder(
+      animation: _glowController,
+      builder: (context, child) {
+        return Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(
+                      0xFF00D9FF,
+                    ).withOpacity(0.3 * _glowController.value),
+                    const Color(
+                      0xFF6C5CE7,
+                    ).withOpacity(0.1 * _glowController.value),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            )
+            .animate(onPlay: (controller) => controller.repeat())
+            .moveY(
+              begin: 0,
+              end: 30,
+              duration: Duration(seconds: 3 + index),
+              curve: Curves.easeInOut,
+            )
+            .moveX(
+              begin: 0,
+              end: 20,
+              duration: Duration(seconds: 4 + index),
+              curve: Curves.easeInOut,
+            );
+      },
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 380,
+      pinned: true,
+      stretch: true,
+      backgroundColor: Colors.transparent,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Parallax Background Image
+            Transform.translate(
+              offset: Offset(0, _scrollOffset * 0.5),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      const Color(0xFF6C5CE7).withOpacity(0.6),
+                      const Color(0xFF00D9FF).withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+                child: RepaintBoundary(child: CustomPaint(painter: HexagonPatternPainter())),
+              ),
+            ),
+
+            // Profile Info
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: _buildProfileHeader(),
+            ),
+          ],
+        ),
+      ),
+
+      actions: [
+        IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: const Icon(Icons.settings, size: 20),
+          ),
+          onPressed: () => context.push('/settings'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Column(
+      children: [
+        // Avatar with animated border
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Animated Glow Ring
+            AnimatedBuilder(
+              animation: _glowController,
+              builder: (context, child) {
+                return Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      colors: [
+                        const Color(0xFF00D9FF),
+                        const Color(0xFF6C5CE7),
+                        const Color(0xFFFFB800),
+                        const Color(0xFF00D9FF),
+                      ],
+                      transform: GradientRotation(
+                        _rotationController.value * 2 * math.pi,
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6C5CE7).withOpacity(0.5),
+                        blurRadius: 30 * _glowController.value,
+                        spreadRadius: 10 * _glowController.value,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            // Avatar Container
+            Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF1A1F3A),
+                border: Border.all(color: const Color(0xFF0A0E1A), width: 4),
+              ),
+              child: ClipOval(
+                child: Image.network(
+                  'https://via.placeholder.com/150',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Color(0xFF6C5CE7),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // Level Badge
+            Positioned(
+              bottom: 5,
+              right: 5,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFB800), Color(0xFFFF6B6B)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFB800).withOpacity(0.5),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.star, size: 14, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text(
+                      'LVL 42',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ).animate().scale(delay: 500.ms, duration: 600.ms),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // Username with gradient text
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
+          ).createShader(bounds),
+          child: const Text(
+            'CYBER_STRIKER',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 2,
+            ),
+          ),
+        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+
+        const SizedBox(height: 8),
+
+        // Status with animated badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.green.withOpacity(0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                  .animate(onPlay: (controller) => controller.repeat())
+                  .scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.5, 1.5),
+                    duration: 1.seconds,
+                  )
+                  .then()
+                  .scale(
+                    begin: const Offset(1.5, 1.5),
+                    end: const Offset(1, 1),
+                    duration: 1.seconds,
+                  ),
+              const SizedBox(width: 8),
+              const Text(
+                'ONLINE',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        ).animate().fadeIn(delay: 500.ms),
+      ],
+    );
+  }
+
+  Widget _buildStatsSection() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.emoji_events,
+                  title: 'WINS',
+                  value: '324',
+                  color: const Color(0xFFFFB800),
+                  delay: 100,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.sports_esports,
+                  title: 'MATCHES',
+                  value: '512',
+                  color: const Color(0xFF00D9FF),
+                  delay: 200,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.trending_up,
+                  title: 'WIN RATE',
+                  value: '63%',
+                  color: const Color(0xFF00FB94),
+                  delay: 300,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.star,
+                  title: 'RATING',
+                  value: '2,847',
+                  color: const Color(0xFF6C5CE7),
+                  delay: 400,
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      body: BlocBuilder<ProfileBloc, ProfileState>(
-        builder: (context, state) {
-          if (state.status == ProfileStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    );
+  }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                // 1. Avatar va Ism
-                _buildHeader(state),
-                const SizedBox(height: 24),
+  Widget _buildStatCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+    required int delay,
+  }) {
+    return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [color.withOpacity(0.2), color.withOpacity(0.05)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 32),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.6),
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        )
+        .animate()
+        .fadeIn(
+          delay: Duration(milliseconds: delay),
+          duration: 600.ms,
+        )
+        .slideY(begin: 0.2, end: 0);
+  }
 
-                // 2. PES Statistikasi
-                _buildPesStats(state),
-                const SizedBox(height: 24),
+  Widget _buildPESInfoCards() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PES MOBILE INFO',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withOpacity(0.8),
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 16),
 
-                // 3. Tahrirlash tugmasi
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push('/edit-profile'),
-                    icon: const Icon(Icons.edit),
-                    label: const Text("Profilni Tahrirlash"),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.black,
+          // PES ID Card with glassmorphism
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.fingerprint,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'PES ID',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                '123-456-789',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            // Copy to clipboard
+                          },
+                          icon: Icon(
+                            Icons.copy,
+                            color: Colors.white.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
                     ),
+
+                    const SizedBox(height: 20),
+                    Container(height: 1, color: Colors.white.withOpacity(0.1)),
+                    const SizedBox(height: 20),
+
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFFB800), Color(0xFFFF6B6B)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.flash_on,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'TEAM STRENGTH',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    '4,285',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.trending_up,
+                                          size: 12,
+                                          color: Colors.green,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '+125',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ).animate().fadeIn(delay: 600.ms).slideX(begin: -0.2, end: 0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerformanceChart() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        height: 200,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF1A1F3A).withOpacity(0.8),
+              const Color(0xFF0A0E1A).withOpacity(0.8),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'PERFORMANCE',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white.withOpacity(0.8),
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: PerformanceChartPainter(),
+                  child: Container(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: 800.ms);
+  }
+
+  Widget _buildAchievementsSection() {
+    final achievements = [
+      {'icon': '🏆', 'name': 'Champion', 'desc': '100 Wins'},
+      {'icon': '⚡', 'name': 'Speed Demon', 'desc': 'Quick Wins'},
+      {'icon': '🎯', 'name': 'Sharpshooter', 'desc': '90% Accuracy'},
+      {'icon': '💎', 'name': 'Diamond', 'desc': 'Top Rank'},
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ACHIEVEMENTS',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withOpacity(0.8),
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: achievements.length,
+              itemBuilder: (context, index) {
+                final achievement = achievements[index];
+                return Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF6C5CE7).withOpacity(0.3),
+                            const Color(0xFF00D9FF).withOpacity(0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF6C5CE7).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            achievement['icon']!,
+                            style: const TextStyle(fontSize: 32),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            achievement['name']!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            achievement['desc']!,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.white.withOpacity(0.6),
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: Duration(milliseconds: 1000 + (index * 100)))
+                    .slideX(begin: 0.5, end: 0);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivity() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'RECENT ACTIVITY',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withOpacity(0.8),
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...List.generate(3, (index) {
+            return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: index == 0
+                                ? [Colors.green, Colors.green.shade700]
+                                : index == 1
+                                ? [Colors.orange, Colors.orange.shade700]
+                                : [Colors.red, Colors.red.shade700],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          index == 0
+                              ? Icons.emoji_events
+                              : index == 1
+                              ? Icons.sports_esports
+                              : Icons.close,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              index == 0
+                                  ? 'Victory vs ProPlayer'
+                                  : index == 1
+                                  ? 'Tournament Started'
+                                  : 'Defeat vs Champion',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${index + 1} hours ago',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        index == 0
+                            ? '+25'
+                            : index == 1
+                            ? '0'
+                            : '-15',
+                        style: TextStyle(
+                          color: index == 0
+                              ? Colors.green
+                              : index == 1
+                              ? Colors.orange
+                              : Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                .animate()
+                .fadeIn(delay: Duration(milliseconds: 1200 + (index * 100)))
+                .slideX(begin: -0.2, end: 0);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingEditButton() {
+    return Positioned(
+      bottom: 30,
+      right: 20,
+      child: AnimatedBuilder(
+        animation: _glowController,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6C5CE7).withOpacity(0.5),
+                  blurRadius: 20 + (10 * _glowController.value),
+                  spreadRadius: 5 * _glowController.value,
                 ),
               ],
+            ),
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                // Navigate to edit profile
+              },
+              backgroundColor: const Color(0xFF6C5CE7),
+              icon: const Icon(Icons.edit, color: Colors.white),
+              label: const Text(
+                'EDIT PROFILE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
             ),
           );
         },
       ),
+    ).animate().scale(delay: 1500.ms, duration: 600.ms);
+  }
+}
+
+// Custom Painters
+class MeshGradientPainter extends CustomPainter {
+  final double animation;
+  final double scrollOffset;
+
+  MeshGradientPainter({required this.animation, required this.scrollOffset});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
+
+    // Animated gradient circles
+    final circle1 = Offset(
+      size.width * 0.3 + (math.sin(animation * 2 * math.pi) * 50),
+      size.height * 0.2 - scrollOffset * 0.5,
     );
+
+    final circle2 = Offset(
+      size.width * 0.7 + (math.cos(animation * 2 * math.pi) * 50),
+      size.height * 0.4 - scrollOffset * 0.3,
+    );
+
+    paint.shader = RadialGradient(
+      colors: [const Color(0xFF6C5CE7).withOpacity(0.3), Colors.transparent],
+    ).createShader(Rect.fromCircle(center: circle1, radius: 150));
+    canvas.drawCircle(circle1, 150, paint);
+
+    paint.shader = RadialGradient(
+      colors: [const Color(0xFF00D9FF).withOpacity(0.3), Colors.transparent],
+    ).createShader(Rect.fromCircle(center: circle2, radius: 120));
+    canvas.drawCircle(circle2, 120, paint);
   }
 
-  Widget _buildHeader(ProfileState state) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.grey[800],
-          backgroundImage: state.avatarUrl.isNotEmpty
-              ? NetworkImage(state.avatarUrl)
-              : null,
-          child: state.avatarUrl.isEmpty
-              ? const Icon(Icons.person, size: 50, color: Colors.white)
-              : null,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          state.username.isEmpty ? "Geymer" : state.username,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          state.phoneNumber.isEmpty ? "+998 -- --- -- --" : state.phoneNumber,
-          style: TextStyle(color: Colors.grey[400]),
-        ),
-      ],
-    );
+  @override
+  bool shouldRepaint(MeshGradientPainter oldDelegate) =>
+      animation != oldDelegate.animation ||
+      scrollOffset != oldDelegate.scrollOffset;
+}
+
+class HexagonPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.05)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    const hexSize = 30.0;
+    final rows = (size.height / hexSize).ceil() + 1;
+    final cols = (size.width / hexSize).ceil() + 1;
+
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        final centerX = col * hexSize * 1.5;
+        final centerY =
+            row * hexSize * math.sqrt(3) +
+            (col % 2 == 1 ? hexSize * math.sqrt(3) / 2 : 0);
+
+        _drawHexagon(canvas, Offset(centerX, centerY), hexSize / 2, paint);
+      }
+    }
   }
 
-  Widget _buildPesStats(ProfileState state) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _statItem("PES ID", state.pesId.isEmpty ? "Yo'q" : state.pesId),
-          Container(width: 1, height: 40, color: Colors.grey[700]),
-          _statItem("Jamoa Kuchi", "${state.teamStrength}"),
-        ],
-      ),
-    );
+  void _drawHexagon(Canvas canvas, Offset center, double radius, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 6; i++) {
+      final angle = (math.pi / 3) * i;
+      final x = center.dx + radius * math.cos(angle);
+      final y = center.dy + radius * math.sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
   }
 
-  Widget _statItem(String label, String value) {
-    return Column(
-      children: [
-        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Orbitron',
-          ),
-        ),
-      ],
-    );
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class PerformanceChartPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    // Grid lines
+    final gridPaint = Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..strokeWidth = 1;
+
+    for (int i = 0; i <= 4; i++) {
+      final y = size.height * i / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    // Chart line
+    final path = Path();
+    final points = [
+      const Offset(0, 0.8),
+      const Offset(0.2, 0.6),
+      const Offset(0.4, 0.4),
+      const Offset(0.6, 0.3),
+      const Offset(0.8, 0.2),
+      const Offset(1, 0.15),
+    ];
+
+    for (int i = 0; i < points.length; i++) {
+      final point = Offset(
+        points[i].dx * size.width,
+        points[i].dy * size.height,
+      );
+
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        final previous = Offset(
+          points[i - 1].dx * size.width,
+          points[i - 1].dy * size.height,
+        );
+        final controlPoint1 = Offset(
+          previous.dx + (point.dx - previous.dx) / 2,
+          previous.dy,
+        );
+        final controlPoint2 = Offset(
+          previous.dx + (point.dx - previous.dx) / 2,
+          point.dy,
+        );
+        path.cubicTo(
+          controlPoint1.dx,
+          controlPoint1.dy,
+          controlPoint2.dx,
+          controlPoint2.dy,
+          point.dx,
+          point.dy,
+        );
+      }
+    }
+
+    // Gradient for line
+    paint.shader = const LinearGradient(
+      colors: [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
+    ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(path, paint);
+
+    // Draw points
+    final pointPaint = Paint()
+      ..color = const Color(0xFF6C5CE7)
+      ..style = PaintingStyle.fill;
+
+    for (final point in points) {
+      canvas.drawCircle(
+        Offset(point.dx * size.width, point.dy * size.height),
+        5,
+        pointPaint,
+      );
+      canvas.drawCircle(
+        Offset(point.dx * size.width, point.dy * size.height),
+        5,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
   }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

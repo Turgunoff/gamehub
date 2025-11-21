@@ -1,4 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:gamehub/core/gen/assets/assets.gen.dart';
+import 'package:gamehub/generated/locale_keys.g.dart';
 
 import '../../core/theme/app_colors.dart';
 
@@ -55,26 +58,61 @@ class _GameHubBottomNavBarState extends State<GameHubBottomNavBar> {
             fontWeight: FontWeight.w500,
             fontSize: 12,
           ),
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Home',
+              icon: Assets.icons.home2.svg(
+                colorFilter: ColorFilter.mode(
+                  widget.currentIndex == 0
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: LocaleKeys.dashboard_home.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.emoji_events_rounded),
-              label: 'Tournaments',
+              icon: Assets.icons.cup.svg(
+                colorFilter: ColorFilter.mode(
+                  widget.currentIndex == 1
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: LocaleKeys.dashboard_tournaments.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline_rounded),
-              label: 'Create',
+              icon: Assets.icons.addCircle.svg(
+                colorFilter: ColorFilter.mode(
+                  widget.currentIndex == 2
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: LocaleKeys.dashboard_create.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.groups_rounded),
-              label: 'Teams',
+              icon: Assets.icons.people.svg(
+                colorFilter: ColorFilter.mode(
+                  widget.currentIndex == 3
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: LocaleKeys.dashboard_teams.tr(),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'Profile',
+              icon: Assets.icons.profileCircle.svg(
+                colorFilter: ColorFilter.mode(
+                  widget.currentIndex == 4
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
+                  BlendMode.srcIn,
+                ),
+              ),
+              label: LocaleKeys.dashboard_profile.tr(),
             ),
           ],
         ),
