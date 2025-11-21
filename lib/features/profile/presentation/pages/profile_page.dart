@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:ui';
 import 'dart:math' as math;
-
 import 'package:go_router/go_router.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -13,37 +11,24 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage>
-    with TickerProviderStateMixin {
-  late AnimationController _glowController;
-  late AnimationController _rotationController;
+class _ProfilePageState extends State<ProfilePage> {
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _glowController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _rotationController = AnimationController(
-      duration: const Duration(seconds: 20),
-      vsync: this,
-    )..repeat();
-
     _scrollController.addListener(() {
-      setState(() {
-        _scrollOffset = _scrollController.offset;
-      });
+      if (mounted) {
+        setState(() {
+          _scrollOffset = _scrollController.offset;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
-    _glowController.dispose();
-    _rotationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -55,8 +40,8 @@ class _ProfilePageState extends State<ProfilePage>
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Animated Background
-          _buildAnimatedBackground(),
+          // Static Background (No animation)
+          _buildStaticBackground(),
 
           // Main Content
           CustomScrollView(
@@ -92,14 +77,14 @@ class _ProfilePageState extends State<ProfilePage>
             ],
           ),
 
-          // Floating Action Button
+          // Floating Action Button (No animation)
           _buildFloatingEditButton(),
         ],
       ),
     );
   }
 
-  Widget _buildAnimatedBackground() {
+  Widget _buildStaticBackground() {
     return Stack(
       children: [
         // Gradient Background
@@ -113,70 +98,45 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         ),
 
-        // Animated Mesh Gradient
-        AnimatedBuilder(
-          animation: _rotationController,
-          builder: (context, child) {
-            return RepaintBoundary(
-              child: CustomPaint(
-                painter: MeshGradientPainter(
-                  animation: _rotationController.value,
-                  scrollOffset: _scrollOffset,
-                ),
-                child: Container(),
+        // Static Mesh Pattern
+        CustomPaint(painter: StaticMeshPatternPainter(), child: Container()),
+
+        // Static gradient overlays for visual depth
+        Positioned(
+          top: 100,
+          left: 50,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF00D9FF).withOpacity(0.15),
+                  Colors.transparent,
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
-
-        // Floating Particles
-        ...List.generate(5, (index) {
-          return Positioned(
-            top: 100.0 + (index * 150),
-            left: 50.0 + (index * 80),
-            child: _buildFloatingParticle(index),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildFloatingParticle(int index) {
-    return AnimatedBuilder(
-      animation: _glowController,
-      builder: (context, child) {
-        return Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(
-                      0xFF00D9FF,
-                    ).withOpacity(0.3 * _glowController.value),
-                    const Color(
-                      0xFF6C5CE7,
-                    ).withOpacity(0.1 * _glowController.value),
-                    Colors.transparent,
-                  ],
-                ),
+        Positioned(
+          top: 300,
+          right: 50,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF6C5CE7).withOpacity(0.15),
+                  Colors.transparent,
+                ],
               ),
-            )
-            .animate(onPlay: (controller) => controller.repeat())
-            .moveY(
-              begin: 0,
-              end: 30,
-              duration: Duration(seconds: 3 + index),
-              curve: Curves.easeInOut,
-            )
-            .moveX(
-              begin: 0,
-              end: 20,
-              duration: Duration(seconds: 4 + index),
-              curve: Curves.easeInOut,
-            );
-      },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -190,7 +150,7 @@ class _ProfilePageState extends State<ProfilePage>
         background: Stack(
           fit: StackFit.expand,
           children: [
-            // Parallax Background Image
+            // Parallax Background
             Transform.translate(
               offset: Offset(0, _scrollOffset * 0.5),
               child: Container(
@@ -205,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage>
                     ],
                   ),
                 ),
-                child: RepaintBoundary(child: CustomPaint(painter: HexagonPatternPainter())),
+                child: CustomPaint(painter: HexagonPatternPainter()),
               ),
             ),
 
@@ -219,7 +179,6 @@ class _ProfilePageState extends State<ProfilePage>
           ],
         ),
       ),
-
       actions: [
         IconButton(
           icon: Container(
@@ -231,7 +190,10 @@ class _ProfilePageState extends State<ProfilePage>
             ),
             child: const Icon(Icons.settings, size: 20),
           ),
-          onPressed: () => context.push('/settings'),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            context.push('/settings');
+          },
         ),
       ],
     );
@@ -240,40 +202,32 @@ class _ProfilePageState extends State<ProfilePage>
   Widget _buildProfileHeader() {
     return Column(
       children: [
-        // Avatar with animated border
+        // Avatar with static glow
         Stack(
           alignment: Alignment.center,
           children: [
-            // Animated Glow Ring
-            AnimatedBuilder(
-              animation: _glowController,
-              builder: (context, child) {
-                return Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: SweepGradient(
-                      colors: [
-                        const Color(0xFF00D9FF),
-                        const Color(0xFF6C5CE7),
-                        const Color(0xFFFFB800),
-                        const Color(0xFF00D9FF),
-                      ],
-                      transform: GradientRotation(
-                        _rotationController.value * 2 * math.pi,
-                      ),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6C5CE7).withOpacity(0.5),
-                        blurRadius: 30 * _glowController.value,
-                        spreadRadius: 10 * _glowController.value,
-                      ),
-                    ],
+            // Static Glow Ring
+            Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const SweepGradient(
+                  colors: [
+                    Color(0xFF00D9FF),
+                    Color(0xFF6C5CE7),
+                    Color(0xFFFFB800),
+                    Color(0xFF00D9FF),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6C5CE7).withOpacity(0.4),
+                    blurRadius: 30,
+                    spreadRadius: 5,
                   ),
-                );
-              },
+                ],
+              ),
             ),
 
             // Avatar Container
@@ -338,13 +292,13 @@ class _ProfilePageState extends State<ProfilePage>
                   ],
                 ),
               ),
-            ).animate().scale(delay: 500.ms, duration: 600.ms),
+            ),
           ],
         ),
 
         const SizedBox(height: 20),
 
-        // Username with gradient text
+        // Username with gradient
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
             colors: [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
@@ -358,11 +312,11 @@ class _ProfilePageState extends State<ProfilePage>
               letterSpacing: 2,
             ),
           ),
-        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+        ),
 
         const SizedBox(height: 8),
 
-        // Status with animated badge
+        // Online Status Badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -374,25 +328,13 @@ class _ProfilePageState extends State<ProfilePage>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                  )
-                  .animate(onPlay: (controller) => controller.repeat())
-                  .scale(
-                    begin: const Offset(1, 1),
-                    end: const Offset(1.5, 1.5),
-                    duration: 1.seconds,
-                  )
-                  .then()
-                  .scale(
-                    begin: const Offset(1.5, 1.5),
-                    end: const Offset(1, 1),
-                    duration: 1.seconds,
-                  ),
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
               const SizedBox(width: 8),
               const Text(
                 'ONLINE',
@@ -405,7 +347,7 @@ class _ProfilePageState extends State<ProfilePage>
               ),
             ],
           ),
-        ).animate().fadeIn(delay: 500.ms),
+        ),
       ],
     );
   }
@@ -423,7 +365,6 @@ class _ProfilePageState extends State<ProfilePage>
                   title: 'WINS',
                   value: '324',
                   color: const Color(0xFFFFB800),
-                  delay: 100,
                 ),
               ),
               const SizedBox(width: 16),
@@ -433,7 +374,6 @@ class _ProfilePageState extends State<ProfilePage>
                   title: 'MATCHES',
                   value: '512',
                   color: const Color(0xFF00D9FF),
-                  delay: 200,
                 ),
               ),
             ],
@@ -447,7 +387,6 @@ class _ProfilePageState extends State<ProfilePage>
                   title: 'WIN RATE',
                   value: '63%',
                   color: const Color(0xFF00FB94),
-                  delay: 300,
                 ),
               ),
               const SizedBox(width: 16),
@@ -457,7 +396,6 @@ class _ProfilePageState extends State<ProfilePage>
                   title: 'RATING',
                   value: '2,847',
                   color: const Color(0xFF6C5CE7),
-                  delay: 400,
                 ),
               ),
             ],
@@ -472,56 +410,49 @@ class _ProfilePageState extends State<ProfilePage>
     required String title,
     required String value,
     required Color color,
-    required int delay,
   }) {
     return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [color.withOpacity(0.2), color.withOpacity(0.05)],
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withOpacity(0.2), color.withOpacity(0.05)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(height: 12),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.6),
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withOpacity(0.6),
+              letterSpacing: 1,
+            ),
           ),
-        )
-        .animate()
-        .fadeIn(
-          delay: Duration(milliseconds: delay),
-          duration: 600.ms,
-        )
-        .slideY(begin: 0.2, end: 0);
+        ],
+      ),
+    );
   }
 
   Widget _buildPESInfoCards() {
@@ -606,7 +537,7 @@ class _ProfilePageState extends State<ProfilePage>
                         IconButton(
                           onPressed: () {
                             HapticFeedback.mediumImpact();
-                            // Copy to clipboard
+                            // Copy to clipboard logic here
                           },
                           icon: Icon(
                             Icons.copy,
@@ -615,11 +546,9 @@ class _ProfilePageState extends State<ProfilePage>
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 20),
                     Container(height: 1, color: Colors.white.withOpacity(0.1)),
                     const SizedBox(height: 20),
-
                     Row(
                       children: [
                         Container(
@@ -670,14 +599,14 @@ class _ProfilePageState extends State<ProfilePage>
                                       color: Colors.green.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Row(
+                                    child: const Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.trending_up,
                                           size: 12,
                                           color: Colors.green,
                                         ),
-                                        const SizedBox(width: 4),
+                                        SizedBox(width: 4),
                                         Text(
                                           '+125',
                                           style: TextStyle(
@@ -700,7 +629,7 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
               ),
             ),
-          ).animate().fadeIn(delay: 600.ms).slideX(begin: -0.2, end: 0),
+          ),
         ],
       ),
     );
@@ -736,17 +665,15 @@ class _ProfilePageState extends State<ProfilePage>
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: RepaintBoundary(
-                child: CustomPaint(
-                  painter: PerformanceChartPainter(),
-                  child: Container(),
-                ),
+              child: CustomPaint(
+                painter: PerformanceChartPainter(),
+                child: Container(),
               ),
             ),
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 800.ms);
+    );
   }
 
   Widget _buildAchievementsSection() {
@@ -780,60 +707,57 @@ class _ProfilePageState extends State<ProfilePage>
               itemBuilder: (context, index) {
                 final achievement = achievements[index];
                 return Container(
-                      width: 100,
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFF6C5CE7).withOpacity(0.3),
-                            const Color(0xFF00D9FF).withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFF6C5CE7).withOpacity(0.3),
-                        ),
+                  width: 100,
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF6C5CE7).withOpacity(0.3),
+                        const Color(0xFF00D9FF).withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF6C5CE7).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        achievement['icon']!,
+                        style: const TextStyle(fontSize: 32),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            achievement['icon']!,
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            achievement['name']!,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            achievement['desc']!,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      const SizedBox(height: 6),
+                      Text(
+                        achievement['name']!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(delay: Duration(milliseconds: 1000 + (index * 100)))
-                    .slideX(begin: 0.5, end: 0);
+                      const SizedBox(height: 2),
+                      Text(
+                        achievement['desc']!,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.white.withOpacity(0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
           ),
@@ -860,86 +784,83 @@ class _ProfilePageState extends State<ProfilePage>
           const SizedBox(height: 16),
           ...List.generate(3, (index) {
             return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: index == 0
-                                ? [Colors.green, Colors.green.shade700]
-                                : index == 1
-                                ? [Colors.orange, Colors.orange.shade700]
-                                : [Colors.red, Colors.red.shade700],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          index == 0
-                              ? Icons.emoji_events
-                              : index == 1
-                              ? Icons.sports_esports
-                              : Icons.close,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              index == 0
-                                  ? 'Victory vs ProPlayer'
-                                  : index == 1
-                                  ? 'Tournament Started'
-                                  : 'Defeat vs Champion',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${index + 1} hours ago',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        index == 0
-                            ? '+25'
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: index == 0
+                            ? [Colors.green, Colors.green.shade700]
                             : index == 1
-                            ? '0'
-                            : '-15',
-                        style: TextStyle(
-                          color: index == 0
-                              ? Colors.green
-                              : index == 1
-                              ? Colors.orange
-                              : Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                            ? [Colors.orange, Colors.orange.shade700]
+                            : [Colors.red, Colors.red.shade700],
                       ),
-                    ],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      index == 0
+                          ? Icons.emoji_events
+                          : index == 1
+                          ? Icons.sports_esports
+                          : Icons.close,
+                      color: Colors.white,
+                    ),
                   ),
-                )
-                .animate()
-                .fadeIn(delay: Duration(milliseconds: 1200 + (index * 100)))
-                .slideX(begin: -0.2, end: 0);
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          index == 0
+                              ? 'Victory vs ProPlayer'
+                              : index == 1
+                              ? 'Tournament Started'
+                              : 'Defeat vs Champion',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${index + 1} hours ago',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    index == 0
+                        ? '+25'
+                        : index == 1
+                        ? '0'
+                        : '-15',
+                    style: TextStyle(
+                      color: index == 0
+                          ? Colors.green
+                          : index == 1
+                          ? Colors.orange
+                          : Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }),
         ],
       ),
@@ -950,84 +871,72 @@ class _ProfilePageState extends State<ProfilePage>
     return Positioned(
       bottom: 30,
       right: 20,
-      child: AnimatedBuilder(
-        animation: _glowController,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF6C5CE7).withOpacity(0.5),
-                  blurRadius: 20 + (10 * _glowController.value),
-                  spreadRadius: 5 * _glowController.value,
-                ),
-              ],
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C5CE7).withOpacity(0.5),
+              blurRadius: 20,
+              spreadRadius: 3,
             ),
-            child: FloatingActionButton.extended(
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                // Navigate to edit profile
-              },
-              backgroundColor: const Color(0xFF6C5CE7),
-              icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text(
-                'EDIT PROFILE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            context.push('/edit-profile');
+          },
+          backgroundColor: const Color(0xFF6C5CE7),
+          icon: const Icon(Icons.edit, color: Colors.white),
+          label: const Text(
+            'EDIT PROFILE',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
             ),
-          );
-        },
+          ),
+        ),
       ),
-    ).animate().scale(delay: 1500.ms, duration: 600.ms);
+    );
   }
 }
 
-// Custom Painters
-class MeshGradientPainter extends CustomPainter {
-  final double animation;
-  final double scrollOffset;
-
-  MeshGradientPainter({required this.animation, required this.scrollOffset});
-
+// Static Mesh Pattern Painter
+class StaticMeshPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
 
-    // Animated gradient circles
-    final circle1 = Offset(
-      size.width * 0.3 + (math.sin(animation * 2 * math.pi) * 50),
-      size.height * 0.2 - scrollOffset * 0.5,
-    );
-
-    final circle2 = Offset(
-      size.width * 0.7 + (math.cos(animation * 2 * math.pi) * 50),
-      size.height * 0.4 - scrollOffset * 0.3,
-    );
+    // Static gradient circles
+    final circle1 = Offset(size.width * 0.3, size.height * 0.2);
+    final circle2 = Offset(size.width * 0.7, size.height * 0.4);
+    final circle3 = Offset(size.width * 0.5, size.height * 0.6);
 
     paint.shader = RadialGradient(
-      colors: [const Color(0xFF6C5CE7).withOpacity(0.3), Colors.transparent],
+      colors: [const Color(0xFF6C5CE7).withOpacity(0.2), Colors.transparent],
     ).createShader(Rect.fromCircle(center: circle1, radius: 150));
     canvas.drawCircle(circle1, 150, paint);
 
     paint.shader = RadialGradient(
-      colors: [const Color(0xFF00D9FF).withOpacity(0.3), Colors.transparent],
+      colors: [const Color(0xFF00D9FF).withOpacity(0.2), Colors.transparent],
     ).createShader(Rect.fromCircle(center: circle2, radius: 120));
     canvas.drawCircle(circle2, 120, paint);
+
+    paint.shader = RadialGradient(
+      colors: [const Color(0xFFFFB800).withOpacity(0.15), Colors.transparent],
+    ).createShader(Rect.fromCircle(center: circle3, radius: 100));
+    canvas.drawCircle(circle3, 100, paint);
   }
 
   @override
-  bool shouldRepaint(MeshGradientPainter oldDelegate) =>
-      animation != oldDelegate.animation ||
-      scrollOffset != oldDelegate.scrollOffset;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// Hexagon Pattern Painter
 class HexagonPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -1072,6 +981,7 @@ class HexagonPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// Performance Chart Painter
 class PerformanceChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

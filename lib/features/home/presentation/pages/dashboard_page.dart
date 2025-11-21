@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gamehub/features/play/presentation/pages/play_page.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -7,7 +8,7 @@ import '../../../../shared/widgets/bottom_nav_bar.dart';
 import 'home_tab_page.dart';
 import '../../../tournaments/presentation/pages/tournaments_tab_page.dart';
 import '../../../create/presentation/pages/create_tab_page.dart';
-import '../../../teams/presentation/pages/teams_tab_page.dart';
+import '../../../history/presentation/pages/history_tab_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -22,9 +23,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final List<Widget> _pages = const [
     HomeTabPage(),
-    TournamentsTabPage(),
-    CreateTabPage(),
-    TeamsTabPage(),
+    TournamentsPage(),
+    PlayPage(),
+    HistoryTabPage(),
     ProfilePage(),
   ];
 
