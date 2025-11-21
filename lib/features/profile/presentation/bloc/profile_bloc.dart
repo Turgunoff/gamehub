@@ -3,56 +3,38 @@ import 'profile_event.dart';
 import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  ProfileBloc() : super(ProfileInitial()) {
+  ProfileBloc() : super(const ProfileState()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfile>(_onUpdateProfile);
-    on<UpdateGameStats>(_onUpdateGameStats);
   }
 
   Future<void> _onLoadProfile(
     LoadProfile event,
     Emitter<ProfileState> emit,
   ) async {
-    emit(ProfileLoading());
+    emit(state.copyWith(status: ProfileStatus.loading));
 
     try {
-      // TODO: Implement API call to fetch profile
-      // For now, emit a placeholder state
-      await Future.delayed(const Duration(milliseconds: 500));
+      // TODO: Keyinchalik bu yerda API dan ma'lumot olamiz
+      await Future.delayed(const Duration(seconds: 1)); // Imitatsiya
 
+      // Hozircha soxta ma'lumot yuklaymiz
       emit(
-        ProfileLoaded(
-          id: event.userId,
-          email: 'user@example.com',
-          username: 'Gamer',
-          fullName: '',
-          avatarUrl: null,
-          bio: '',
-          skillLevel: 'beginner',
-          reputationScore: 100,
-          isVerified: false,
-          isPremium: false,
-          totalMatches: 0,
-          wins: 0,
-          losses: 0,
-          draws: 0,
-          winRate: 0.0,
-          tournamentsParticipated: 0,
-          tournamentWins: 0,
-          country: null,
-          city: null,
-          language: 'uz',
-          timezone: 'UTC+5',
-          profileCompletionPercentage: 0,
-          createdAt: DateTime.now(),
-          lastActiveAt: DateTime.now(),
-          collectiveStrength: 0,
-          collectiveStrengthProof: null,
-          collectiveStrengthVerified: false,
+        state.copyWith(
+          status: ProfileStatus.success,
+          username: 'Gamer_UZ',
+          phoneNumber: '+998901234567',
+          pesId: '123456789',
+          teamStrength: 3150,
         ),
       );
     } catch (e) {
-      emit(ProfileError('Failed to load profile: ${e.toString()}'));
+      emit(
+        state.copyWith(
+          status: ProfileStatus.failure,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -60,34 +42,26 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     UpdateProfile event,
     Emitter<ProfileState> emit,
   ) async {
-    if (state is ProfileLoaded) {
-      final currentState = state as ProfileLoaded;
+    emit(state.copyWith(status: ProfileStatus.loading));
 
-      try {
-        // TODO: Implement API call to update profile
-        emit(
-          currentState.copyWith(
-            fullName: event.name,
-            username: event.username,
-            bio: event.bio,
-          ),
-        );
-      } catch (e) {
-        emit(ProfileError('Failed to update profile: ${e.toString()}'));
-      }
-    }
-  }
+    try {
+      // TODO: Keyinchalik API ga yangi ma'lumotni yuboramiz
+      await Future.delayed(const Duration(seconds: 1));
 
-  Future<void> _onUpdateGameStats(
-    UpdateGameStats event,
-    Emitter<ProfileState> emit,
-  ) async {
-    if (state is ProfileLoaded) {
-      final currentState = state as ProfileLoaded;
+      // Muvaffaqiyatli yangilandi
       emit(
-        currentState.copyWith(
-          winRate: event.winRate.toDouble(),
-          totalMatches: event.matches,
+        state.copyWith(
+          status: ProfileStatus.success,
+          username: event.username,
+          pesId: event.pesId,
+          teamStrength: event.teamStrength,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.failure,
+          errorMessage: "Yangilashda xatolik bo'ldi",
         ),
       );
     }
