@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart' as auth;
-import '../../../profile/presentation/bloc/profile_bloc.dart';
-import '../../../profile/presentation/bloc/profile_event.dart';
-import '../../../profile/presentation/bloc/profile_state.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../../shared/widgets/bottom_nav_bar.dart';
-import '../../../teams/presentation/teams_page.dart';
-import '../../../tournaments/presentation/pages/tournaments_page.dart';
-import '../../../profile/presentation/pages/profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -25,32 +18,17 @@ class _DashboardPageState extends State<DashboardPage> {
 
   final List<Widget> _pages = [
     const _HomeContent(),
-    const TournamentsPage(),
+    const _TournamentsContent(),
     const _CreateContent(),
     const _TeamsContent(),
-    const ProfilePage(),
+    const _ProfileContent(),
   ];
 
   @override
-  void initState() {
-    super.initState();
-    // Load profile when dashboard is first opened (login paytida)
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId != null) {
-      final profileBloc = context.read<ProfileBloc>();
-      // Only load if not already loaded
-      if (profileBloc.state is! ProfileLoaded) {
-        profileBloc.add(LoadProfile(userId));
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return BlocListener<auth.AuthBloc, auth.AuthState>(
+    return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is auth.AuthUnauthenticated) {
-          // Logout tugaganda splash page ga qaytish
+        if (state is AuthUnauthenticated) {
           context.go('/');
         }
       },
@@ -78,84 +56,38 @@ class _HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgDark,
-      extendBodyBehindAppBar: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Row(
           children: [
-            // Profile Picture with Level Badge
-            Stack(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 20,
-                    color: Colors.white,
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      '25',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.primaryGradient,
+              ),
+              child: const Icon(
+                Icons.person,
+                size: 20,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(width: 12),
-            // Username and Currency
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'ProGamer',
+                    'Gamer',
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.monetization_on,
-                        color: Colors.amber,
-                        size: 12,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '2,450',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -163,40 +95,13 @@ class _HomeContent extends StatelessWidget {
           ],
         ),
         actions: [
-          // Notifications
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.notifications,
-                  color: AppColors.textSecondary,
-                  size: 24,
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '3',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.notifications,
+              color: AppColors.textSecondary,
+              size: 24,
+            ),
           ),
         ],
       ),
@@ -205,120 +110,20 @@ class _HomeContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Statistics Cards
-            Row(
-              children: [
-                // Win Rate Card
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgPrimary,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.trending_up,
-                              color: Colors.green,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '78%',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '23W/7L',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Rank Card
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgPrimary,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.emoji_events,
-                              color: Colors.blue,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '#127',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Top 5%',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
             // Find Match Button
             Container(
               width: double.infinity,
               height: 100,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF6B46C1), // Deep purple-blue
-                    Color(0xFF06B6D4), // Vibrant cyan-blue
-                  ],
+                  colors: [Color(0xFF6B46C1), Color(0xFF06B6D4)],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF06B6D4).withOpacity(0.4),
+                    color: const Color(0xFF06B6D4).withValues(alpha: 0.4),
                     blurRadius: 25,
                     spreadRadius: 5,
                     offset: const Offset(0, 10),
@@ -326,54 +131,37 @@ class _HomeContent extends StatelessWidget {
                 ],
               ),
               child: ElevatedButton(
-                onPressed: () {
-                  // Find match logic
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
                 ),
-                child: Column(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
+                    const Icon(Icons.sports_esports, color: Colors.white, size: 32),
+                    const SizedBox(width: 16),
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Game Controller Icon
-                        const Icon(
-                          Icons.sports_esports,
-                          color: Colors.white,
-                          size: 32,
+                        Text(
+                          'dashboard.find_match'.tr(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2,
+                          ),
                         ),
-                        const SizedBox(width: 16),
-                        // FIND MATCH Text
-                        Column(
-                          children: [
-                            Text(
-                              'FIND MATCH',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                            Text(
-                              '1,234 online',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          '1,234 ${'dashboard.online'.tr()}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
@@ -389,7 +177,7 @@ class _HomeContent extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Upcoming Tournaments',
+                  'dashboard.upcoming_tournaments'.tr(),
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 20,
@@ -399,7 +187,7 @@ class _HomeContent extends StatelessWidget {
                 TextButton(
                   onPressed: () {},
                   child: Text(
-                    'View All',
+                    'dashboard.view_all'.tr(),
                     style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 14,
@@ -412,44 +200,26 @@ class _HomeContent extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Tournament Cards
+            // Placeholder tournament cards
             _buildTournamentCard(
               title: 'Friday Night Championship',
               time: 'Starts in 2h 15m',
               participants: '45/64',
-              entryFee: '\$5',
               prize: '\$500',
-              icon: Icons.access_time,
             ),
-
             const SizedBox(height: 12),
-
             _buildTournamentCard(
               title: 'Beginner\'s League',
               time: 'Tomorrow 20:00',
               participants: '12/32',
-              entryFee: 'FREE',
               prize: '500 coins',
-              icon: Icons.access_time,
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildTournamentCard(
-              title: 'Shadow Hunters',
-              time: 'Next match in 45 min',
-              participants: '5',
-              entryFee: '',
-              prize: '',
-              icon: Icons.emoji_events,
-              showParticipants: false,
             ),
 
             const SizedBox(height: 32),
 
             // Recent Matches
             Text(
-              'Recent Matches',
+              'dashboard.recent_matches'.tr(),
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 20,
@@ -459,12 +229,9 @@ class _HomeContent extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Match Results
             _buildMatchResult('vs TeamAlpha', '2-0', '+25 pts', true),
             const SizedBox(height: 12),
             _buildMatchResult('vs ProSquad', '1-2', '-15 pts', false),
-            const SizedBox(height: 12),
-            _buildMatchResult('vs Noobs', '2-1', '+20 pts', true),
           ],
         ),
       ),
@@ -475,21 +242,18 @@ class _HomeContent extends StatelessWidget {
     required String title,
     required String time,
     required String participants,
-    required String entryFee,
     required String prize,
-    required IconData icon,
-    bool showParticipants = true,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgPrimary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 24),
+          Icon(Icons.access_time, color: AppColors.primary, size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -506,105 +270,38 @@ class _HomeContent extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      color: AppColors.textTertiary,
-                      size: 14,
-                    ),
+                    Icon(Icons.access_time, color: AppColors.textTertiary, size: 14),
                     const SizedBox(width: 4),
-                    Text(
-                      time,
-                      style: TextStyle(
-                        color: AppColors.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (showParticipants) ...[
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.people,
-                        color: AppColors.textTertiary,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        participants,
-                        style: TextStyle(
-                          color: AppColors.textTertiary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                    Text(time, style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                    const SizedBox(width: 16),
+                    Icon(Icons.people, color: AppColors.textTertiary, size: 14),
+                    const SizedBox(width: 4),
+                    Text(participants, style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
                   ],
                 ),
-                if (entryFee.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Entry: $entryFee',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
-          if (prize.isNotEmpty)
-            Text(
-              prize,
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          else
-            Row(
-              children: [
-                // Participant avatars
-                ...List.generate(
-                  3,
-                  (index) => Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.3),
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: AppColors.primary,
-                      size: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.primary,
-                  size: 16,
-                ),
-              ],
+          Text(
+            prize,
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMatchResult(
-    String opponent,
-    String score,
-    String points,
-    bool isWin,
-  ) {
+  Widget _buildMatchResult(String opponent, String score, String points, bool isWin) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgPrimary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -639,13 +336,11 @@ class _HomeContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isWin
-                  ? Colors.green.withOpacity(0.2)
-                  : Colors.red.withOpacity(0.2),
+              color: isWin ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              isWin ? 'WIN' : 'LOSS',
+              isWin ? 'dashboard.win'.tr() : 'dashboard.loss'.tr(),
               style: TextStyle(
                 color: isWin ? Colors.green : Colors.red,
                 fontSize: 12,
@@ -659,38 +354,30 @@ class _HomeContent extends StatelessWidget {
   }
 }
 
-// Tournaments Content
+// Tournaments Content - Placeholder
 class _TournamentsContent extends StatelessWidget {
   const _TournamentsContent();
 
   @override
   Widget build(BuildContext context) {
-    return const TournamentsPage();
-  }
-}
-
-// Create Content
-class _CreateContent extends StatelessWidget {
-  const _CreateContent();
-
-  @override
-  Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+      child: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(Icons.emoji_events, size: 80, color: AppColors.primary),
+            const SizedBox(height: 24),
             Text(
-              'Create',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              'dashboard.tournaments'.tr(),
+              style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
                 fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
-              'Yangi turnir yoki jamoa yaratish imkoniyati tez orada',
+              'common.coming_soon'.tr(),
               style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
             ),
           ],
@@ -700,17 +387,73 @@ class _CreateContent extends StatelessWidget {
   }
 }
 
-// _TeamsContent class ni yangilang:
+// Create Content - Placeholder
+class _CreateContent extends StatelessWidget {
+  const _CreateContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_circle_outline, size: 80, color: AppColors.primary),
+            const SizedBox(height: 24),
+            Text(
+              'dashboard.create'.tr(),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'common.coming_soon'.tr(),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Teams Content - Placeholder
 class _TeamsContent extends StatelessWidget {
   const _TeamsContent();
 
   @override
   Widget build(BuildContext context) {
-    return const TeamsPage(); // Import qilishni unutmang
+    return SafeArea(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.groups, size: 80, color: AppColors.primary),
+            const SizedBox(height: 24),
+            Text(
+              'dashboard.teams'.tr(),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'common.coming_soon'.tr(),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-// Profile Content
+// Profile Content - Placeholder with Logout
 class _ProfileContent extends StatelessWidget {
   const _ProfileContent();
 
@@ -721,19 +464,49 @@ class _ProfileContent extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            const Spacer(),
+            Icon(Icons.person, size: 80, color: AppColors.primary),
+            const SizedBox(height: 24),
             Text(
-              'Profile',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              'dashboard.profile'.tr(),
+              style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
                 fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
-              'Profil sozlamalari va ma\'lumotlari tez orada',
+              'common.coming_soon'.tr(),
               style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
             ),
+            const Spacer(),
+            // Logout Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.read<AuthBloc>().add(AuthLogoutRequested());
+                },
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

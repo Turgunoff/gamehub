@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/onboarding_service.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -17,18 +18,16 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    // 3 sekund kutish va auth state ni tekshirish
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Auth state ni tekshirish
+    // Check auth state
     context.read<AuthBloc>().add(AuthCheckRequested());
 
-    // 3 sekund kutish
+    // Wait for splash animation
     await Future.delayed(const Duration(seconds: 3));
 
-    // Agar widget hali mounted bo'lsa, navigation qilish
     if (mounted) {
       _handleNavigation();
     }
@@ -38,17 +37,28 @@ class _SplashPageState extends State<SplashPage> {
     final authState = context.read<AuthBloc>().state;
 
     if (authState is AuthAuthenticated) {
-      // User auth bo'lsa dashboard ga o'tish
       context.go('/dashboard');
     } else if (authState is AuthUnauthenticated) {
-      // User auth bo'lmasa onboarding yoki auth ga o'tish
       _checkOnboardingAndNavigate();
     } else if (authState is AuthError) {
-      // Xatolik bo'lsa auth ga o'tish
       context.go('/auth');
     } else {
-      // AuthLoading yoki AuthInitial holatida onboarding/auth ga o'tish
       _checkOnboardingAndNavigate();
+    }
+  }
+
+  Future<void> _checkOnboardingAndNavigate() async {
+    final isOnboardingCompleted = await OnboardingService.isOnboardingCompleted();
+    final isFirstLaunch = await OnboardingService.isFirstLaunch();
+
+    if (mounted) {
+      if (isFirstLaunch) {
+        context.go('/onboarding');
+      } else if (isOnboardingCompleted) {
+        context.go('/auth');
+      } else {
+        context.go('/onboarding');
+      }
     }
   }
 
@@ -69,7 +79,7 @@ class _SplashPageState extends State<SplashPage> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                     blurRadius: 30,
                     spreadRadius: 10,
                   ),
@@ -86,13 +96,13 @@ class _SplashPageState extends State<SplashPage> {
 
             // App Name
             Text(
-                  'GAMEHUB',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    letterSpacing: 3,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                )
+              'app_name'.tr().toUpperCase(),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                letterSpacing: 3,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+            )
                 .animate()
                 .fadeIn(delay: 400.ms, duration: 600.ms)
                 .slideY(begin: 0.3, end: 0),
@@ -101,7 +111,7 @@ class _SplashPageState extends State<SplashPage> {
 
             // Tagline
             Text(
-              'COMPETE • WIN • DOMINATE',
+              'tagline'.tr(),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textTertiary,
                 letterSpacing: 2,
@@ -119,25 +129,5 @@ class _SplashPageState extends State<SplashPage> {
         ),
       ),
     );
-  }
-
-  void _checkOnboardingAndNavigate() async {
-    // Onboarding status ni tekshirish
-    final isOnboardingCompleted =
-        await OnboardingService.isOnboardingCompleted();
-    final isFirstLaunch = await OnboardingService.isFirstLaunch();
-
-    if (mounted) {
-      if (isFirstLaunch) {
-        // App birinchi marta ochilgan - onboarding ga o'tish
-        context.go('/onboarding');
-      } else if (isOnboardingCompleted) {
-        // Onboarding tugagan - auth ga o'tish
-        context.go('/auth');
-      } else {
-        // Onboarding tugamagan - onboarding ga o'tish
-        context.go('/onboarding');
-      }
-    }
   }
 }

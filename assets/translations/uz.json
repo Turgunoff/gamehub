@@ -1,0 +1,84 @@
+{
+  "app_name": "GameHub",
+  "tagline": "KURASH • YUTISH • HUKMRONLIK",
+
+  "onboarding": {
+    "skip": "O'tkazib yuborish",
+    "next": "Keyingi",
+    "get_started": "Boshlash",
+    "slide1_title": "Turnirlarga qatnashing",
+    "slide1_description": "Esports turnirlarida qatnashing va butun dunyo o'yinchilari bilan raqobatlashing",
+    "slide2_title": "Jamoangni yarating",
+    "slide2_description": "O'z jamomangizni tuzing va birgalikda reytingda o'sib boring",
+    "slide3_title": "Coaching oling",
+    "slide3_description": "Professional murabbiylardan o'rganing va mahoratingizni oshiring",
+    "slide4_title": "Jamiyatga qo'shiling",
+    "slide4_description": "Geymerlar bilan bog'laning, tajriba almashing va birgalikda o'sib boring"
+  },
+
+  "auth": {
+    "login_title": "Xush kelibsiz",
+    "login_subtitle": "Gaming jamiyatiga qo'shiling",
+    "email_label": "Email",
+    "email_hint": "example@email.com",
+    "email_required": "Email kiriting",
+    "email_invalid": "To'g'ri email kiriting",
+    "send_code": "Kod yuborish",
+    "or": "yoki",
+    "google": "Google",
+    "discord": "Discord",
+    "verify_title": "Kodni tasdiqlang",
+    "code_sent_to": "{email} ga kod yuborildi",
+    "change_email": "Email ni o'zgartirish",
+    "verify": "Tasdiqlash",
+    "resend_code": "Kodni qayta yuborish",
+    "resend_in": "Qayta yuborish",
+    "code_expires": "Kod 2 daqiqa davomida amal qiladi",
+    "check_spam": "Agar kod kelmasa, spam papkasini tekshiring yoki qayta yuborishni bosing",
+    "enter_code": "Kodni kiriting",
+    "enter_6_digit": "6 xonali kod kiriting",
+    "only_numbers": "Faqat raqamlar kiriting",
+    "code_error": "Kod noto'g'ri yoki eskirgan",
+    "new_code_sent": "Yangi kod yuborildi!"
+  },
+
+  "dashboard": {
+    "home": "Bosh sahifa",
+    "tournaments": "Turnirlar",
+    "create": "Yaratish",
+    "teams": "Jamoalar",
+    "profile": "Profil",
+    "find_match": "O'YIN TOPISH",
+    "online": "onlayn",
+    "upcoming_tournaments": "Kelgusi turnirlar",
+    "view_all": "Hammasini ko'rish",
+    "recent_matches": "So'nggi o'yinlar",
+    "win": "G'ALABA",
+    "loss": "MAG'LUBIYAT"
+  },
+
+  "common": {
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik",
+    "retry": "Qayta urinish",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "back": "Orqaga",
+    "continue": "Davom etish",
+    "coming_soon": "Tez orada"
+  },
+
+  "errors": {
+    "network_error": "Tarmoq xatosi. Qayta urinib ko'ring",
+    "server_error": "Server xatosi. Keyinroq urinib ko'ring",
+    "unknown_error": "Xatolik yuz berdi. Qayta urinib ko'ring"
+  },
+
+  "language": {
+    "select": "Tilni tanlang",
+    "uzbek": "O'zbek",
+    "english": "English"
+  }
+}

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
-import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,10 +23,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // Only load if profile is not loaded yet
     if (currentState is! ProfileLoaded) {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId != null) {
-        profileBloc.add(LoadProfile(userId));
-      }
+      // TODO: Get actual user ID from auth service
+      profileBloc.add(LoadProfile('user_id'));
     }
   }
 
@@ -65,11 +61,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      final userId =
-                          Supabase.instance.client.auth.currentUser?.id;
-                      if (userId != null) {
-                        context.read<ProfileBloc>().add(LoadProfile(userId));
-                      }
+                      context.read<ProfileBloc>().add(LoadProfile('user_id'));
                     },
                     child: const Text('Retry'),
                   ),
@@ -83,14 +75,11 @@ class _ProfilePageState extends State<ProfilePage> {
               color: AppColors.primary,
               backgroundColor: AppColors.bgCard,
               onRefresh: () async {
-                final userId = Supabase.instance.client.auth.currentUser?.id;
-                if (userId != null) {
-                  context.read<ProfileBloc>().add(LoadProfile(userId));
-                  // Wait for the bloc to finish loading
-                  await context.read<ProfileBloc>().stream.firstWhere(
-                        (state) => state is! ProfileLoading,
-                      );
-                }
+                context.read<ProfileBloc>().add(LoadProfile('user_id'));
+                // Wait for the bloc to finish loading
+                await context.read<ProfileBloc>().stream.firstWhere(
+                      (state) => state is! ProfileLoading,
+                    );
               },
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
@@ -404,10 +393,9 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.only(right: 8.0),
           child: IconButton(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const EditProfilePage(),
-                ),
+              // TODO: Navigate to edit profile page
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Coming soon')),
               );
             },
             icon: Container(

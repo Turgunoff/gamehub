@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:gamehub/core/theme/app_theme.dart';
-import 'core/config/env.dart';
 import 'core/router/app_router.dart';
 import 'core/services/network_service.dart';
+import 'core/services/api_service.dart';
 import 'core/widgets/network_overlay.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/profile/presentation/bloc/profile_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await NetworkService().initialize();
+  // Initialize localization
+  await EasyLocalization.ensureInitialized();
 
-  //Status bar style
+  // Initialize services
+  await NetworkService().initialize();
+  await ApiService().initialize();
+
+  // Status bar style
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
+    const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
@@ -26,7 +31,15 @@ void main() async {
     ),
   );
 
-  runApp(const MyApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('uz'), Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('uz'),
+      startLocale: const Locale('uz'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -35,16 +48,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
-        BlocProvider<ProfileBloc>(create: (context) => ProfileBloc()),
-      ],
+      providers: [BlocProvider<AuthBloc>(create: (context) => AuthBloc())],
       child: MaterialApp.router(
         title: 'GameHub Pro',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         darkTheme: AppTheme.darkTheme,
         routerConfig: AppRouter.router,
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
         builder: (context, child) {
           return NetworkOverlay(child: child!);
         },

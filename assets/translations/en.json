@@ -1,0 +1,84 @@
+{
+  "app_name": "GameHub",
+  "tagline": "COMPETE • WIN • DOMINATE",
+
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "get_started": "Get Started",
+    "slide1_title": "Join Tournaments",
+    "slide1_description": "Participate in esports tournaments and compete with players worldwide",
+    "slide2_title": "Create Your Team",
+    "slide2_description": "Build your dream team and climb the rankings together",
+    "slide3_title": "Get Coaching",
+    "slide3_description": "Learn from professional coaches and improve your skills",
+    "slide4_title": "Join Community",
+    "slide4_description": "Connect with gamers, share experiences and grow together"
+  },
+
+  "auth": {
+    "login_title": "Welcome Back",
+    "login_subtitle": "Join the gaming community",
+    "email_label": "Email",
+    "email_hint": "example@email.com",
+    "email_required": "Please enter your email",
+    "email_invalid": "Please enter a valid email",
+    "send_code": "Send Code",
+    "or": "or",
+    "google": "Google",
+    "discord": "Discord",
+    "verify_title": "Verify Code",
+    "code_sent_to": "Code sent to {email}",
+    "change_email": "Change email",
+    "verify": "Verify",
+    "resend_code": "Resend code",
+    "resend_in": "Resend in",
+    "code_expires": "Code expires in 2 minutes",
+    "check_spam": "If you don't receive the code, check your spam folder or resend",
+    "enter_code": "Enter code",
+    "enter_6_digit": "Enter 6-digit code",
+    "only_numbers": "Only numbers allowed",
+    "code_error": "Invalid or expired code",
+    "new_code_sent": "New code sent!"
+  },
+
+  "dashboard": {
+    "home": "Home",
+    "tournaments": "Tournaments",
+    "create": "Create",
+    "teams": "Teams",
+    "profile": "Profile",
+    "find_match": "FIND MATCH",
+    "online": "online",
+    "upcoming_tournaments": "Upcoming Tournaments",
+    "view_all": "View All",
+    "recent_matches": "Recent Matches",
+    "win": "WIN",
+    "loss": "LOSS"
+  },
+
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "continue": "Continue",
+    "coming_soon": "Coming Soon"
+  },
+
+  "errors": {
+    "network_error": "Network error. Please try again",
+    "server_error": "Server error. Please try again later",
+    "unknown_error": "Something went wrong. Please try again"
+  },
+
+  "language": {
+    "select": "Select Language",
+    "uzbek": "O'zbek",
+    "english": "English"
+  }
+}

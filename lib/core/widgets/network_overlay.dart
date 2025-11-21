@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:app_settings/app_settings.dart';
 import '../theme/app_colors.dart';
 import '../services/network_service.dart';
 
