@@ -186,9 +186,18 @@ class _TournamentsPageState extends State<TournamentsPage> {
       itemBuilder: (context, index) {
         final tournament = tournaments[index];
         return TournamentCard(
-          tournament: tournament,
-          onJoinPressed: () => _onJoinTournament(tournament),
-          onViewDetailsPressed: () => _onViewTournamentDetails(tournament),
+          title: tournament.title,
+          status: tournament.status,
+          stage: tournament.status == 'LIVE' ? 'In Progress' : tournament.time,
+          prize: tournament.prizePool.toStringAsFixed(0),
+          participants:
+              '${tournament.currentParticipants}/${tournament.maxParticipants}',
+          entryFee: tournament.entryFee == 0
+              ? 'FREE'
+              : tournament.entryFee.toStringAsFixed(0),
+          endTime: tournament.time,
+          isLive: tournament.isLive,
+          onTap: () => _onViewTournamentDetails(tournament),
         );
       },
     );

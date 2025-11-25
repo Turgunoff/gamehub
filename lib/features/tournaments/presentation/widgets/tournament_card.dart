@@ -1,242 +1,296 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/tournament.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:flutter/services.dart';
 
+/// Turnir kartasi widget'i
+/// Faol va kelgusi turnirlarni ko'rsatadi
 class TournamentCard extends StatelessWidget {
-  final Tournament tournament;
-  final VoidCallback? onJoinPressed;
-  final VoidCallback? onViewDetailsPressed;
+  final String title;
+  final String status;
+  final String stage;
+  final String prize;
+  final String participants;
+  final String entryFee;
+  final String endTime;
+  final bool isLive;
+  final String? myStatus;
+  final VoidCallback? onTap;
 
   const TournamentCard({
     super.key,
-    required this.tournament,
-    this.onJoinPressed,
-    this.onViewDetailsPressed,
+    required this.title,
+    required this.status,
+    required this.stage,
+    required this.prize,
+    required this.participants,
+    required this.entryFee,
+    required this.endTime,
+    required this.isLive,
+    this.myStatus,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool canJoin =
-        tournament.currentParticipants < tournament.maxParticipants;
-    final bool isLive = tournament.isLive;
-
-    return GestureDetector(
-      onTap: onViewDetailsPressed,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.bgCardLight.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tournament.title,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            tournament.game,
-                            style: const TextStyle(
-                              color: Color(0xFF8892B0),
-                              fontSize: 14,
-                            ),
-                          ),
-                          if (isLive) ...[
-                            const SizedBox(width: 12),
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.error,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'LIVE',
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          if (tournament.isPremium) ...[
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.emoji_events,
-                              color: AppColors.warning,
-                              size: 16,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: AppColors.bgCardLight,
-                  ),
-                  child: Icon(
-                    _getGameIcon(tournament.game),
-                    color: AppColors.primary,
-                    size: 30,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildInfoItem(
-                  Icons.access_time,
-                  tournament.time,
-                  const Color(0xFF8892B0),
-                ),
-                const SizedBox(width: 24),
-                _buildInfoItem(
-                  Icons.people,
-                  '${tournament.currentParticipants}/${tournament.maxParticipants}',
-                  const Color(0xFF8892B0),
-                ),
-                const SizedBox(width: 24),
-                _buildInfoItem(
-                  Icons.account_balance_wallet,
-                  '\$${tournament.entryFee.toStringAsFixed(0)}',
-                  const Color(0xFF8892B0),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.emoji_events,
-                  color: Color(0xFF8892B0),
-                  size: 16,
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Prize Pool',
-                  style: TextStyle(color: Color(0xFF8892B0), fontSize: 14),
-                ),
-                const SizedBox(width: 8),
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Color(0xFF6B46C1), // Deep purple-blue
-                      Color(0xFF06B6D4), // Vibrant cyan-blue
-                    ],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ).createShader(bounds),
-                  child: Text(
-                    '\$${tournament.prizePool.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF6B46C1), // Deep purple-blue
-                    Color(0xFF06B6D4), // Vibrant cyan-blue
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ElevatedButton(
-                onPressed: canJoin ? onJoinPressed : onViewDetailsPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                ),
-                child: Text(
-                  canJoin ? 'Join Tournament' : 'View Details',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.08),
+            Colors.white.withOpacity(0.03),
           ],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isLive
+              ? Colors.redAccent.withOpacity(0.5)
+              : Colors.white.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header section
+          _buildHeader(),
+          // Body section
+          _buildBody(),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String text, Color textColor) {
-    return Row(
-      children: [
-        Icon(icon, color: const Color(0xFF8892B0), size: 16),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+  /// Turnir kartasining header qismi
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isLive
+              ? [
+                  Colors.redAccent.withOpacity(0.3),
+                  Colors.orange.withOpacity(0.2)
+                ]
+              : [
+                  const Color(0xFF6C5CE7).withOpacity(0.3),
+                  const Color(0xFF00D9FF).withOpacity(0.2)
+                ],
         ),
-      ],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Row(
+        children: [
+          // Tournament icon
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isLive
+                    ? [Colors.redAccent, Colors.orange]
+                    : [const Color(0xFF6C5CE7), const Color(0xFF00D9FF)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.emoji_events,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Tournament info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isLive
+                            ? Colors.redAccent
+                            : const Color(0xFF00D9FF),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        status,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      stage,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Prize info
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.monetization_on,
+                    color: Color(0xFFFFB800),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    prize,
+                    style: const TextStyle(
+                      color: Color(0xFFFFB800),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                'Entry: $entryFee',
+                style: TextStyle(
+                  color: entryFee == 'FREE'
+                      ? const Color(0xFF00FB94)
+                      : Colors.white.withOpacity(0.5),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  IconData _getGameIcon(String game) {
-    switch (game.toLowerCase()) {
-      case 'cs:go':
-        return Icons.sports_esports;
-      case 'valorant':
-        return Icons.games;
-      case 'pubg':
-        return Icons.sports_esports;
-      case 'league of legends':
-        return Icons.games;
-      default:
-        return Icons.sports_esports;
-    }
+  /// Turnir kartasining body qismi
+  Widget _buildBody() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Participants and time info
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.people,
+                    color: Colors.white.withOpacity(0.5),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    participants,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.timer,
+                    color: Colors.white.withOpacity(0.5),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    endTime,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // My status (if exists)
+          if (myStatus != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00FB94).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.person,
+                    color: Color(0xFF00FB94),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'You: $myStatus',
+                    style: const TextStyle(
+                      color: Color(0xFF00FB94),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // Action button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onTap?.call();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    isLive ? Colors.orange : const Color(0xFF6C5CE7),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                isLive ? 'VIEW BRACKET' : 'JOIN TOURNAMENT',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import '../widgets/play_header.dart';
+import '../widgets/quick_match_button.dart';
+import '../widgets/game_modes_grid.dart';
+import '../widgets/match_settings_section.dart';
+import '../widgets/play_stats_preview.dart';
+import '../widgets/matchmaking_dialog.dart';
 
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
@@ -45,7 +51,7 @@ class _PlayPageState extends State<PlayPage>
             child: Column(
               children: [
                 // Header
-                _buildHeader(),
+                PlayHeader(onlineUsers: _onlineUsers),
 
                 // Content
                 Expanded(
@@ -55,19 +61,27 @@ class _PlayPageState extends State<PlayPage>
                     child: Column(
                       children: [
                         // Quick Match - Main Button
-                        _buildQuickMatchButton(),
+                        QuickMatchButton(
+                          pulseController: _pulseController,
+                          onTap: _startQuickMatch,
+                        ),
                         const SizedBox(height: 32),
 
                         // Game Modes Grid
-                        _buildGameModesGrid(),
+                        GameModesGrid(
+                          selectedMode: _selectedMode,
+                          onModeSelected: (mode) {
+                            setState(() => _selectedMode = mode);
+                          },
+                        ),
                         const SizedBox(height: 32),
 
                         // Match Settings
-                        _buildMatchSettings(),
+                        const MatchSettingsSection(),
                         const SizedBox(height: 32),
 
                         // Your Stats Preview
-                        _buildStatsPreview(),
+                        const PlayStatsPreview(),
                       ],
                     ),
                   ),
@@ -593,12 +607,14 @@ class _PlayPageState extends State<PlayPage>
     );
   }
 
+  /// Quick match boshlash
   void _startQuickMatch() {
-    // Navigate to matchmaking screen
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _buildMatchmakingDialog(),
+      builder: (context) => MatchmakingDialog(
+        onCancel: () {},
+      ),
     );
   }
 

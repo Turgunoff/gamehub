@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import '../widgets/history_header.dart';
+import '../widgets/history_stats_overview.dart';
+import '../widgets/history_tab_bar.dart';
+import '../widgets/history_match_card.dart';
+import '../widgets/history_performance_chart.dart';
+import '../widgets/history_stat_card.dart';
 
 class HistoryTabPage extends StatefulWidget {
   const HistoryTabPage({super.key});
@@ -40,13 +46,18 @@ class _HistoryTabPageState extends State<HistoryTabPage>
             child: Column(
               children: [
                 // Header
-                _buildHeader(),
+                HistoryHeader(
+                  selectedPeriod: _selectedPeriod,
+                  onPeriodChanged: (period) {
+                    setState(() => _selectedPeriod = period);
+                  },
+                ),
 
                 // Stats Overview
-                _buildStatsOverview(),
+                const HistoryStatsOverview(),
 
                 // Tab Bar
-                _buildTabBar(),
+                HistoryTabBar(controller: _tabController),
 
                 // Tab Content
                 Expanded(
@@ -348,7 +359,7 @@ class _HistoryTabPageState extends State<HistoryTabPage>
         ];
 
         final match = results[index % results.length];
-        return _buildMatchCard(
+        return HistoryMatchCard(
           date: index == 0
               ? 'Today, 15:30'
               : index == 1
@@ -645,11 +656,11 @@ class _HistoryTabPageState extends State<HistoryTabPage>
       child: Column(
         children: [
           // Performance Chart
-          _buildPerformanceChart(),
+          const HistoryPerformanceChart(),
           const SizedBox(height: 20),
 
           // Goals Statistics
-          _buildStatCard(
+          HistoryStatCard(
             title: 'GOALS STATISTICS',
             icon: Icons.sports_soccer,
             color: const Color(0xFFFFB800),
@@ -663,7 +674,7 @@ class _HistoryTabPageState extends State<HistoryTabPage>
           const SizedBox(height: 16),
 
           // Match Statistics
-          _buildStatCard(
+          HistoryStatCard(
             title: 'MATCH PERFORMANCE',
             icon: Icons.analytics,
             color: const Color(0xFF6C5CE7),
@@ -677,7 +688,7 @@ class _HistoryTabPageState extends State<HistoryTabPage>
           const SizedBox(height: 16),
 
           // Tournament Stats
-          _buildStatCard(
+          HistoryStatCard(
             title: 'TOURNAMENT STATS',
             icon: Icons.emoji_events,
             color: const Color(0xFF00D9FF),

@@ -99,6 +99,17 @@ class $AssetsIconsGen {
   ];
 }
 
+class $AssetsImagesGen {
+  const $AssetsImagesGen();
+
+  /// File path: assets/images/cyberpitch_background.svg
+  SvgGenImage get cyberpitchBackground =>
+      const SvgGenImage('assets/images/cyberpitch_background.svg');
+
+  /// List of all assets
+  List<SvgGenImage> get values => [cyberpitchBackground];
+}
+
 class $AssetsTranslationsGen {
   const $AssetsTranslationsGen();
 
@@ -117,6 +128,7 @@ class Assets {
 
   static const $AssetsFontsGen fonts = $AssetsFontsGen();
   static const $AssetsIconsGen icons = $AssetsIconsGen();
+  static const $AssetsImagesGen images = $AssetsImagesGen();
   static const $AssetsTranslationsGen translations = $AssetsTranslationsGen();
 }
 

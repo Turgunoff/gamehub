@@ -3,6 +3,13 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:go_router/go_router.dart';
+import '../widgets/profile_header.dart';
+import '../widgets/profile_stats_section.dart';
+import '../widgets/profile_pes_info_card.dart';
+import '../widgets/profile_performance_chart.dart';
+import '../widgets/profile_achievements_section.dart';
+import '../widgets/profile_recent_activity.dart';
+import '../widgets/profile_floating_edit_button.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -56,19 +63,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   children: [
                     // Stats Cards
-                    _buildStatsSection(),
+                    const ProfileStatsSection(),
 
                     // PES Info Cards
-                    _buildPESInfoCards(),
+                    const ProfilePESInfoCard(),
 
                     // Performance Chart
-                    _buildPerformanceChart(),
+                    const ProfilePerformanceChart(),
 
                     // Achievements
-                    _buildAchievementsSection(),
+                    const ProfileAchievementsSection(),
 
                     // Recent Activity
-                    _buildRecentActivity(),
+                    const ProfileRecentActivity(),
 
                     const SizedBox(height: 100),
                   ],
@@ -78,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
 
           // Floating Action Button (No animation)
-          _buildFloatingEditButton(),
+          const ProfileFloatingEditButton(),
         ],
       ),
     );
@@ -174,7 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
               bottom: 40,
               left: 0,
               right: 0,
-              child: _buildProfileHeader(),
+              child: const ProfileHeader(),
             ),
           ],
         ),

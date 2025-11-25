@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Main gradient for field lines -->
+    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00D9FF;stop-opacity:0.15"/>
+      <stop offset="50%" style="stop-color:#6C5CE7;stop-opacity:0.10"/>
+      <stop offset="100%" style="stop-color:#00D9FF;stop-opacity:0.05"/>
+    </linearGradient>
+    
+    <!-- Accent gradient for important elements -->
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00D9FF;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#6C5CE7;stop-opacity:0.2"/>
+    </linearGradient>
+    
+    <!-- Radial gradient for center circle -->
+    <radialGradient id="centerGradient">
+      <stop offset="0%" style="stop-color:#6C5CE7;stop-opacity:0.2"/>
+      <stop offset="50%" style="stop-color:#00D9FF;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.05"/>
+    </radialGradient>
+    
+    <!-- Goal gradient -->
+    <linearGradient id="goalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB800;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#FF6B6B;stop-opacity:0.1"/>
+    </linearGradient>
+    
+    <!-- Glow filter effect -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Soft glow for center elements -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2" result="softBlur"/>
+      <feMerge>
+        <feMergeNode in="softBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+    
+    <!-- Grass pattern -->
+    <pattern id="grassPattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="20" fill="#ffffff" opacity="0.02"/>
+      <rect y="20" width="40" height="20" fill="#ffffff" opacity="0.01"/>
+    </pattern>
+    
+    <!-- Dots pattern for texture -->
+    <pattern id="dotPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="5" r="0.5" fill="#ffffff" opacity="0.03"/>
+    </pattern>
+  </defs>
+  
+  <!-- Dark background -->
+  <rect width="400" height="600" fill="#0A0E1A"/>
+  
+  <!-- Gradient background overlay -->
+  <rect width="400" height="600">
+    <animate attributeName="opacity" 
+             values="0.3;0.5;0.3" 
+             dur="10s" 
+             repeatCount="indefinite"/>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A1F3A;stop-opacity:0.5"/>
+      <stop offset="50%" style="stop-color:#6C5CE7;stop-opacity:0.1"/>
+      <stop offset="100%" style="stop-color:#00D9FF;stop-opacity:0.05"/>
+    </linearGradient>
+  </rect>
+  
+  <!-- Field area with subtle gradient -->
+  <rect x="20" y="20" width="360" height="560" 
+        fill="url(#grassPattern)" 
+        opacity="0.5"/>
+  
+  <!-- Main field outline with rounded corners -->
+  <rect x="20" y="20" width="360" height="560" 
+        fill="none" 
+        stroke="url(#lineGradient)" 
+        stroke-width="2.5"
+        rx="3" ry="3"
+        filter="url(#glow)"/>
+  
+  <!-- Field texture overlay -->
+  <rect x="20" y="20" width="360" height="560" 
+        fill="url(#dotPattern)" 
+        opacity="0.3"/>
+  
+  <!-- Decorative grass stripes -->
+  <g opacity="0.03">
+    <rect x="20" y="20" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="75" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="130" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="185" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="240" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="295" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="350" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="405" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="460" width="360" height="35" fill="url(#accentGradient)"/>
+    <rect x="20" y="515" width="360" height="35" fill="url(#accentGradient)"/>
+  </g>
+  
+  <!-- Center line with glow -->
+  <line x1="20" y1="300" x2="380" y2="300" 
+        stroke="url(#lineGradient)" 
+        stroke-width="2.5"
+        filter="url(#softGlow)"/>
+  
+  <!-- Center circles with animation -->
+  <g filter="url(#softGlow)">
+    <!-- Outer center circle -->
+    <circle cx="200" cy="300" r="65" 
+            fill="none" 
+            stroke="url(#lineGradient)" 
+            stroke-width="2.5">
+      <animate attributeName="stroke-opacity" 
+               values="0.5;1;0.5" 
+               dur="4s" 
+               repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Inner decorative circle -->
+    <circle cx="200" cy="300" r="40" 
+            fill="none" 
+            stroke="url(#accentGradient)" 
+            stroke-width="1"
+            stroke-dasharray="5,5"
+            opacity="0.5">
+      <animateTransform attributeName="transform"
+                        type="rotate"
+                        from="0 200 300"
+                        to="360 200 300"
+                        dur="30s"
+                        repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Center circle -->
+    <circle cx="200" cy="300" r="10" 
+            fill="url(#centerGradient)" 
+            stroke="url(#accentGradient)" 
+            stroke-width="2"/>
+    
+    <!-- Center spot with pulse animation -->
+    <circle cx="200" cy="300" r="4" 
+            fill="url(#accentGradient)">
+      <animate attributeName="r" 
+               values="4;6;4" 
+               dur="2s" 
+               repeatCount="indefinite"/>
+      <animate attributeName="opacity" 
+               values="0.8;0.4;0.8" 
+               dur="2s" 
+               repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Top penalty area with enhanced design -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="20" width="240" height="120" 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          stroke-width="2.5"
+          rx="2" ry="2"/>
+    
+    <!-- Top goal area -->
+    <rect x="140" y="20" width="120" height="55" 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          stroke-width="2"
+          rx="1" ry="1"/>
+    
+    <!-- Top penalty arc -->
+    <path d="M 140 140 A 55 55 0 0 0 260 140" 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          stroke-width="2"
+          stroke-dasharray="0.5,2"
+          opacity="0.8"/>
+    
+    <!-- Top penalty spot with glow -->
+    <g filter="url(#glow)">
+      <circle cx="200" cy="95" r="5" 
+              fill="url(#accentGradient)"
+              opacity="0.6"/>
+      <circle cx="200" cy="95" r="3" 
+              fill="#ffffff"
+              opacity="0.3"/>
+    </g>
+    
+    <!-- Top goal with special styling -->
+    <g filter="url(#glow)">
+      <rect x="165" y="10" width="70" height="15" 
+            fill="url(#goalGradient)" 
+            stroke="url(#goalGradient)" 
+            stroke-width="3"
+            rx="2" ry="2"/>
+      <!-- Goal net pattern -->
+      <g opacity="0.2">
+        <line x1="170" y1="15" x2="170" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="180" y1="15" x2="180" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="190" y1="15" x2="190" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="200" y1="15" x2="200" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="210" y1="15" x2="210" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="220" y1="15" x2="220" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="230" y1="15" x2="230" y2="25" stroke="#FFB800" stroke-width="0.5"/>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Bottom penalty area with enhanced design -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="460" width="240" height="120" 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          stroke-width="2.5"
+          rx="2" ry="2"/>
+    
+    <!-- Bottom goal area -->
+    <rect x="140" y="525" width="120" height="55" 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          stroke-width="2"
+          rx="1" ry="1"/>
+    
+    <!-- Bottom penalty arc -->
+    <path d="M 140 460 A 55 55 0 0 1 260 460" 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          stroke-width="2"
+          stroke-dasharray="0.5,2"
+          opacity="0.8"/>
+    
+    <!-- Bottom penalty spot with glow -->
+    <g filter="url(#glow)">
+      <circle cx="200" cy="505" r="5" 
+              fill="url(#accentGradient)"
+              opacity="0.6"/>
+      <circle cx="200" cy="505" r="3" 
+              fill="#ffffff"
+              opacity="0.3"/>
+    </g>
+    
+    <!-- Bottom goal with special styling -->
+    <g filter="url(#glow)">
+      <rect x="165" y="575" width="70" height="15" 
+            fill="url(#goalGradient)" 
+            stroke="url(#goalGradient)" 
+            stroke-width="3"
+            rx="2" ry="2"/>
+      <!-- Goal net pattern -->
+      <g opacity="0.2">
+        <line x1="170" y1="575" x2="170" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="180" y1="575" x2="180" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="190" y1="575" x2="190" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="200" y1="575" x2="200" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="210" y1="575" x2="210" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="220" y1="575" x2="220" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+        <line x1="230" y1="575" x2="230" y2="585" stroke="#FFB800" stroke-width="0.5"/>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Enhanced corner arcs with glow -->
+  <g filter="url(#softGlow)" opacity="0.8">
+    <!-- Top-left corner -->
+    <path d="M 20 35 A 15 15 0 0 0 35 20" 
+          fill="none" 
+          stroke="url(#accentGradient)" 
+          stroke-width="2"/>
+    <circle cx="30" cy="30" r="2" fill="url(#accentGradient)" opacity="0.5"/>
+    
+    <!-- Top-right corner -->
+    <path d="M 365 20 A 15 15 0 0 0 380 35" 
+          fill="none" 
+          stroke="url(#accentGradient)" 
+          stroke-width="2"/>
+    <circle cx="370" cy="30" r="2" fill="url(#accentGradient)" opacity="0.5"/>
+    
+    <!-- Bottom-left corner -->
+    <path d="M 35 580 A 15 15 0 0 0 20 565" 
+          fill="none" 
+          stroke="url(#accentGradient)" 
+          stroke-width="2"/>
+    <circle cx="30" cy="570" r="2" fill="url(#accentGradient)" opacity="0.5"/>
+    
+    <!-- Bottom-right corner -->
+    <path d="M 380 565 A 15 15 0 0 0 365 580" 
+          fill="none" 
+          stroke="url(#accentGradient)" 
+          stroke-width="2"/>
+    <circle cx="370" cy="570" r="2" fill="url(#accentGradient)" opacity="0.5"/>
+  </g>
+  
+  <!-- Decorative elements -->
+  <g opacity="0.1">
+    <!-- Side markers -->
+    <g stroke="url(#accentGradient)" stroke-width="1.5">
+      <line x1="15" y1="150" x2="25" y2="150"/>
+      <line x1="15" y1="300" x2="25" y2="300"/>
+      <line x1="15" y1="450" x2="25" y2="450"/>
+      
+      <line x1="375" y1="150" x2="385" y2="150"/>
+      <line x1="375" y1="300" x2="385" y2="300"/>
+      <line x1="375" y1="450" x2="385" y2="450"/>
+    </g>
+    
+    <!-- Decorative dots along sidelines -->
+    <g fill="url(#accentGradient)">
+      <circle cx="20" cy="100" r="1"/>
+      <circle cx="20" cy="200" r="1"/>
+      <circle cx="20" cy="400" r="1"/>
+      <circle cx="20" cy="500" r="1"/>
+      
+      <circle cx="380" cy="100" r="1"/>
+      <circle cx="380" cy="200" r="1"/>
+      <circle cx="380" cy="400" r="1"/>
+      <circle cx="380" cy="500" r="1"/>
+    </g>
+  </g>
+  
+  <!-- Animated accent lines -->
+  <g opacity="0.05">
+    <line x1="0" y1="0" x2="400" y2="600" 
+          stroke="url(#accentGradient)" 
+          stroke-width="1"
+          stroke-dasharray="10,20">
+      <animate attributeName="stroke-dashoffset" 
+               from="0" to="30" 
+               dur="10s" 
+               repeatCount="indefinite"/>
+    </line>
+    <line x1="400" y1="0" x2="0" y2="600" 
+          stroke="url(#accentGradient)" 
+          stroke-width="1"
+          stroke-dasharray="10,20">
+      <animate attributeName="stroke-dashoffset" 
+               from="0" to="-30" 
+               dur="10s" 
+               repeatCount="indefinite"/>
+    </line>
+  </g>
+  
+  <!-- CyberPitch branding (optional) -->
+  <text x="200" y="595" 
+        font-family="Arial, sans-serif" 
+        font-size="8" 
+        fill="url(#accentGradient)" 
+        text-anchor="middle"
+        opacity="0.2">
+    CYBERPITCH
+  </text>
+</svg>
