@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
+import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../bloc/profile_bloc.dart';
+import '../bloc/profile_event.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,49 +25,62 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
-      body: Stack(
-        children: [
-          // Simple gradient background (no animation)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          // Logout bo'lgandan keyin ProfileBloc ni tozalash
+          print(
+            '🔄 [SettingsPage] Logout bo\'ldi, ProfileBloc tozalanmoqda...',
+          );
+          context.read<ProfileBloc>().add(ProfileResetRequested());
+          // Logout bo'lgandan keyin login sahifasiga o'tkazish
+          context.go('/auth');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0A0E1A),
+        body: Stack(
+          children: [
+            // Simple gradient background (no animation)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
+                ),
               ),
             ),
-          ),
 
-          // Subtle pattern overlay
-          CustomPaint(painter: GridPatternPainter(), child: Container()),
+            // Subtle pattern overlay
+            CustomPaint(painter: GridPatternPainter(), child: Container()),
 
-          // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      children: [
-                        _buildProfileSection(),
-                        _buildGameSettingsSection(),
-                        _buildNotificationSection(),
-                        _buildAppearanceSection(),
-                        _buildAccountSection(),
-                        _buildAboutSection(),
-                      ],
+            // Main content
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Column(
+                        children: [
+                          _buildProfileSection(),
+                          _buildGameSettingsSection(),
+                          _buildNotificationSection(),
+                          _buildAppearanceSection(),
+                          _buildAccountSection(),
+                          _buildAboutSection(),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -922,7 +939,8 @@ class _SettingsPageState extends State<SettingsPage> {
             onPressed: () {
               Navigator.pop(context);
               HapticFeedback.mediumImpact();
-              // Perform sign out
+              // Logout eventini dispatch qilish
+              context.read<AuthBloc>().add(AuthLogoutRequested());
             },
             child: const Text(
               'SIGN OUT',

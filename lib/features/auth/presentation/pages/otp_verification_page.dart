@@ -7,11 +7,13 @@ import 'package:pinput/pinput.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/auth_bloc.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String email;
 
-  const OTPVerificationPage({super.key, required this.email});  
+  const OTPVerificationPage({super.key, required this.email});
 
   @override
   State<OTPVerificationPage> createState() => _OTPVerificationPageState();
@@ -125,10 +127,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       decoration: BoxDecoration(
         color: AppColors.bgDark,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary,
-          width: 2,
-        ),
+        border: Border.all(color: AppColors.primary, width: 2),
       ),
     );
 
@@ -136,16 +135,18 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       decoration: BoxDecoration(
         color: AppColors.bgDark,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.error,
-          width: 2,
-        ),
+        border: Border.all(color: AppColors.error, width: 2),
       ),
     );
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
+          // Yangi user kirganda ProfileBloc ni qayta yuklash
+          print(
+            '✅ [OTPVerificationPage] User muvaffaqiyatli kirildi, profil yuklanmoqda...',
+          );
+          context.read<ProfileBloc>().add(ProfileLoadRequested());
           context.go('/dashboard');
         } else if (state is AuthOTPSentSuccess) {
           _startCountdown();
@@ -229,11 +230,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
 
                     Text(
                       'auth.verify_title'.tr(),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 28,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 28,
+                          ),
                     ).animate().fadeIn(
                       duration: const Duration(milliseconds: 800),
                       delay: const Duration(milliseconds: 200),
@@ -242,7 +244,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     const SizedBox(height: 12),
 
                     Text(
-                      'auth.code_sent_to'.tr(args: [_formatEmail(widget.email)]),
+                      'auth.code_sent_to'.tr(
+                        args: [_formatEmail(widget.email)],
+                      ),
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppColors.textSecondary,
@@ -309,7 +313,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+                          disabledBackgroundColor: AppColors.primary.withValues(
+                            alpha: 0.5,
+                          ),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -354,7 +360,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),

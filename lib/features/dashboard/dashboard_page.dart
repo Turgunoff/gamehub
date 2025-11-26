@@ -10,6 +10,8 @@ import '../tournaments/presentation/pages/tournaments_tab_page.dart';
 import '../create/presentation/pages/create_tab_page.dart';
 import '../history/presentation/pages/history_tab_page.dart';
 import '../profile/presentation/pages/profile_page.dart';
+import '../profile/presentation/bloc/profile_bloc.dart';
+import '../profile/presentation/bloc/profile_event.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -35,6 +37,10 @@ class _DashboardPageState extends State<DashboardPage> {
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
           context.go('/');
+        } else if (state is AuthAuthenticated) {
+          // Yangi user kirganda yoki dashboard ochilganda profilni yuklash
+          print('✅ [DashboardPage] User authenticated, profil yuklanmoqda...');
+          context.read<ProfileBloc>().add(ProfileLoadRequested());
         }
       },
       child: Scaffold(

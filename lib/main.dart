@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
         BlocProvider<ProfileBloc>(
-          create: (context) => ProfileBloc()..add(LoadProfile()),
+          create: (context) => ProfileBloc()..add(ProfileLoadRequested()),
         ),
       ],
       child: MaterialApp.router(

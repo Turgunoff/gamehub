@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart' hide Options;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'
+    hide Options;
 import 'package:flutter/foundation.dart';
 import 'device_service.dart';
+import '../models/profile_model.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -12,7 +14,7 @@ class ApiService {
 
   late Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  
+
   String? _accessToken;
   String? _refreshToken;
 
@@ -43,12 +45,18 @@ class ApiService {
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          _log('RESPONSE', '${response.statusCode} ${response.requestOptions.path}');
+          _log(
+            'RESPONSE',
+            '${response.statusCode} ${response.requestOptions.path}',
+          );
           return handler.next(response);
         },
         onError: (error, handler) async {
-          _log('ERROR', '${error.response?.statusCode} ${error.requestOptions.path}');
-          
+          _log(
+            'ERROR',
+            '${error.response?.statusCode} ${error.requestOptions.path}',
+          );
+
           // 401 bo'lsa token refresh qilish
           if (error.response?.statusCode == 401 && _refreshToken != null) {
             final refreshed = await _tryRefreshToken();
@@ -58,7 +66,7 @@ class ApiService {
               return handler.resolve(retryResponse);
             }
           }
-          
+
           return handler.next(error);
         },
       ),
@@ -68,12 +76,80 @@ class ApiService {
   }
 
   // ══════════════════════════════════════════════════════════
+  // PROFILE METHODS
+  // ══════════════════════════════════════════════════════════
+
+  /// Mening profilim
+  Future<UserMeModel> getMyProfile() async {
+    final response = await _dio.get('/users/me');
+    return UserMeModel.fromJson(response.data);
+  }
+
+  /// Profilni yangilash
+  Future<ProfileModel> updateProfile({
+    String? nickname,
+    String? fullName,
+    String? phone,
+    String? birthDate,
+    String? gender,
+    String? region,
+    String? bio,
+    String? language,
+    String? telegram,
+    String? instagram,
+    String? youtube,
+    String? discord,
+    String? pesId,
+    int? teamStrength,
+    String? favoriteTeam,
+    String? playStyle,
+    String? preferredFormation,
+    String? availableHours,
+  }) async {
+    final data = <String, dynamic>{};
+
+    if (nickname != null) data['nickname'] = nickname;
+    if (fullName != null) data['full_name'] = fullName;
+    if (phone != null) data['phone'] = phone;
+    if (birthDate != null) data['birth_date'] = birthDate;
+    if (gender != null) data['gender'] = gender;
+    if (region != null) data['region'] = region;
+    if (bio != null) data['bio'] = bio;
+    if (language != null) data['language'] = language;
+    if (telegram != null) data['telegram'] = telegram;
+    if (instagram != null) data['instagram'] = instagram;
+    if (youtube != null) data['youtube'] = youtube;
+    if (discord != null) data['discord'] = discord;
+    if (pesId != null) data['pes_id'] = pesId;
+    if (teamStrength != null) data['team_strength'] = teamStrength;
+    if (favoriteTeam != null) data['favorite_team'] = favoriteTeam;
+    if (playStyle != null) data['play_style'] = playStyle;
+    if (preferredFormation != null)
+      data['preferred_formation'] = preferredFormation;
+    if (availableHours != null) data['available_hours'] = availableHours;
+
+    final response = await _dio.patch('/users/me', data: data);
+    return ProfileModel.fromJson(response.data['profile']);
+  }
+
+  /// Telefon tasdiqlash
+  Future<Map<String, dynamic>> verifyPhone(String phone, String code) async {
+    final response = await _dio.post(
+      '/users/me/verify-phone',
+      data: {'phone': phone, 'code': code},
+    );
+    return response.data;
+  }
+  // ══════════════════════════════════════════════════════════
   // TOKEN MANAGEMENT
   // ══════════════════════════════════════════════════════════
 
   Future<void> _loadTokens() async {
     _accessToken = await _storage.read(key: 'access_token');
     _refreshToken = await _storage.read(key: 'refresh_token');
+
+    // DEBUG: Tekshirish
+    print('TOKEN LOADED: ${_accessToken?.substring(0, 20) ?? "NULL"}');
   }
 
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
@@ -81,6 +157,9 @@ class ApiService {
     await _storage.write(key: 'refresh_token', value: refreshToken);
     _accessToken = accessToken;
     _refreshToken = refreshToken;
+
+    // DEBUG: Tekshirish
+    print('TOKEN SAVED: ${accessToken.substring(0, 20)}...');
   }
 
   Future<void> _clearTokens() async {
@@ -102,7 +181,7 @@ class ApiService {
       final accessToken = response.data['access_token'];
       final refreshToken = response.data['refresh_token'];
       await _saveTokens(accessToken, refreshToken);
-      
+
       return true;
     } catch (e) {
       await _clearTokens();
@@ -152,10 +231,7 @@ class ApiService {
         expiresIn: response.data['expires_in'] ?? 120,
       );
     } on DioException catch (e) {
-      return OTPResponse(
-        success: false,
-        message: _getErrorMessage(e),
-      );
+      return OTPResponse(success: false, message: _getErrorMessage(e));
     }
   }
 
@@ -176,22 +252,16 @@ class ApiService {
       );
 
       final data = response.data;
-      
+
       // Tokenlarni saqlash
-      await _saveTokens(
-        data['access_token'],
-        data['refresh_token'],
-      );
+      await _saveTokens(data['access_token'], data['refresh_token']);
 
       return AuthResponse(
         success: true,
         isNewUser: data['is_new_user'] ?? false,
       );
     } on DioException catch (e) {
-      return AuthResponse(
-        success: false,
-        message: _getErrorMessage(e),
-      );
+      return AuthResponse(success: false, message: _getErrorMessage(e));
     }
   }
 
@@ -208,7 +278,7 @@ class ApiService {
   /// Auth tekshirish
   Future<bool> checkAuth() async {
     await _loadTokens();
-    
+
     if (_accessToken == null) return false;
 
     try {
@@ -302,11 +372,7 @@ class ApiResponse {
   final String? message;
   final dynamic data;
 
-  ApiResponse({
-    required this.success,
-    this.message,
-    this.data,
-  });
+  ApiResponse({required this.success, this.message, this.data});
 }
 
 class OTPResponse {
@@ -314,11 +380,7 @@ class OTPResponse {
   final String? message;
   final int expiresIn;
 
-  OTPResponse({
-    required this.success,
-    this.message,
-    this.expiresIn = 120,
-  });
+  OTPResponse({required this.success, this.message, this.expiresIn = 120});
 }
 
 class AuthResponse {
@@ -326,9 +388,5 @@ class AuthResponse {
   final String? message;
   final bool isNewUser;
 
-  AuthResponse({
-    required this.success,
-    this.message,
-    this.isNewUser = false,
-  });
+  AuthResponse({required this.success, this.message, this.isNewUser = false});
 }

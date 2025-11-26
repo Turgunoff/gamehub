@@ -1,29 +1,29 @@
 import 'package:equatable/equatable.dart';
 
 abstract class ProfileEvent extends Equatable {
-  const ProfileEvent();
-
   @override
   List<Object?> get props => [];
 }
 
-// Profilni yuklash
-class LoadProfile extends ProfileEvent {
-  const LoadProfile();
-}
+class ProfileLoadRequested extends ProfileEvent {}
 
-// Profilni yangilash (Ism, PES ID, Jamoa kuchi)
-class UpdateProfile extends ProfileEvent {
-  final String username;
-  final String pesId;
-  final int teamStrength;
+class ProfileResetRequested extends ProfileEvent {}
 
-  const UpdateProfile({
-    required this.username,
-    required this.pesId,
-    required this.teamStrength,
+class ProfileUpdateRequested extends ProfileEvent {
+  final String? nickname;
+  final String? pesId;
+  final int? teamStrength;
+  final String? region;
+  final String? bio;
+
+  ProfileUpdateRequested({
+    this.nickname,
+    this.pesId,
+    this.teamStrength,
+    this.region,
+    this.bio,
   });
 
   @override
-  List<Object?> get props => [username, pesId, teamStrength];
+  List<Object?> get props => [nickname, pesId, teamStrength, region, bio];
 }

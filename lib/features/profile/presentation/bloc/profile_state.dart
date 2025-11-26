@@ -1,57 +1,48 @@
 import 'package:equatable/equatable.dart';
+import '../../../../core/models/profile_model.dart';
 
 enum ProfileStatus { initial, loading, success, failure }
+abstract class ProfileState extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
-class ProfileState extends Equatable {
-  final ProfileStatus status;
-  final String username;
-  final String phoneNumber;
-  final String avatarUrl;
+class ProfileInitial extends ProfileState {}
 
-  // PES 2026 maxsus maydonlari
-  final String pesId; // 9 xonali ID
-  final int teamStrength; // Jamoa kuchi (masalan: 3150)
+class ProfileLoading extends ProfileState {}
 
-  final String? errorMessage;
+class ProfileLoaded extends ProfileState {
+  final UserMeModel user;
 
-  const ProfileState({
-    this.status = ProfileStatus.initial,
-    this.username = '',
-    this.phoneNumber = '',
-    this.avatarUrl = '',
-    this.pesId = '',
-    this.teamStrength = 0,
-    this.errorMessage,
-  });
-
-  ProfileState copyWith({
-    ProfileStatus? status,
-    String? username,
-    String? phoneNumber,
-    String? avatarUrl,
-    String? pesId,
-    int? teamStrength,
-    String? errorMessage,
-  }) {
-    return ProfileState(
-      status: status ?? this.status,
-      username: username ?? this.username,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-      pesId: pesId ?? this.pesId,
-      teamStrength: teamStrength ?? this.teamStrength,
-      errorMessage: errorMessage ?? this.errorMessage,
-    );
-  }
+  ProfileLoaded(this.user);
 
   @override
-  List<Object?> get props => [
-    status,
-    username,
-    phoneNumber,
-    avatarUrl,
-    pesId,
-    teamStrength,
-    errorMessage,
-  ];
+  List<Object?> get props => [user];
+}
+
+class ProfileUpdating extends ProfileState {
+  final UserMeModel user;
+
+  ProfileUpdating(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class ProfileUpdateSuccess extends ProfileState {
+  final ProfileModel profile;
+
+  ProfileUpdateSuccess(this.profile);
+
+  @override
+  List<Object?> get props => [profile];
+}
+
+class ProfileError extends ProfileState {
+  final String message;
+
+  ProfileError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
