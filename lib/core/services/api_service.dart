@@ -1,16 +1,24 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' hide Options;
+import 'package:flutter/foundation.dart';
+import 'device_service.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
 
-  // Backend URL
   static const String baseUrl = 'https://nights.uz/api/v1';
 
   late Dio _dio;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  
   String? _accessToken;
+  String? _refreshToken;
+
+  // ══════════════════════════════════════════════════════════
+  // INITIALIZATION
+  // ══════════════════════════════════════════════════════════
 
   Future<void> initialize() async {
     _dio = Dio(
@@ -25,171 +33,302 @@ class ApiService {
       ),
     );
 
-    // Interceptor for logging and token
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           if (_accessToken != null) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
           }
-          print('REQUEST[${options.method}] => PATH: ${options.path}');
+          _log('REQUEST', '${options.method} ${options.path}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print(
-            'RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}',
-          );
+          _log('RESPONSE', '${response.statusCode} ${response.requestOptions.path}');
           return handler.next(response);
         },
-        onError: (error, handler) {
-          print(
-            'ERROR[${error.response?.statusCode}] => PATH: ${error.requestOptions.path}',
-          );
+        onError: (error, handler) async {
+          _log('ERROR', '${error.response?.statusCode} ${error.requestOptions.path}');
+          
+          // 401 bo'lsa token refresh qilish
+          if (error.response?.statusCode == 401 && _refreshToken != null) {
+            final refreshed = await _tryRefreshToken();
+            if (refreshed) {
+              // Qayta so'rov yuborish
+              final retryResponse = await _retry(error.requestOptions);
+              return handler.resolve(retryResponse);
+            }
+          }
+          
           return handler.next(error);
         },
       ),
     );
 
-    // Load saved token
-    await _loadToken();
+    await _loadTokens();
   }
 
-  Future<void> _loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _accessToken = prefs.getString('access_token');
+  // ══════════════════════════════════════════════════════════
+  // TOKEN MANAGEMENT
+  // ══════════════════════════════════════════════════════════
+
+  Future<void> _loadTokens() async {
+    _accessToken = await _storage.read(key: 'access_token');
+    _refreshToken = await _storage.read(key: 'refresh_token');
   }
 
-  Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('access_token', token);
-    _accessToken = token;
+  Future<void> _saveTokens(String accessToken, String refreshToken) async {
+    await _storage.write(key: 'access_token', value: accessToken);
+    await _storage.write(key: 'refresh_token', value: refreshToken);
+    _accessToken = accessToken;
+    _refreshToken = refreshToken;
   }
 
-  Future<void> _clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
+  Future<void> _clearTokens() async {
+    await _storage.deleteAll();
     _accessToken = null;
+    _refreshToken = null;
   }
+
+  Future<bool> _tryRefreshToken() async {
+    if (_refreshToken == null) return false;
+
+    try {
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': _refreshToken},
+        options: Options(headers: {}), // Token qo'shmaslik
+      );
+
+      final accessToken = response.data['access_token'];
+      final refreshToken = response.data['refresh_token'];
+      await _saveTokens(accessToken, refreshToken);
+      
+      return true;
+    } catch (e) {
+      await _clearTokens();
+      return false;
+    }
+  }
+
+  Future<Response> _retry(RequestOptions requestOptions) async {
+    final options = Options(
+      method: requestOptions.method,
+      headers: {
+        ...requestOptions.headers,
+        'Authorization': 'Bearer $_accessToken',
+      },
+    );
+
+    return _dio.request(
+      requestOptions.path,
+      data: requestOptions.data,
+      queryParameters: requestOptions.queryParameters,
+      options: options,
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // PUBLIC GETTERS
+  // ══════════════════════════════════════════════════════════
 
   String? get accessToken => _accessToken;
   bool get isLoggedIn => _accessToken != null;
 
-  // Send OTP code to email
-  Future<ApiResponse> sendOTP(String email) async {
-    print('========== SEND OTP ==========');
-    print('Email: $email');
-    print('Full URL: $baseUrl/auth/send-code');
+  // ══════════════════════════════════════════════════════════
+  // AUTH METHODS
+  // ══════════════════════════════════════════════════════════
 
+  /// OTP kod yuborish
+  Future<OTPResponse> sendOTP(String email) async {
     try {
       final response = await _dio.post(
         '/auth/send-code',
         data: {'email': email},
       );
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Data: ${response.data}');
-
-      return ApiResponse(
+      return OTPResponse(
         success: true,
-        message: response.data['message'] ?? 'Code sent successfully',
+        message: response.data['message'],
+        expiresIn: response.data['expires_in'] ?? 120,
       );
     } on DioException catch (e) {
-      print('========== DIO ERROR ==========');
-      print('Error Type: ${e.type}');
-      print('Error Message: ${e.message}');
-      print('Response: ${e.response}');
-      print('Response Data: ${e.response?.data}');
-      print('Response Status: ${e.response?.statusCode}');
-      print('================================');
-      return _handleError(e);
-    } catch (e) {
-      print('========== GENERAL ERROR ==========');
-      print('Error: $e');
-      print('====================================');
-      return ApiResponse(success: false, message: e.toString());
+      return OTPResponse(
+        success: false,
+        message: _getErrorMessage(e),
+      );
     }
   }
 
-  // Verify OTP and login
-  Future<AuthResponse> verifyOTP(String email, String code) async {
+  /// OTP tekshirish va login
+  Future<AuthResponse> verifyOTP(
+    String email,
+    String code, {
+    Map<String, dynamic>? deviceInfo,
+  }) async {
     try {
       final response = await _dio.post(
         '/auth/verify-code',
-        data: {'email': email, 'code': code},
+        data: {
+          'email': email,
+          'code': code,
+          if (deviceInfo != null) 'device_info': deviceInfo,
+        },
       );
 
       final data = response.data;
-      final token = data['access_token'];
-      final isNewUser = data['is_new_user'] ?? false;
-
-      // Save token
-      await _saveToken(token);
+      
+      // Tokenlarni saqlash
+      await _saveTokens(
+        data['access_token'],
+        data['refresh_token'],
+      );
 
       return AuthResponse(
         success: true,
-        accessToken: token,
-        isNewUser: isNewUser,
+        isNewUser: data['is_new_user'] ?? false,
       );
     } on DioException catch (e) {
-      final error = _handleError(e);
-      return AuthResponse(success: false, message: error.message);
+      return AuthResponse(
+        success: false,
+        message: _getErrorMessage(e),
+      );
     }
   }
 
-  // Logout
+  /// Logout
   Future<void> logout() async {
-    await _clearToken();
+    try {
+      await _dio.post('/auth/logout');
+    } catch (e) {
+      // Xato bo'lsa ham tokenlarni o'chirish
+    }
+    await _clearTokens();
   }
 
-  // Check if user is authenticated
+  /// Auth tekshirish
   Future<bool> checkAuth() async {
-    await _loadToken();
-    return _accessToken != null;
+    await _loadTokens();
+    
+    if (_accessToken == null) return false;
+
+    try {
+      // Token ishlashini tekshirish
+      await _dio.get('/users/me');
+      return true;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        // Token eskirgan, refresh qilib ko'rish
+        return await _tryRefreshToken();
+      }
+      return false;
+    }
   }
 
-  // Error handler
-  ApiResponse _handleError(DioException e) {
-    String message = 'Unknown error occurred';
+  // ══════════════════════════════════════════════════════════
+  // GENERIC API METHODS
+  // ══════════════════════════════════════════════════════════
 
-    if (e.response != null) {
-      final data = e.response?.data;
+  Future<Response> get(String path, {Map<String, dynamic>? params}) async {
+    return _dio.get(path, queryParameters: params);
+  }
+
+  Future<Response> post(String path, {dynamic data}) async {
+    return _dio.post(path, data: data);
+  }
+
+  Future<Response> patch(String path, {dynamic data}) async {
+    return _dio.patch(path, data: data);
+  }
+
+  Future<Response> delete(String path) async {
+    return _dio.delete(path);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // HELPERS
+  // ══════════════════════════════════════════════════════════
+
+  String _getErrorMessage(DioException e) {
+    // Server xatosi
+    if (e.response?.data != null) {
+      final data = e.response!.data;
       if (data is Map && data['detail'] != null) {
-        message = data['detail'];
-      } else if (e.response?.statusCode == 400) {
-        message = 'Invalid request';
-      } else if (e.response?.statusCode == 401) {
-        message = 'Unauthorized';
-      } else if (e.response?.statusCode == 500) {
-        message = 'Server error';
+        return data['detail'].toString();
       }
-    } else if (e.type == DioExceptionType.connectionTimeout) {
-      message = 'Connection timeout';
-    } else if (e.type == DioExceptionType.connectionError) {
-      message = 'Network error';
     }
 
-    return ApiResponse(success: false, message: message);
+    // Status code bo'yicha
+    switch (e.response?.statusCode) {
+      case 400:
+        return 'Noto\'g\'ri so\'rov';
+      case 401:
+        return 'Avtorizatsiya xatosi';
+      case 403:
+        return 'Ruxsat yo\'q';
+      case 404:
+        return 'Topilmadi';
+      case 429:
+        return 'Juda ko\'p so\'rov. Keyinroq urinib ko\'ring';
+      case 500:
+        return 'Server xatosi';
+    }
+
+    // Connection xatolari
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Internet aloqasi sekin';
+      case DioExceptionType.connectionError:
+        return 'Internet aloqasi yo\'q';
+      default:
+        return 'Xatolik yuz berdi';
+    }
+  }
+
+  void _log(String type, String message) {
+    if (kDebugMode) {
+      print('[$type] $message');
+    }
   }
 }
+
+// ══════════════════════════════════════════════════════════
+// RESPONSE MODELS
+// ══════════════════════════════════════════════════════════
 
 class ApiResponse {
   final bool success;
   final String? message;
   final dynamic data;
 
-  ApiResponse({required this.success, this.message, this.data});
+  ApiResponse({
+    required this.success,
+    this.message,
+    this.data,
+  });
+}
+
+class OTPResponse {
+  final bool success;
+  final String? message;
+  final int expiresIn;
+
+  OTPResponse({
+    required this.success,
+    this.message,
+    this.expiresIn = 120,
+  });
 }
 
 class AuthResponse {
   final bool success;
-  final String? accessToken;
-  final bool isNewUser;
   final String? message;
+  final bool isNewUser;
 
   AuthResponse({
     required this.success,
-    this.accessToken,
-    this.isNewUser = false,
     this.message,
+    this.isNewUser = false,
   });
 }

@@ -11,7 +11,7 @@ import '../bloc/auth_bloc.dart';
 class OTPVerificationPage extends StatefulWidget {
   final String email;
 
-  const OTPVerificationPage({super.key, required this.email});
+  const OTPVerificationPage({super.key, required this.email});  
 
   @override
   State<OTPVerificationPage> createState() => _OTPVerificationPageState();
@@ -147,7 +147,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       listener: (context, state) {
         if (state is AuthAuthenticated) {
           context.go('/dashboard');
-        } else if (state is AuthOTPSentState) {
+        } else if (state is AuthOTPSentSuccess) {
           _startCountdown();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

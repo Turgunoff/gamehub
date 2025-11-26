@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppColors.bgPrimary,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthOTPSentState) {
+          if (state is AuthOTPSentSuccess) {
             context.push('/otp-verification', extra: state.email);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
