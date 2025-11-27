@@ -51,10 +51,20 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     print('📝 [ProfileBloc] Profilni yangilash so\'rovi');
     print('📤 [ProfileBloc] Yuborilayotgan ma\'lumotlar:');
     print('   - Nickname: ${event.nickname}');
+    print('   - Full Name: ${event.fullName}');
+    print('   - Phone: ${event.phone}');
+    print('   - Birth Date: ${event.birthDate}');
+    print('   - Gender: ${event.gender}');
+    print('   - Region: ${event.region}');
+    print('   - Language: ${event.language}');
+    print('   - Bio: ${event.bio}');
+    print('   - Telegram: ${event.telegram}');
+    print('   - Instagram: ${event.instagram}');
+    print('   - YouTube: ${event.youtube}');
+    print('   - Discord: ${event.discord}');
     print('   - PES ID: ${event.pesId}');
     print('   - Team Strength: ${event.teamStrength}');
-    print('   - Region: ${event.region}');
-    print('   - Bio: ${event.bio}');
+    print('   - Available Hours: ${event.availableHours}');
 
     final currentState = state;
     if (currentState is ProfileLoaded) {
@@ -65,19 +75,29 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       print('🔄 [ProfileBloc] API so\'rovi: PATCH /users/me');
       final profile = await _apiService.updateProfile(
         nickname: event.nickname,
-        pesId: event.pesId,
-        teamStrength: event.teamStrength,
+        fullName: event.fullName,
+        phone: event.phone,
+        birthDate: event.birthDate,
+        gender: event.gender,
         region: event.region,
         bio: event.bio,
+        language: event.language,
+        telegram: event.telegram,
+        instagram: event.instagram,
+        youtube: event.youtube,
+        discord: event.discord,
+        pesId: event.pesId,
+        teamStrength: event.teamStrength,
+        availableHours: event.availableHours,
       );
       print('✅ [ProfileBloc] Profil muvaffaqiyatli yangilandi');
       print('📊 [ProfileBloc] Yangilangan profil ma\'lumotlari:');
       print('   - Nickname: ${profile.nickname}');
+      print('   - Full Name: ${profile.fullName}');
       print('   - PES ID: ${profile.pesId}');
       print('   - Team Strength: ${profile.teamStrength}');
       print('   - Region: ${profile.region}');
       print('   - Bio: ${profile.bio}');
-      print('   - Avatar URL: ${profile.avatarUrl}');
       emit(ProfileUpdateSuccess(profile));
 
       // Profilni qayta yuklash
