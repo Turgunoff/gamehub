@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
+import 'package:gamehub/core/models/profile_model.dart';
 
 /// Profile ekranidagi PES info card widget'i
 /// PES ID va Team Strength ma'lumotlarini ko'rsatadi
 class ProfilePESInfoCard extends StatelessWidget {
-  const ProfilePESInfoCard({super.key});
+  final ProfileModel? profile;
+
+  const ProfilePESInfoCard({super.key, this.profile});
 
   @override
   Widget build(BuildContext context) {
+    final pesId = profile?.pesId ?? '-';
+    final teamStrength = profile?.teamStrength;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -46,12 +52,12 @@ class ProfilePESInfoCard extends StatelessWidget {
                 child: Column(
                   children: [
                     // PES ID Row
-                    _buildPESIDRow(),
+                    _buildPESIDRow(context, pesId),
                     const SizedBox(height: 20),
                     Container(height: 1, color: Colors.white.withOpacity(0.1)),
                     const SizedBox(height: 20),
                     // Team Strength Row
-                    _buildTeamStrengthRow(),
+                    _buildTeamStrengthRow(teamStrength),
                   ],
                 ),
               ),
@@ -63,7 +69,7 @@ class ProfilePESInfoCard extends StatelessWidget {
   }
 
   /// PES ID qatorini ko'rsatuvchi widget
-  Widget _buildPESIDRow() {
+  Widget _buildPESIDRow(BuildContext context, String pesId) {
     return Row(
       children: [
         Container(
@@ -93,9 +99,9 @@ class ProfilePESInfoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                '123-456-789',
-                style: TextStyle(
+              Text(
+                pesId,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -105,22 +111,37 @@ class ProfilePESInfoCard extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          onPressed: () {
-            HapticFeedback.mediumImpact();
-            // Copy to clipboard logic here
-          },
-          icon: Icon(
-            Icons.copy,
-            color: Colors.white.withOpacity(0.6),
+        if (pesId != '-')
+          IconButton(
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              Clipboard.setData(ClipboardData(text: pesId));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('PES ID nusxalandi'),
+                  backgroundColor: const Color(0xFF1A1F3A),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.copy,
+              color: Colors.white.withOpacity(0.6),
+            ),
           ),
-        ),
       ],
     );
   }
 
   /// Team Strength qatorini ko'rsatuvchi widget
-  Widget _buildTeamStrengthRow() {
+  Widget _buildTeamStrengthRow(int? teamStrength) {
+    final strengthValue = teamStrength != null
+        ? _formatNumber(teamStrength)
+        : '-';
+
     return Row(
       children: [
         Container(
@@ -150,53 +171,26 @@ class ProfilePESInfoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    '4,285',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.trending_up,
-                          size: 12,
-                          color: Colors.green,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          '+125',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Text(
+                strengthValue,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K'.replaceAll('.', ',');
+    }
+    return number.toString();
   }
 }
 

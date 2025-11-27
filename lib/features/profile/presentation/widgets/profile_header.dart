@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:gamehub/core/widgets/optimized_image.dart';
+import 'package:gamehub/core/models/profile_model.dart';
 
 /// Profile ekranining header qismi
 /// Avatar, username va online statusni ko'rsatadi
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final ProfileModel? profile;
+
+  const ProfileHeader({super.key, this.profile});
 
   @override
   Widget build(BuildContext context) {
+    final nickname = profile?.nickname ?? 'GAMER';
+    final level = profile?.level ?? 1;
+    final avatarUrl = profile?.avatarUrl;
+    final isVerified = profile?.isVerified ?? false;
+
     return Column(
       children: [
         // Avatar with static glow
@@ -47,17 +55,23 @@ class ProfileHeader extends StatelessWidget {
                 border: Border.all(color: const Color(0xFF0A0E1A), width: 4),
               ),
               child: ClipOval(
-                child: OptimizedImage(
-                  imageUrl: 'https://via.placeholder.com/150',
-                  fit: BoxFit.cover,
-                  width: 130,
-                  height: 130,
-                  errorWidget: const Icon(
-                    Icons.person,
-                    size: 60,
-                    color: Color(0xFF6C5CE7),
-                  ),
-                ),
+                child: avatarUrl != null && avatarUrl.isNotEmpty
+                    ? OptimizedImage(
+                        imageUrl: avatarUrl,
+                        fit: BoxFit.cover,
+                        width: 130,
+                        height: 130,
+                        errorWidget: const Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Color(0xFF6C5CE7),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.person,
+                        size: 60,
+                        color: Color(0xFF6C5CE7),
+                      ),
               ),
             ),
             // Level Badge
@@ -82,14 +96,14 @@ class ProfileHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star, size: 14, color: Colors.white),
-                    SizedBox(width: 4),
+                    const Icon(Icons.star, size: 14, color: Colors.white),
+                    const SizedBox(width: 4),
                     Text(
-                      'LVL 42',
-                      style: TextStyle(
+                      'LVL $level',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -99,6 +113,24 @@ class ProfileHeader extends StatelessWidget {
                 ),
               ),
             ),
+            // Verified Badge
+            if (isVerified)
+              Positioned(
+                top: 5,
+                right: 5,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF00FB94),
+                  ),
+                  child: const Icon(
+                    Icons.verified,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 20),
@@ -107,9 +139,9 @@ class ProfileHeader extends StatelessWidget {
           shaderCallback: (bounds) => const LinearGradient(
             colors: [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
           ).createShader(bounds),
-          child: const Text(
-            'CYBER_STRIKER',
-            style: TextStyle(
+          child: Text(
+            nickname.toUpperCase(),
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
               color: Colors.white,

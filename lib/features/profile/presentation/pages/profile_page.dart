@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/models/profile_model.dart';
+import '../bloc/profile_bloc.dart';
+import '../bloc/profile_event.dart';
+import '../bloc/profile_state.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_stats_section.dart';
 import '../widgets/profile_pes_info_card.dart';
@@ -32,6 +37,8 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       }
     });
+    // Profil ma'lumotlarini yuklash
+    context.read<ProfileBloc>().add(ProfileLoadRequested());
   }
 
   @override
@@ -42,52 +49,77 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // Static Background (No animation)
-          _buildStaticBackground(),
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      builder: (context, state) {
+        // Profil ma'lumotlari
+        ProfileModel? profile;
+        bool isLoading = false;
 
-          // Main Content
-          CustomScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Custom App Bar with parallax effect
-              _buildSliverAppBar(),
+        if (state is ProfileLoading) {
+          isLoading = true;
+        } else if (state is ProfileLoaded) {
+          profile = state.user.profile;
+        } else if (state is ProfileUpdating) {
+          profile = state.user.profile;
+        }
 
-              // Profile Content
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    // Stats Cards
-                    const ProfileStatsSection(),
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A0E1A),
+          extendBodyBehindAppBar: true,
+          body: Stack(
+            children: [
+              // Static Background (No animation)
+              _buildStaticBackground(),
 
-                    // PES Info Cards
-                    const ProfilePESInfoCard(),
+              // Main Content
+              CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // Custom App Bar with parallax effect
+                  _buildSliverAppBar(profile),
 
-                    // Performance Chart
-                    const ProfilePerformanceChart(),
+                  // Profile Content
+                  SliverToBoxAdapter(
+                    child: isLoading
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(50),
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF6C5CE7),
+                              ),
+                            ),
+                          )
+                        : Column(
+                            children: [
+                              // Stats Cards
+                              ProfileStatsSection(profile: profile),
 
-                    // Achievements
-                    const ProfileAchievementsSection(),
+                              // PES Info Cards
+                              ProfilePESInfoCard(profile: profile),
 
-                    // Recent Activity
-                    const ProfileRecentActivity(),
+                              // Performance Chart
+                              const ProfilePerformanceChart(),
 
-                    const SizedBox(height: 100),
-                  ],
-                ),
+                              // Achievements
+                              const ProfileAchievementsSection(),
+
+                              // Recent Activity
+                              const ProfileRecentActivity(),
+
+                              const SizedBox(height: 100),
+                            ],
+                          ),
+                  ),
+                ],
               ),
+
+              // Floating Action Button (No animation)
+              const ProfileFloatingEditButton(),
             ],
           ),
-
-          // Floating Action Button (No animation)
-          const ProfileFloatingEditButton(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -147,7 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSliverAppBar() {
+  Widget _buildSliverAppBar(ProfileModel? profile) {
     return SliverAppBar(
       expandedHeight: 380,
       pinned: true,
@@ -181,7 +213,7 @@ class _ProfilePageState extends State<ProfilePage> {
               bottom: 40,
               left: 0,
               right: 0,
-              child: const ProfileHeader(),
+              child: ProfileHeader(profile: profile),
             ),
           ],
         ),
