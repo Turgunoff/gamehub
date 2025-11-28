@@ -140,6 +140,47 @@ class ApiService {
     );
     return response.data;
   }
+
+  /// Avatar yuklash
+  Future<AvatarUploadResponse> uploadAvatar(String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          filePath,
+          filename: 'avatar.jpg',
+        ),
+      });
+
+      final response = await _dio.post(
+        '/upload/avatar',
+        data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+        ),
+      );
+
+      return AvatarUploadResponse(
+        success: true,
+        avatarUrl: response.data['avatar_url'],
+        message: response.data['message'],
+      );
+    } on DioException catch (e) {
+      return AvatarUploadResponse(
+        success: false,
+        message: _getErrorMessage(e),
+      );
+    }
+  }
+
+  /// Avatar o'chirish
+  Future<bool> deleteAvatar() async {
+    try {
+      await _dio.delete('/upload/avatar');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
   // ══════════════════════════════════════════════════════════
   // TOKEN MANAGEMENT
   // ══════════════════════════════════════════════════════════
@@ -389,4 +430,12 @@ class AuthResponse {
   final bool isNewUser;
 
   AuthResponse({required this.success, this.message, this.isNewUser = false});
+}
+
+class AvatarUploadResponse {
+  final bool success;
+  final String? avatarUrl;
+  final String? message;
+
+  AvatarUploadResponse({required this.success, this.avatarUrl, this.message});
 }

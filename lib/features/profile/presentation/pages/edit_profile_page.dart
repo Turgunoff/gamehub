@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/models/profile_model.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../core/services/image_picker_service.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -60,7 +62,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   // Avatar
   File? _selectedImage;
-  final ImagePicker _picker = ImagePicker();
+  String? _currentAvatarUrl;
+  bool _isUploadingAvatar = false;
+  final ImagePickerService _imagePickerService = ImagePickerService();
+  final ApiService _apiService = ApiService();
 
   bool _isInitialized = false;
   bool _isLoading = false;
@@ -145,6 +150,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _pesIdController.text = profile.pesId ?? '';
     _strengthController.text = profile.teamStrength?.toString() ?? '';
     _availableHoursController.text = profile.availableHours ?? '';
+
+    // Avatar
+    _currentAvatarUrl = profile.avatarUrl;
 
     // O'ynash vaqtini parse qilish
     if (profile.availableHours != null && profile.availableHours!.contains('-')) {
@@ -472,9 +480,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           Container(
             width: 120,
             height: 120,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const SweepGradient(
+              gradient: SweepGradient(
                 colors: [
                   Color(0xFF00D9FF),
                   Color(0xFF6C5CE7),
@@ -490,33 +498,52 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 color: Color(0xFF1A1F3A),
               ),
               child: ClipOval(
-                child: _selectedImage != null
-                    ? Image.file(
-                        _selectedImage!,
-                        fit: BoxFit.cover,
-                        width: 114,
-                        height: 114,
+                child: _isUploadingAvatar
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF6C5CE7),
+                          strokeWidth: 2,
+                        ),
                       )
-                    : const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Color(0xFF6C5CE7),
-                      ),
+                    : _selectedImage != null
+                        ? Image.file(
+                            _selectedImage!,
+                            fit: BoxFit.cover,
+                            width: 114,
+                            height: 114,
+                          )
+                        : _currentAvatarUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: _currentAvatarUrl!,
+                                fit: BoxFit.cover,
+                                width: 114,
+                                height: 114,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF6C5CE7),
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => const Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: Color(0xFF6C5CE7),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Color(0xFF6C5CE7),
+                              ),
               ),
             ),
           ),
+          // Rasm tanlash tugmasi
           Positioned(
             bottom: 0,
             right: 0,
             child: GestureDetector(
-              onTap: () async {
-                final picked = await _picker.pickImage(
-                  source: ImageSource.gallery,
-                );
-                if (picked != null) {
-                  setState(() => _selectedImage = File(picked.path));
-                }
-              },
+              onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: const BoxDecoration(
@@ -533,6 +560,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ),
           ),
+          // Rasmni o'chirish tugmasi
+          if (_selectedImage != null || _currentAvatarUrl != null)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              child: GestureDetector(
+                onTap: _isUploadingAvatar ? null : _removeAvatar,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.9),
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
           // Verified badge
           if (_isPhoneVerified)
             Positioned(
@@ -554,6 +602,100 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ],
       ),
     );
+  }
+
+  /// Rasm tanlash va yuklash
+  Future<void> _pickAndUploadAvatar() async {
+    HapticFeedback.lightImpact();
+
+    final file = await _imagePickerService.pickAndCropAvatar(context);
+    if (file == null) return;
+
+    setState(() {
+      _selectedImage = file;
+      _isUploadingAvatar = true;
+    });
+
+    try {
+      final response = await _apiService.uploadAvatar(file.path);
+
+      if (response.success && response.avatarUrl != null) {
+        setState(() {
+          _currentAvatarUrl = response.avatarUrl;
+          _isUploadingAvatar = false;
+        });
+        _showSnackBar('Avatar muvaffaqiyatli yuklandi!');
+      } else {
+        setState(() {
+          _selectedImage = null;
+          _isUploadingAvatar = false;
+        });
+        _showSnackBar(response.message ?? 'Avatar yuklashda xatolik', isError: true);
+      }
+    } catch (e) {
+      setState(() {
+        _selectedImage = null;
+        _isUploadingAvatar = false;
+      });
+      _showSnackBar('Avatar yuklashda xatolik: $e', isError: true);
+    }
+  }
+
+  /// Avatarni o'chirish
+  Future<void> _removeAvatar() async {
+    HapticFeedback.lightImpact();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F3A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Avatarni o\'chirish',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Haqiqatan ham avatarni o\'chirmoqchimisiz?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Bekor qilish'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'O\'chirish',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isUploadingAvatar = true);
+
+    try {
+      final success = await _apiService.deleteAvatar();
+
+      if (success) {
+        setState(() {
+          _selectedImage = null;
+          _currentAvatarUrl = null;
+          _isUploadingAvatar = false;
+        });
+        _showSnackBar('Avatar o\'chirildi');
+      } else {
+        setState(() => _isUploadingAvatar = false);
+        _showSnackBar('Avatar o\'chirishda xatolik', isError: true);
+      }
+    } catch (e) {
+      setState(() => _isUploadingAvatar = false);
+      _showSnackBar('Avatar o\'chirishda xatolik: $e', isError: true);
+    }
   }
 
   Widget _buildPersonalSection() {
