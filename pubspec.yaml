@@ -36,7 +36,7 @@ dependencies:
 
   # --- 5. Forms & Inputs ---
   image_picker: ^1.1.2 # Rasm yuklash (Skrinshot)
-  image_cropper: ^8.0.2 # Rasmni kvadrat kesish
+  crop_your_image: ^1.1.0 # Rasmni kvadrat kesish (Pure Flutter)
   pinput: ^5.0.0 # SMS kod (OTP) kiritish uchun (Juda muhim)
   mask_text_input_formatter: ^2.9.0 # Telefon raqam formati (+998 ##...)
   # country_picker shart emas, agar faqat O'zbekiston/MDH bo'lsa.
@@ -54,6 +54,7 @@ dependencies:
   package_info_plus: ^9.0.0
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.2.5
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:

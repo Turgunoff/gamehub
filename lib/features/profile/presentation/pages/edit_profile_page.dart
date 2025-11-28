@@ -91,6 +91,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final List<String> _languages = ['uz', 'ru', 'en'];
 
   @override
+  void initState() {
+    super.initState();
+    // Profil ma'lumotlarini yangilash
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileBloc>().add(ProfileLoadRequested());
+    });
+  }
+
+  @override
   void dispose() {
     _nicknameController.dispose();
     _fullNameController.dispose();
@@ -151,8 +160,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _strengthController.text = profile.teamStrength?.toString() ?? '';
     _availableHoursController.text = profile.availableHours ?? '';
 
-    // Avatar
-    _currentAvatarUrl = profile.avatarUrl;
+    // Avatar - listener da yangilanadi, bu yerda faqat birinchi marta
+    // _currentAvatarUrl listener orqali boshqariladi
 
     // O'ynash vaqtini parse qilish
     if (profile.availableHours != null && profile.availableHours!.contains('-')) {
@@ -332,6 +341,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
       listener: (context, state) {
         if (state is ProfileLoaded) {
           _initializeWithProfile(state.user.profile);
+          // Avatar URL ni har doim serverdan yangilash
+          // (lokal o'zgarish bo'lmagan bo'lsa - ya'ni upload qilinmagan bo'lsa)
+          if (_selectedImage == null) {
+            setState(() {
+              _currentAvatarUrl = state.user.profile?.avatarUrl;
+            });
+          }
         } else if (state is ProfileUpdateSuccess) {
           setState(() => _isLoading = false);
           _showSnackBar('Profil muvaffaqiyatli saqlandi!');
@@ -624,6 +640,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _currentAvatarUrl = response.avatarUrl;
           _isUploadingAvatar = false;
         });
+        // Profilni qayta yuklash - boshqa sahifalarda ham ko'rinishi uchun
+        if (mounted) {
+          context.read<ProfileBloc>().add(ProfileLoadRequested());
+        }
         _showSnackBar('Avatar muvaffaqiyatli yuklandi!');
       } else {
         setState(() {
@@ -687,6 +707,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _currentAvatarUrl = null;
           _isUploadingAvatar = false;
         });
+        // Profilni qayta yuklash
+        if (mounted) {
+          context.read<ProfileBloc>().add(ProfileLoadRequested());
+        }
         _showSnackBar('Avatar o\'chirildi');
       } else {
         setState(() => _isUploadingAvatar = false);
