@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:ui';
+
+import '../../../../core/services/settings_service.dart';
 import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
@@ -15,25 +20,53 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  // Settings service
+  final SettingsService _settingsService = SettingsService();
+
   // Settings values
   bool _notificationsEnabled = true;
-  bool _soundEnabled = true;
   bool _vibrationEnabled = true;
-  bool _darkMode = true;
-  String _selectedLanguage = 'O\'zbek';
-  double _graphicsQuality = 2; // 0-Low, 1-Medium, 2-High
+  bool _tournamentReminders = true;
+  String _selectedLanguage = 'uz';
+
+  // App info
+  String _appVersion = '1.0.0';
+  String _buildNumber = '1';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+    _loadAppInfo();
+  }
+
+  Future<void> _loadSettings() async {
+    await _settingsService.init();
+    if (!mounted) return;
+
+    setState(() {
+      _notificationsEnabled = _settingsService.notificationsEnabled;
+      _vibrationEnabled = _settingsService.vibrationEnabled;
+      _tournamentReminders = _settingsService.tournamentReminders;
+      // Hozirgi locale dan tilni olish
+      _selectedLanguage = context.locale.languageCode;
+    });
+  }
+
+  Future<void> _loadAppInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = packageInfo.version;
+      _buildNumber = packageInfo.buildNumber;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
-          // Logout bo'lgandan keyin ProfileBloc ni tozalash
-          print(
-            '🔄 [SettingsPage] Logout bo\'ldi, ProfileBloc tozalanmoqda...',
-          );
           context.read<ProfileBloc>().add(ProfileResetRequested());
-          // Logout bo'lgandan keyin login sahifasiga o'tkazish
           context.go('/auth');
         }
       },
@@ -41,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: const Color(0xFF0A0E1A),
         body: Stack(
           children: [
-            // Simple gradient background (no animation)
+            // Background
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -52,7 +85,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
 
-            // Subtle pattern overlay
+            // Grid pattern
             CustomPaint(painter: GridPatternPainter(), child: Container()),
 
             // Main content
@@ -66,8 +99,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.only(bottom: 20),
                       child: Column(
                         children: [
-                          _buildProfileSection(),
-                          _buildGameSettingsSection(),
                           _buildNotificationSection(),
                           _buildAppearanceSection(),
                           _buildAccountSection(),
@@ -90,10 +121,9 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          // Back button
           GestureDetector(
             onTap: () {
-              HapticFeedback.lightImpact();
+              if (_vibrationEnabled) HapticFeedback.lightImpact();
               Navigator.pop(context);
             },
             child: Container(
@@ -110,12 +140,9 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
-
           const SizedBox(width: 20),
-
-          // Title
           const Text(
-            'SETTINGS',
+            'SOZLAMALAR',
             style: TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -123,230 +150,50 @@ class _SettingsPageState extends State<SettingsPage> {
               letterSpacing: 2,
             ),
           ),
-
-          const Spacer(),
-
-          // Profile indicator
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 20),
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildProfileSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF6C5CE7).withOpacity(0.2),
-            const Color(0xFF00D9FF).withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF6C5CE7).withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 30),
-          ),
-
-          const SizedBox(width: 16),
-
-          // User info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'CYBER_STRIKER',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'PES ID: 123-456-789',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Edit button
-          IconButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              // Navigate to edit profile
-            },
-            icon: Icon(Icons.edit, color: Colors.white.withOpacity(0.7)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGameSettingsSection() {
-    return _buildSection(
-      title: 'GAME SETTINGS',
-      icon: Icons.sports_esports,
-      color: const Color(0xFFFFB800),
-      children: [
-        _buildSettingTile(
-          icon: Icons.speed,
-          title: 'Graphics Quality',
-          subtitle: _getGraphicsQualityText(),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _getGraphicsQualityColor().withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: _getGraphicsQualityColor().withOpacity(0.5),
-              ),
-            ),
-            child: Text(
-              _getGraphicsQualityText(),
-              style: TextStyle(
-                color: _getGraphicsQualityColor(),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          onTap: () => _showGraphicsQualityDialog(),
-        ),
-
-        _buildDivider(),
-
-        _buildSwitchTile(
-          icon: Icons.volume_up,
-          title: 'Sound Effects',
-          subtitle: 'Game sounds and music',
-          value: _soundEnabled,
-          onChanged: (value) {
-            setState(() => _soundEnabled = value);
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSwitchTile(
-          icon: Icons.vibration,
-          title: 'Vibration',
-          subtitle: 'Haptic feedback',
-          value: _vibrationEnabled,
-          onChanged: (value) {
-            setState(() => _vibrationEnabled = value);
-            if (value) HapticFeedback.mediumImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSettingTile(
-          icon: Icons.gamepad,
-          title: 'Controls',
-          subtitle: 'Customize game controls',
-          trailing: const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white54,
-            size: 16,
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            // Navigate to controls settings
-          },
-        ),
-      ],
     );
   }
 
   Widget _buildNotificationSection() {
     return _buildSection(
-      title: 'NOTIFICATIONS',
+      title: 'BILDIRISHNOMALAR',
       icon: Icons.notifications,
       color: const Color(0xFF00FB94),
       children: [
         _buildSwitchTile(
           icon: Icons.notifications_active,
-          title: 'Push Notifications',
-          subtitle: 'Receive match and tournament alerts',
+          title: 'Push bildirishnomalar',
+          subtitle: 'O\'yin va turnir xabarlari',
           value: _notificationsEnabled,
-          onChanged: (value) {
+          onChanged: (value) async {
             setState(() => _notificationsEnabled = value);
-            HapticFeedback.lightImpact();
+            await _settingsService.setNotificationsEnabled(value);
+            if (_vibrationEnabled) HapticFeedback.lightImpact();
           },
         ),
-
         _buildDivider(),
-
-        _buildSettingTile(
-          icon: Icons.message,
-          title: 'Message Alerts',
-          subtitle: 'Team and private messages',
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'ON',
-              style: TextStyle(
-                color: Colors.green,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSettingTile(
+        _buildSwitchTile(
           icon: Icons.emoji_events,
-          title: 'Tournament Reminders',
-          subtitle: 'Get notified before tournaments',
-          trailing: const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white54,
-            size: 16,
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
+          title: 'Turnir eslatmalari',
+          subtitle: 'Turnir boshlanishidan oldin xabar',
+          value: _tournamentReminders,
+          onChanged: (value) async {
+            setState(() => _tournamentReminders = value);
+            await _settingsService.setTournamentReminders(value);
+            if (_vibrationEnabled) HapticFeedback.lightImpact();
+          },
+        ),
+        _buildDivider(),
+        _buildSwitchTile(
+          icon: Icons.vibration,
+          title: 'Tebranish',
+          subtitle: 'Tugmalarni bosganda tebranish',
+          value: _vibrationEnabled,
+          onChanged: (value) async {
+            setState(() => _vibrationEnabled = value);
+            await _settingsService.setVibrationEnabled(value);
+            if (value) HapticFeedback.mediumImpact();
           },
         ),
       ],
@@ -355,27 +202,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildAppearanceSection() {
     return _buildSection(
-      title: 'APPEARANCE',
+      title: 'KO\'RINISH',
       icon: Icons.palette,
       color: const Color(0xFF6C5CE7),
       children: [
-        _buildSwitchTile(
-          icon: Icons.dark_mode,
-          title: 'Dark Mode',
-          subtitle: 'Reduce eye strain',
-          value: _darkMode,
-          onChanged: (value) {
-            setState(() => _darkMode = value);
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
         _buildSettingTile(
           icon: Icons.language,
-          title: 'Language',
-          subtitle: _selectedLanguage,
+          title: 'Til',
+          subtitle: _selectedLanguage == 'uz' ? 'O\'zbek' : 'English',
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -388,7 +222,10 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.language, size: 14, color: Color(0xFF00D9FF)),
+                Text(
+                  _selectedLanguage == 'uz' ? '🇺🇿' : '🇬🇧',
+                  style: const TextStyle(fontSize: 14),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   _selectedLanguage.toUpperCase(),
@@ -409,72 +246,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildAccountSection() {
     return _buildSection(
-      title: 'ACCOUNT',
+      title: 'HISOB',
       icon: Icons.person,
       color: const Color(0xFFFF6B6B),
       children: [
         _buildSettingTile(
-          icon: Icons.security,
-          title: 'Privacy & Security',
-          subtitle: 'Manage your account security',
-          trailing: const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white54,
-            size: 16,
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSettingTile(
-          icon: Icons.link,
-          title: 'Connected Accounts',
-          subtitle: 'Manage linked social accounts',
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              '2 LINKED',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSettingTile(
-          icon: Icons.backup,
-          title: 'Backup & Restore',
-          subtitle: 'Save your game progress',
-          trailing: const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white54,
-            size: 16,
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSettingTile(
           icon: Icons.logout,
-          title: 'Sign Out',
-          subtitle: 'Sign out from your account',
+          title: 'Chiqish',
+          subtitle: 'Hisobdan chiqish',
           trailing: Icon(
             Icons.logout,
             color: Colors.red.withOpacity(0.8),
@@ -489,92 +268,52 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildAboutSection() {
     return _buildSection(
-      title: 'ABOUT',
+      title: 'ILOVA HAQIDA',
       icon: Icons.info,
       color: Colors.white54,
       children: [
         _buildSettingTile(
           icon: Icons.help,
-          title: 'Help & Support',
-          subtitle: 'Get help with the app',
+          title: 'Yordam va qo\'llab-quvvatlash',
+          subtitle: 'Admin bilan bog\'lanish',
           trailing: const Icon(
             Icons.arrow_forward_ios,
             color: Colors.white54,
             size: 16,
           ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
+          onTap: () => _showSupportBottomSheet(),
         ),
-
         _buildDivider(),
-
-        _buildSettingTile(
-          icon: Icons.description,
-          title: 'Terms & Conditions',
-          subtitle: 'Read our terms of service',
-          trailing: const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white54,
-            size: 16,
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
-        _buildSettingTile(
-          icon: Icons.privacy_tip,
-          title: 'Privacy Policy',
-          subtitle: 'Learn how we protect your data',
-          trailing: const Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white54,
-            size: 16,
-          ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-        ),
-
-        _buildDivider(),
-
         _buildSettingTile(
           icon: Icons.star,
-          title: 'Rate Us',
-          subtitle: 'Help us improve with your feedback',
+          title: 'Baholash',
+          subtitle: 'Play Market da baholang',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(5, (index) {
               return Icon(
                 Icons.star,
                 size: 16,
-                color: index < 4 ? const Color(0xFFFFB800) : Colors.white24,
+                color: index < 5 ? const Color(0xFFFFB800) : Colors.white24,
               );
             }),
           ),
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
+          onTap: () => _openPlayStore(),
         ),
-
         _buildDivider(),
-
         _buildSettingTile(
           icon: Icons.code,
-          title: 'Version',
-          subtitle: 'CyberPitch v1.0.0',
+          title: 'Versiya',
+          subtitle: 'CyberPitch v$_appVersion',
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
-              'LATEST',
-              style: TextStyle(
+            child: Text(
+              'Build $_buildNumber',
+              style: const TextStyle(
                 color: Colors.white54,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -582,8 +321,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           onTap: () {
-            HapticFeedback.lightImpact();
-            // Show version details
+            if (_vibrationEnabled) HapticFeedback.lightImpact();
           },
         ),
       ],
@@ -601,7 +339,6 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header
           Padding(
             padding: const EdgeInsets.only(left: 8, bottom: 12),
             child: Row(
@@ -620,8 +357,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-
-          // Section content
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
@@ -765,139 +500,262 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  String _getGraphicsQualityText() {
-    switch (_graphicsQuality.toInt()) {
-      case 0:
-        return 'LOW';
-      case 1:
-        return 'MEDIUM';
-      case 2:
-        return 'HIGH';
-      default:
-        return 'MEDIUM';
-    }
-  }
+  void _showLanguageDialog() {
+    if (_vibrationEnabled) HapticFeedback.mediumImpact();
 
-  Color _getGraphicsQualityColor() {
-    switch (_graphicsQuality.toInt()) {
-      case 0:
-        return Colors.orange;
-      case 1:
-        return Colors.yellow;
-      case 2:
-        return Colors.green;
-      default:
-        return Colors.yellow;
-    }
-  }
-
-  void _showGraphicsQualityDialog() {
-    HapticFeedback.mediumImpact();
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F3A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Graphics Quality',
-          style: TextStyle(color: Colors.white),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
+          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        content: Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildQualityOption('Low', 0),
-            _buildQualityOption('Medium', 1),
-            _buildQualityOption('High', 2),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Tilni tanlang',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildLanguageOption('uz', 'O\'zbek', '🇺🇿'),
+            const SizedBox(height: 12),
+            _buildLanguageOption('en', 'English', '🇬🇧'),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'CANCEL',
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'APPLY',
-              style: TextStyle(color: Color(0xFF00D9FF)),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildQualityOption(String label, int value) {
-    return RadioListTile<int>(
-      title: Text(label, style: const TextStyle(color: Colors.white)),
-      value: value,
-      groupValue: _graphicsQuality.toInt(),
-      onChanged: (newValue) {
-        setState(() => _graphicsQuality = newValue!.toDouble());
-        HapticFeedback.lightImpact();
+  Widget _buildLanguageOption(String code, String name, String flag) {
+    final isSelected = _selectedLanguage == code;
+    return GestureDetector(
+      onTap: () async {
+        setState(() => _selectedLanguage = code);
+        await _settingsService.setLanguage(code);
+        if (_vibrationEnabled) HapticFeedback.lightImpact();
+        if (!mounted) return;
+        Navigator.pop(context);
+        // Tilni o'zgartirish
+        context.setLocale(Locale(code));
       },
-      activeColor: const Color(0xFF00D9FF),
-    );
-  }
-
-  void _showLanguageDialog() {
-    HapticFeedback.mediumImpact();
-    final languages = ['O\'zbek', 'Русский', 'English'];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F3A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Select Language',
-          style: TextStyle(color: Colors.white),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
+                )
+              : null,
+          color: isSelected ? null : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? Colors.transparent
+                : Colors.white.withOpacity(0.1),
+          ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: languages.map((lang) {
-            return ListTile(
-              leading: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: _selectedLanguage == lang
-                      ? const Color(0xFF00D9FF)
-                      : Colors.white12,
-                  shape: BoxShape.circle,
-                ),
-                child: _selectedLanguage == lang
-                    ? const Icon(Icons.check, color: Colors.white, size: 16)
-                    : null,
+        child: Row(
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 16),
+            Text(
+              name,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              title: Text(
-                lang,
-                style: TextStyle(
-                  color: _selectedLanguage == lang
-                      ? const Color(0xFF00D9FF)
-                      : Colors.white,
-                  fontWeight: _selectedLanguage == lang
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-              onTap: () {
-                setState(() => _selectedLanguage = lang);
-                Navigator.pop(context);
-                HapticFeedback.lightImpact();
-              },
-            );
-          }).toList(),
+            ),
+            const Spacer(),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+          ],
         ),
       ),
     );
+  }
+
+  void _showSupportBottomSheet() {
+    if (_vibrationEnabled) HapticFeedback.mediumImpact();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
+          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Row(
+              children: [
+                Icon(Icons.support_agent, color: Color(0xFF6C5CE7), size: 28),
+                SizedBox(width: 12),
+                Text(
+                  'Yordam va qo\'llab-quvvatlash',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildSupportOption(
+              icon: Icons.telegram,
+              title: 'Telegram',
+              subtitle: '@cyberpitch_support',
+              color: const Color(0xFF0088CC),
+              onTap: () => _openUrl('https://t.me/cyberpitch_support'),
+            ),
+            const SizedBox(height: 12),
+            _buildSupportOption(
+              icon: Icons.email,
+              title: 'Email',
+              subtitle: 'support@cyberpitch.uz',
+              color: const Color(0xFFFF6B6B),
+              onTap: () => _openUrl('mailto:support@cyberpitch.uz'),
+            ),
+            const SizedBox(height: 12),
+            _buildSupportOption(
+              icon: Icons.phone,
+              title: 'Telefon',
+              subtitle: '+998 90 123 45 67',
+              color: const Color(0xFF00FB94),
+              onTap: () => _openUrl('tel:+998901234567'),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSupportOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        if (_vibrationEnabled) HapticFeedback.lightImpact();
+        Navigator.pop(context);
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white.withOpacity(0.5),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _openPlayStore() async {
+    if (_vibrationEnabled) HapticFeedback.lightImpact();
+
+    // TODO: O'zingizning package name ni qo'ying
+    const packageName = 'uz.cyberpitch.app';
+    const url = 'https://play.google.com/store/apps/details?id=$packageName';
+
+    await _openUrl(url);
   }
 
   void _showSignOutDialog() {
-    HapticFeedback.mediumImpact();
+    if (_vibrationEnabled) HapticFeedback.mediumImpact();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -915,7 +773,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Sign Out',
+              'Chiqish',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -924,26 +782,25 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         content: const Text(
-          'Are you sure you want to sign out? You will need to sign in again to access your account.',
+          'Hisobdan chiqmoqchimisiz? Qayta kirish uchun login qilishingiz kerak bo\'ladi.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text(
-              'CANCEL',
+              'BEKOR',
               style: TextStyle(color: Colors.white54),
             ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              HapticFeedback.mediumImpact();
-              // Logout eventini dispatch qilish
+              if (_vibrationEnabled) HapticFeedback.mediumImpact();
               context.read<AuthBloc>().add(AuthLogoutRequested());
             },
             child: const Text(
-              'SIGN OUT',
+              'CHIQISH',
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
@@ -953,7 +810,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-// Simple grid pattern painter (no animation)
+// Grid pattern painter
 class GridPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -964,12 +821,10 @@ class GridPatternPainter extends CustomPainter {
 
     const gridSize = 50.0;
 
-    // Draw vertical lines
     for (double x = 0; x < size.width; x += gridSize) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
 
-    // Draw horizontal lines
     for (double y = 0; y < size.height; y += gridSize) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
