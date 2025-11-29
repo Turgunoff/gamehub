@@ -1,16 +1,34 @@
 import 'package:equatable/equatable.dart';
 
+/// Base event class
 abstract class ProfileEvent extends Equatable {
+  const ProfileEvent();
+
   @override
   List<Object?> get props => [];
 }
 
-class ProfileLoadRequested extends ProfileEvent {}
+/// Profilni yuklash so'rovi
+///
+/// Ilova ochilganda yoki profile page ga kirilganda chaqiriladi.
+class ProfileLoadRequested extends ProfileEvent {
+  const ProfileLoadRequested();
+}
 
-class ProfileResetRequested extends ProfileEvent {}
+/// Profilni tozalash (logout)
+///
+/// Foydalanuvchi tizimdan chiqganda chaqiriladi.
+class ProfileResetRequested extends ProfileEvent {
+  const ProfileResetRequested();
+}
 
+/// Profilni yangilash so'rovi
+///
+/// Edit profile page dan ma'lumotlar saqlanayotganda chaqiriladi.
 class ProfileUpdateRequested extends ProfileEvent {
-  // Shaxsiy
+  // ═══════════════════════════════════════════
+  // SHAXSIY MA'LUMOTLAR
+  // ═══════════════════════════════════════════
   final String? nickname;
   final String? fullName;
   final String? phone;
@@ -20,18 +38,22 @@ class ProfileUpdateRequested extends ProfileEvent {
   final String? bio;
   final String? language;
 
-  // Ijtimoiy tarmoqlar
+  // ═══════════════════════════════════════════
+  // IJTIMOIY TARMOQLAR
+  // ═══════════════════════════════════════════
   final String? telegram;
   final String? instagram;
   final String? youtube;
   final String? discord;
 
-  // O'yin
+  // ═══════════════════════════════════════════
+  // O'YIN MA'LUMOTLARI
+  // ═══════════════════════════════════════════
   final String? pesId;
   final int? teamStrength;
   final String? availableHours;
 
-  ProfileUpdateRequested({
+  const ProfileUpdateRequested({
     this.nickname,
     this.fullName,
     this.phone,
@@ -51,20 +73,8 @@ class ProfileUpdateRequested extends ProfileEvent {
 
   @override
   List<Object?> get props => [
-        nickname,
-        fullName,
-        phone,
-        birthDate,
-        gender,
-        region,
-        bio,
-        language,
-        telegram,
-        instagram,
-        youtube,
-        discord,
-        pesId,
-        teamStrength,
-        availableHours,
-      ];
+    nickname, fullName, phone, birthDate, gender, region, bio, language,
+    telegram, instagram, youtube, discord,
+    pesId, teamStrength, availableHours,
+  ];
 }

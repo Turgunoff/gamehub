@@ -1,47 +1,62 @@
 import 'package:equatable/equatable.dart';
 import '../../../../core/models/profile_model.dart';
 
-enum ProfileStatus { initial, loading, success, failure }
+/// Profile BLoC holatlari
 abstract class ProfileState extends Equatable {
+  const ProfileState();
+
   @override
   List<Object?> get props => [];
 }
 
-class ProfileInitial extends ProfileState {}
+/// Boshlang'ich holat - hech narsa yuklanmagan
+class ProfileInitial extends ProfileState {
+  const ProfileInitial();
+}
 
-class ProfileLoading extends ProfileState {}
+/// Profil yuklanmoqda
+class ProfileLoading extends ProfileState {
+  const ProfileLoading();
+}
 
+/// Profil muvaffaqiyatli yuklandi
 class ProfileLoaded extends ProfileState {
   final UserMeModel user;
 
-  ProfileLoaded(this.user);
+  const ProfileLoaded(this.user);
+
+  /// Profilni olish (qisqa yo'l)
+  ProfileModel? get profile => user.profile;
 
   @override
   List<Object?> get props => [user];
 }
 
+/// Profil yangilanmoqda (loading ko'rsatish uchun)
 class ProfileUpdating extends ProfileState {
   final UserMeModel user;
 
-  ProfileUpdating(this.user);
+  const ProfileUpdating(this.user);
 
   @override
   List<Object?> get props => [user];
 }
 
+/// Profil muvaffaqiyatli yangilandi
 class ProfileUpdateSuccess extends ProfileState {
   final ProfileModel profile;
 
-  ProfileUpdateSuccess(this.profile);
+  const ProfileUpdateSuccess(this.profile);
 
   @override
   List<Object?> get props => [profile];
 }
 
+/// Xatolik yuz berdi
 class ProfileError extends ProfileState {
   final String message;
 
-  ProfileError(this.message);
+  const ProfileError(this.message);
 
   @override
   List<Object?> get props => [message];

@@ -12,15 +12,17 @@ import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+/// Sozlamalar ekrani
+///
+/// Ilova sozlamalari: til, bildirishnomalar, hisob boshqaruvi.
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  // Settings service
+class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsService _settingsService = SettingsService();
 
   // Settings values
@@ -48,7 +50,6 @@ class _SettingsPageState extends State<SettingsPage> {
       _notificationsEnabled = _settingsService.notificationsEnabled;
       _vibrationEnabled = _settingsService.vibrationEnabled;
       _tournamentReminders = _settingsService.tournamentReminders;
-      // Hozirgi locale dan tilni olish
       _selectedLanguage = context.locale.languageCode;
     });
   }
@@ -66,7 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthUnauthenticated) {
-          context.read<ProfileBloc>().add(ProfileResetRequested());
+          context.read<ProfileBloc>().add(const ProfileResetRequested());
           context.go('/auth');
         }
       },
@@ -74,21 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: const Color(0xFF0A0E1A),
         body: Stack(
           children: [
-            // Background
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
-                ),
-              ),
-            ),
-
-            // Grid pattern
-            CustomPaint(painter: GridPatternPainter(), child: Container()),
-
-            // Main content
+            _buildBackground(),
             SafeArea(
               child: Column(
                 children: [
@@ -116,6 +103,27 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // UI QISMLARI
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildBackground() {
+    return Stack(
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
+            ),
+          ),
+        ),
+        CustomPaint(painter: _GridPatternPainter(), child: Container()),
+      ],
+    );
+  }
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -129,9 +137,9 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: const Icon(
                 Icons.arrow_back_ios_new,
@@ -154,6 +162,10 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION LAR
+  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildNotificationSection() {
     return _buildSection(
@@ -213,10 +225,10 @@ class _SettingsPageState extends State<SettingsPage> {
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF00D9FF).withOpacity(0.2),
+              color: const Color(0xFF00D9FF).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFF00D9FF).withOpacity(0.5),
+                color: const Color(0xFF00D9FF).withValues(alpha: 0.5),
               ),
             ),
             child: Row(
@@ -238,7 +250,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-          onTap: () => _showLanguageDialog(),
+          onTap: _showLanguageDialog,
         ),
       ],
     );
@@ -256,10 +268,10 @@ class _SettingsPageState extends State<SettingsPage> {
           subtitle: 'Hisobdan chiqish',
           trailing: Icon(
             Icons.logout,
-            color: Colors.red.withOpacity(0.8),
+            color: Colors.red.withValues(alpha: 0.8),
             size: 20,
           ),
-          onTap: () => _showSignOutDialog(),
+          onTap: _showSignOutDialog,
           isDestructive: true,
         ),
       ],
@@ -281,7 +293,7 @@ class _SettingsPageState extends State<SettingsPage> {
             color: Colors.white54,
             size: 16,
           ),
-          onTap: () => _showSupportBottomSheet(),
+          onTap: _showSupportBottomSheet,
         ),
         _buildDivider(),
         _buildSettingTile(
@@ -298,7 +310,7 @@ class _SettingsPageState extends State<SettingsPage> {
               );
             }),
           ),
-          onTap: () => _openPlayStore(),
+          onTap: _openPlayStore,
         ),
         _buildDivider(),
         _buildSettingTile(
@@ -308,7 +320,7 @@ class _SettingsPageState extends State<SettingsPage> {
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -327,6 +339,10 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // YORDAMCHI WIDGETLAR
+  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildSection({
     required String title,
@@ -359,9 +375,9 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
@@ -395,8 +411,8 @@ class _SettingsPageState extends State<SettingsPage> {
               height: 40,
               decoration: BoxDecoration(
                 color: isDestructive
-                    ? Colors.red.withOpacity(0.2)
-                    : Colors.white.withOpacity(0.1),
+                    ? Colors.red.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -423,7 +439,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle,
                     style: TextStyle(
                       color: isDestructive
-                          ? Colors.red.withOpacity(0.7)
+                          ? Colors.red.withValues(alpha: 0.7)
                           : Colors.white54,
                       fontSize: 12,
                     ),
@@ -453,7 +469,7 @@ class _SettingsPageState extends State<SettingsPage> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: Colors.white70, size: 20),
@@ -483,7 +499,7 @@ class _SettingsPageState extends State<SettingsPage> {
             value: value,
             onChanged: onChanged,
             activeColor: const Color(0xFF00D9FF),
-            activeTrackColor: const Color(0xFF00D9FF).withOpacity(0.3),
+            activeTrackColor: const Color(0xFF00D9FF).withValues(alpha: 0.3),
             inactiveThumbColor: Colors.white24,
             inactiveTrackColor: Colors.white12,
           ),
@@ -496,9 +512,13 @@ class _SettingsPageState extends State<SettingsPage> {
     return Container(
       height: 1,
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      color: Colors.white.withOpacity(0.05),
+      color: Colors.white.withValues(alpha: 0.05),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // DIALOGLAR
+  // ═══════════════════════════════════════════════════════════════
 
   void _showLanguageDialog() {
     if (_vibrationEnabled) HapticFeedback.mediumImpact();
@@ -523,7 +543,7 @@ class _SettingsPageState extends State<SettingsPage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -556,7 +576,6 @@ class _SettingsPageState extends State<SettingsPage> {
         if (_vibrationEnabled) HapticFeedback.lightImpact();
         if (!mounted) return;
         Navigator.pop(context);
-        // Tilni o'zgartirish
         context.setLocale(Locale(code));
       },
       child: Container(
@@ -567,12 +586,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
                 )
               : null,
-          color: isSelected ? null : Colors.white.withOpacity(0.05),
+          color: isSelected ? null : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? Colors.transparent
-                : Colors.white.withOpacity(0.1),
+                : Colors.white.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -620,7 +639,7 @@ class _SettingsPageState extends State<SettingsPage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -686,9 +705,9 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -696,7 +715,7 @@ class _SettingsPageState extends State<SettingsPage> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -718,7 +737,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -727,7 +746,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               size: 16,
             ),
           ],
@@ -745,11 +764,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _openPlayStore() async {
     if (_vibrationEnabled) HapticFeedback.lightImpact();
-
-    // TODO: O'zingizning package name ni qo'ying
     const packageName = 'uz.cyberpitch.app';
     const url = 'https://play.google.com/store/apps/details?id=$packageName';
-
     await _openUrl(url);
   }
 
@@ -766,7 +782,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
+                color: Colors.red.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.warning, color: Colors.red, size: 24),
@@ -810,12 +826,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-// Grid pattern painter
-class GridPatternPainter extends CustomPainter {
+/// Grid pattern painter
+class _GridPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.02)
+      ..color = Colors.white.withValues(alpha: 0.02)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

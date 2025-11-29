@@ -9,7 +9,7 @@ import '../home/presentation/pages/home_tab_page.dart';
 import '../tournaments/presentation/pages/tournaments_tab_page.dart';
 import '../create/presentation/pages/create_tab_page.dart';
 import '../history/presentation/pages/history_tab_page.dart';
-import '../profile/presentation/pages/profile_page.dart';
+import '../profile/presentation/screens/profile_screen.dart';
 import '../profile/presentation/bloc/profile_bloc.dart';
 import '../profile/presentation/bloc/profile_event.dart';
 
@@ -28,7 +28,7 @@ class _DashboardPageState extends State<DashboardPage> {
     TournamentsPage(),
     PlayPage(),
     HistoryTabPage(),
-    ProfilePage(),
+    ProfileScreen(),
   ];
 
   @override

@@ -1,78 +1,65 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gamehub/core/services/api_service.dart';
+
+import '../../../../core/services/api_service.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
+/// Profile BLoC - Profil boshqaruvi
+///
+/// Foydalanuvchi profili bilan bog'liq barcha operatsiyalar
+/// (yuklash, yangilash, tozalash) shu yerda boshqariladi.
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
 
-  ProfileBloc() : super(ProfileInitial()) {
+  ProfileBloc({ApiService? apiService})
+      : _apiService = apiService ?? ApiService(),
+        super(const ProfileInitial()) {
     on<ProfileLoadRequested>(_onLoadRequested);
     on<ProfileUpdateRequested>(_onUpdateRequested);
     on<ProfileResetRequested>(_onResetRequested);
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // PROFILNI YUKLASH
+  // ═══════════════════════════════════════════════════════════════
+
   Future<void> _onLoadRequested(
     ProfileLoadRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    print('📥 [ProfileBloc] Profil ma\'lumotlarini yuklash so\'rovi');
-    emit(ProfileLoading());
+    _log('Profil yuklanmoqda...');
+    emit(const ProfileLoading());
 
     try {
-      print('🔄 [ProfileBloc] API so\'rovi: GET /users/me');
       final user = await _apiService.getMyProfile();
-      print('✅ [ProfileBloc] Profil ma\'lumotlari muvaffaqiyatli yuklandi');
-      print('📊 [ProfileBloc] User ID: ${user.id}');
-      print('📊 [ProfileBloc] Email: ${user.email}');
-      if (user.profile != null) {
-        print('📊 [ProfileBloc] Profile ma\'lumotlari:');
-        print('   - Nickname: ${user.profile!.nickname}');
-        print('   - PES ID: ${user.profile!.pesId}');
-        print('   - Team Strength: ${user.profile!.teamStrength}');
-        print('   - Region: ${user.profile!.region}');
-        print('   - Bio: ${user.profile!.bio}');
-        print('   - Avatar URL: ${user.profile!.avatarUrl}');
-      } else {
-        print('⚠️ [ProfileBloc] Profile ma\'lumotlari mavjud emas');
-      }
+      _log('Profil yuklandi: ${user.email}');
+      _logProfile(user.profile);
       emit(ProfileLoaded(user));
     } catch (e) {
-      print('❌ [ProfileBloc] Xatolik yuz berdi: $e');
+      _logError('Profil yuklashda xatolik', e);
       emit(ProfileError(_getErrorMessage(e)));
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PROFILNI YANGILASH
+  // ═══════════════════════════════════════════════════════════════
 
   Future<void> _onUpdateRequested(
     ProfileUpdateRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    print('📝 [ProfileBloc] Profilni yangilash so\'rovi');
-    print('📤 [ProfileBloc] Yuborilayotgan ma\'lumotlar:');
-    print('   - Nickname: ${event.nickname}');
-    print('   - Full Name: ${event.fullName}');
-    print('   - Phone: ${event.phone}');
-    print('   - Birth Date: ${event.birthDate}');
-    print('   - Gender: ${event.gender}');
-    print('   - Region: ${event.region}');
-    print('   - Language: ${event.language}');
-    print('   - Bio: ${event.bio}');
-    print('   - Telegram: ${event.telegram}');
-    print('   - Instagram: ${event.instagram}');
-    print('   - YouTube: ${event.youtube}');
-    print('   - Discord: ${event.discord}');
-    print('   - PES ID: ${event.pesId}');
-    print('   - Team Strength: ${event.teamStrength}');
-    print('   - Available Hours: ${event.availableHours}');
+    _log('Profil yangilanmoqda...');
 
+    // Hozirgi holatni saqlash (xato bo'lsa qaytish uchun)
     final currentState = state;
     if (currentState is ProfileLoaded) {
       emit(ProfileUpdating(currentState.user));
     }
 
     try {
-      print('🔄 [ProfileBloc] API so\'rovi: PATCH /users/me');
       final profile = await _apiService.updateProfile(
         nickname: event.nickname,
         fullName: event.fullName,
@@ -90,25 +77,14 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         teamStrength: event.teamStrength,
         availableHours: event.availableHours,
       );
-      print('✅ [ProfileBloc] Profil muvaffaqiyatli yangilandi');
-      print('📊 [ProfileBloc] Yangilangan profil ma\'lumotlari:');
-      print('   - Nickname: ${profile.nickname}');
-      print('   - Full Name: ${profile.fullName}');
-      print('   - PES ID: ${profile.pesId}');
-      print('   - Team Strength: ${profile.teamStrength}');
-      print('   - Region: ${profile.region}');
-      print('   - Bio: ${profile.bio}');
+
+      _log('Profil yangilandi');
       emit(ProfileUpdateSuccess(profile));
 
-      // Profilni qayta yuklash
-      print('🔄 [ProfileBloc] Profilni qayta yuklash...');
-      add(ProfileLoadRequested());
+      // Yangilangan profilni qayta yuklash
+      add(const ProfileLoadRequested());
     } catch (e) {
-      print('❌ [ProfileBloc] Profilni yangilashda xatolik: $e');
-      if (e is DioException) {
-        print('❌ [ProfileBloc] Status Code: ${e.response?.statusCode}');
-        print('❌ [ProfileBloc] Response Data: ${e.response?.data}');
-      }
+      _logError('Profil yangilashda xatolik', e);
       emit(ProfileError(_getErrorMessage(e)));
 
       // Xato bo'lsa eski holatga qaytish
@@ -118,15 +94,23 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // PROFILNI TOZALASH (LOGOUT)
+  // ═══════════════════════════════════════════════════════════════
+
   Future<void> _onResetRequested(
     ProfileResetRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    print('🔄 [ProfileBloc] Profil holati tozalanmoqda...');
-    emit(ProfileInitial());
-    print('✅ [ProfileBloc] Profil holati tozalandi');
+    _log('Profil tozalanmoqda...');
+    emit(const ProfileInitial());
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // YORDAMCHI METODLAR
+  // ═══════════════════════════════════════════════════════════════
+
+  /// Xatolik xabarini olish
   String _getErrorMessage(dynamic e) {
     if (e is DioException) {
       final data = e.response?.data;
@@ -135,5 +119,31 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       }
     }
     return 'Xatolik yuz berdi';
+  }
+
+  /// Debug log
+  void _log(String message) {
+    if (kDebugMode) {
+      print('📱 [ProfileBloc] $message');
+    }
+  }
+
+  /// Xatolik log
+  void _logError(String message, dynamic error) {
+    if (kDebugMode) {
+      print('❌ [ProfileBloc] $message: $error');
+      if (error is DioException) {
+        print('   Status: ${error.response?.statusCode}');
+        print('   Data: ${error.response?.data}');
+      }
+    }
+  }
+
+  /// Profil ma'lumotlarini log qilish
+  void _logProfile(dynamic profile) {
+    if (kDebugMode && profile != null) {
+      print('   - Nickname: ${profile.nickname}');
+      print('   - Avatar: ${profile.avatarUrl}');
+    }
   }
 }

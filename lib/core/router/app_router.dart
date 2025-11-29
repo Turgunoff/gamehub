@@ -7,8 +7,8 @@ import '../../features/dashboard/dashboard_page.dart';
 import '../../features/history/presentation/teams_page.dart';
 import '../../features/tournaments/presentation/pages/tournaments_page.dart';
 import '../../features/tournaments/presentation/pages/tournament_details_page.dart';
-import '../../features/profile/presentation/pages/edit_profile_page.dart';
-import '../../features/profile/presentation/pages/settings_page.dart';
+import '../../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/profile/presentation/screens/settings_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -54,11 +54,11 @@ class AppRouter {
       // Profile
       GoRoute(
         path: '/edit-profile',
-        builder: (context, state) => const EditProfilePage(),
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const SettingsPage(),
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

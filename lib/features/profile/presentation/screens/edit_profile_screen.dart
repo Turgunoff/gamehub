@@ -12,14 +12,14 @@ import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 
-class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfileScreenState extends State<EditProfileScreen> {
   // Form key
   final _formKey = GlobalKey<FormState>();
 
