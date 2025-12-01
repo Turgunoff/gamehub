@@ -298,6 +298,36 @@ class ApiService {
     }
   }
 
+  /// Kutilayotgan challenge'larni olish
+  Future<PendingChallengesResponse> getPendingChallenges() async {
+    try {
+      final response = await _dio.get('/matches/pending');
+      return PendingChallengesResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Challenge qabul qilish
+  Future<Map<String, dynamic>> acceptChallenge(String matchId) async {
+    try {
+      final response = await _dio.post('/matches/$matchId/accept');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Challenge rad etish
+  Future<Map<String, dynamic>> declineChallenge(String matchId) async {
+    try {
+      final response = await _dio.post('/matches/$matchId/decline');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
   // ══════════════════════════════════════════════════════════
   // TOKEN MANAGEMENT
   // ══════════════════════════════════════════════════════════
@@ -964,6 +994,75 @@ class AllPlayersResponse {
       count: json['count'] ?? 0,
       totalOnline: json['total_online'] ?? 0,
       filter: json['filter'] ?? 'all',
+    );
+  }
+}
+
+class PendingChallengesResponse {
+  final List<PendingChallenge> challenges;
+  final int count;
+
+  PendingChallengesResponse({
+    required this.challenges,
+    required this.count,
+  });
+
+  factory PendingChallengesResponse.fromJson(Map<String, dynamic> json) {
+    return PendingChallengesResponse(
+      challenges: (json['challenges'] as List?)
+              ?.map((e) => PendingChallenge.fromJson(e))
+              .toList() ??
+          [],
+      count: json['count'] ?? 0,
+    );
+  }
+}
+
+class PendingChallenge {
+  final String id;
+  final String mode;
+  final int betAmount;
+  final ChallengerInfo challenger;
+  final DateTime createdAt;
+
+  PendingChallenge({
+    required this.id,
+    required this.mode,
+    required this.betAmount,
+    required this.challenger,
+    required this.createdAt,
+  });
+
+  factory PendingChallenge.fromJson(Map<String, dynamic> json) {
+    return PendingChallenge(
+      id: json['id'] ?? '',
+      mode: json['mode'] ?? 'friendly',
+      betAmount: json['bet_amount'] ?? 0,
+      challenger: ChallengerInfo.fromJson(json['challenger'] ?? {}),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+class ChallengerInfo {
+  final String id;
+  final String? nickname;
+  final String? avatarUrl;
+  final int? teamStrength;
+
+  ChallengerInfo({
+    required this.id,
+    this.nickname,
+    this.avatarUrl,
+    this.teamStrength,
+  });
+
+  factory ChallengerInfo.fromJson(Map<String, dynamic> json) {
+    return ChallengerInfo(
+      id: json['id'] ?? '',
+      nickname: json['nickname'],
+      avatarUrl: json['avatar_url'],
+      teamStrength: json['team_strength'],
     );
   }
 }

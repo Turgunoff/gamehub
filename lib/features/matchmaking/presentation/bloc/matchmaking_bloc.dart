@@ -294,10 +294,12 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
       _log('Matchmaking bekor qilindi');
       _stopTimers();
       await _apiService.leaveMatchmakingQueue();
-      emit(const MatchmakingCancelledState());
+      // O'yinchilar ro'yxatini qayta yuklash
+      add(const PlayersRequested(filter: 'all'));
     } catch (e) {
       _log('Bekor qilishda xato: $e');
-      emit(const MatchmakingCancelledState());
+      // Xatolik bo'lsa ham o'yinchilarni yuklash
+      add(const PlayersRequested(filter: 'all'));
     }
   }
 

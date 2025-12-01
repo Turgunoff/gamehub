@@ -50,6 +50,20 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     _onlineStatusTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       ApiService().updateOnlineStatus();
     });
+
+    // Pending challenges tekshirish
+    _checkPendingChallenges();
+  }
+
+  Future<void> _checkPendingChallenges() async {
+    try {
+      final response = await ApiService().getPendingChallenges();
+      if (response.count > 0 && mounted) {
+        _showPendingChallengesDialog(response.challenges);
+      }
+    } catch (e) {
+      // Ignore errors
+    }
   }
 
   @override
@@ -567,181 +581,345 @@ class _QuickMatchPageState extends State<QuickMatchPage>
   Widget _buildPlayerCard(OnlinePlayer player) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        gradient: LinearGradient(
+          colors: player.isOnline
+              ? [
+                  const Color(0xFF1A2A3A).withOpacity(0.8),
+                  const Color(0xFF0F1A2A).withOpacity(0.9),
+                ]
+              : [
+                  const Color(0xFF1A1F2E).withOpacity(0.6),
+                  const Color(0xFF0A0E1A).withOpacity(0.7),
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: player.isOnline
+              ? const Color(0xFF00FB94).withOpacity(0.3)
+              : Colors.white.withOpacity(0.05),
+          width: 1.5,
+        ),
+        boxShadow: player.isOnline
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF00FB94).withOpacity(0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [],
       ),
-      child: Row(
-        children: [
-          // Avatar
-          Stack(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF1A1F3A),
-                  border: Border.all(
-                    color: const Color(0xFF6C5CE7).withOpacity(0.5),
-                    width: 2,
-                  ),
-                ),
-                child: ClipOval(
-                  child: player.avatarUrl != null
-                      ? OptimizedImage(
-                          imageUrl: player.avatarUrl!,
-                          fit: BoxFit.cover,
-                          width: 50,
-                          height: 50,
-                          errorWidget: const Icon(
-                            Icons.person,
-                            color: Color(0xFF6C5CE7),
-                            size: 24,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.person,
-                          color: Color(0xFF6C5CE7),
-                          size: 24,
-                        ),
-                ),
-              ),
-              // Online/Offline indicator
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: player.isOnline
-                        ? const Color(0xFF00FB94)
-                        : const Color(0xFF6B7280),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF0A0E1A), width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-
-          // Player info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // TODO: Show player profile
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Text(
-                      player.nickname,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (!player.isOnline) ...[
-                      const SizedBox(width: 8),
+                // Avatar with glow effect for online
+                Container(
+                  decoration: player.isOnline
+                      ? BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00FB94).withOpacity(0.4),
+                              blurRadius: 12,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        )
+                      : null,
+                  child: Stack(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
+                        width: 56,
+                        height: 56,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: player.isOnline
+                                ? [const Color(0xFF6C5CE7), const Color(0xFF00D9FF)]
+                                : [const Color(0xFF3A3F5A), const Color(0xFF2A2F4A)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          border: Border.all(
+                            color: player.isOnline
+                                ? const Color(0xFF00FB94)
+                                : Colors.white.withOpacity(0.2),
+                            width: 2,
+                          ),
                         ),
-                        child: Text(
-                          'offline',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 10,
+                        child: ClipOval(
+                          child: player.avatarUrl != null
+                              ? OptimizedImage(
+                                  imageUrl: player.avatarUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 56,
+                                  height: 56,
+                                  errorWidget: const Icon(
+                                    Icons.person,
+                                    color: Colors.white70,
+                                    size: 28,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.person,
+                                  color: Colors.white70,
+                                  size: 28,
+                                ),
+                        ),
+                      ),
+                      // Online indicator with pulse
+                      Positioned(
+                        bottom: 2,
+                        right: 2,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: player.isOnline
+                                ? const Color(0xFF00FB94)
+                                : const Color(0xFF6B7280),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF0A0E1A),
+                              width: 2.5,
+                            ),
+                            boxShadow: player.isOnline
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF00FB94).withOpacity(0.6),
+                                      blurRadius: 6,
+                                      spreadRadius: 1,
+                                    ),
+                                  ]
+                                : [],
                           ),
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      'Lvl ${player.level}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 12,
+                const SizedBox(width: 14),
+
+                // Player info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Nickname with status badge
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              player.nickname,
+                              style: TextStyle(
+                                color: player.isOnline
+                                    ? Colors.white
+                                    : Colors.white.withOpacity(0.7),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: player.isOnline
+                                  ? const Color(0xFF00FB94).withOpacity(0.15)
+                                  : Colors.white.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: player.isOnline
+                                    ? const Color(0xFF00FB94).withOpacity(0.3)
+                                    : Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                            child: Text(
+                              player.isOnline ? 'ONLINE' : 'OFFLINE',
+                              style: TextStyle(
+                                color: player.isOnline
+                                    ? const Color(0xFF00FB94)
+                                    : Colors.white.withOpacity(0.4),
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Stats row
+                      Row(
+                        children: [
+                          // Level badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF6C5CE7), Color(0xFF8B7CF7)],
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'LVL ${player.level}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+
+                          // Win rate
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: (player.winRate >= 50
+                                      ? const Color(0xFF00FB94)
+                                      : const Color(0xFFFF6B6B))
+                                  .withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  player.winRate >= 50
+                                      ? Icons.trending_up
+                                      : Icons.trending_down,
+                                  size: 12,
+                                  color: player.winRate >= 50
+                                      ? const Color(0xFF00FB94)
+                                      : const Color(0xFFFF6B6B),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${player.winRate.toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    color: player.winRate >= 50
+                                        ? const Color(0xFF00FB94)
+                                        : const Color(0xFFFF6B6B),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+
+                          // Total matches
+                          Text(
+                            '${player.totalMatches} o\'yin',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Challenge button
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: player.hasActiveMatch
+                        ? null
+                        : const LinearGradient(
+                            colors: [Color(0xFFFFB800), Color(0xFFFF8C00)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    color: player.hasActiveMatch ? const Color(0xFF3A3F5A) : null,
+                    boxShadow: player.hasActiveMatch
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: const Color(0xFFFFB800).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: player.hasActiveMatch
+                          ? null
+                          : () {
+                              HapticFeedback.lightImpact();
+                              _matchmakingBloc
+                                  .add(ChallengeSent(opponentId: player.id));
+                            },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              player.hasActiveMatch
+                                  ? Icons.hourglass_top
+                                  : Icons.sports_esports,
+                              size: 16,
+                              color: player.hasActiveMatch
+                                  ? Colors.white.withOpacity(0.4)
+                                  : Colors.black87,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              player.hasActiveMatch ? 'BAND' : 'CHALLENGE',
+                              style: TextStyle(
+                                color: player.hasActiveMatch
+                                    ? Colors.white.withOpacity(0.4)
+                                    : Colors.black87,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '•',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Win: ${player.winRate.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        color: player.winRate >= 50
-                            ? const Color(0xFF00FB94)
-                            : const Color(0xFFFF6B6B),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '•',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${player.totalMatches} o\'yin',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
-
-          // Challenge button
-          ElevatedButton(
-            onPressed: player.hasActiveMatch
-                ? null
-                : () {
-                    HapticFeedback.lightImpact();
-                    _matchmakingBloc.add(ChallengeSent(opponentId: player.id));
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: player.hasActiveMatch
-                  ? Colors.grey
-                  : const Color(0xFFFFB800),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              player.hasActiveMatch ? 'BAND' : 'CHALLENGE',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -864,6 +1042,270 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         content: Text(message),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showPendingChallengesDialog(List<PendingChallenge> challenges) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F3A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB800).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.sports_esports,
+                color: Color(0xFFFFB800),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'CHALLENGE KELDI!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: challenges.length,
+            itemBuilder: (context, index) {
+              final challenge = challenges[index];
+              return _buildChallengeCard(challenge, dialogContext);
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'YOPISH',
+              style: TextStyle(color: Colors.white.withOpacity(0.6)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChallengeCard(PendingChallenge challenge, BuildContext dialogContext) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF2A2F4A).withOpacity(0.8),
+            const Color(0xFF1A1F3A).withOpacity(0.9),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFFFB800).withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Avatar
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFFFFB800),
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: challenge.challenger.avatarUrl != null
+                      ? OptimizedImage(
+                          imageUrl: challenge.challenger.avatarUrl!,
+                          fit: BoxFit.cover,
+                          width: 50,
+                          height: 50,
+                          errorWidget: const Icon(
+                            Icons.person,
+                            color: Colors.white70,
+                            size: 24,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          color: Colors.white70,
+                          size: 24,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Challenger info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      challenge.challenger.nickname ?? 'Unknown',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6C5CE7).withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            challenge.mode.toUpperCase(),
+                            style: const TextStyle(
+                              color: Color(0xFF00D9FF),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        if (challenge.betAmount > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFB800).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.monetization_on,
+                                  size: 12,
+                                  color: Color(0xFFFFB800),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${challenge.betAmount}',
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFB800),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    try {
+                      await ApiService().declineChallenge(challenge.id);
+                      if (mounted) {
+                        Navigator.pop(dialogContext);
+                        _showSnackBar('Challenge rad etildi', Colors.orange);
+                      }
+                    } catch (e) {
+                      _showSnackBar('Xatolik: $e', Colors.red);
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF6B6B),
+                    side: const BorderSide(color: Color(0xFFFF6B6B)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'RAD ETISH',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await ApiService().acceptChallenge(challenge.id);
+                      if (mounted) {
+                        Navigator.pop(dialogContext);
+                        _showSnackBar('Challenge qabul qilindi!', Colors.green);
+                        // TODO: Navigate to match room
+                      }
+                    } catch (e) {
+                      _showSnackBar('Xatolik: $e', Colors.red);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00FB94),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'QABUL QILISH',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
