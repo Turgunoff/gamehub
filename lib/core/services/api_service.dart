@@ -250,6 +250,27 @@ class ApiService {
     }
   }
 
+  /// Barcha o'yinchilar (filter va search bilan)
+  Future<AllPlayersResponse> getAllPlayers({
+    String filter = 'all', // 'all' yoki 'online'
+    String? search,
+    int limit = 50,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'filter': filter,
+        'limit': limit,
+      };
+      if (search != null && search.isNotEmpty) {
+        params['search'] = search;
+      }
+      final response = await _dio.get('/matches/players', queryParameters: params);
+      return AllPlayersResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
   /// Challenge yuborish
   Future<ChallengeResponse> sendChallenge({
     required String opponentId,
@@ -867,6 +888,7 @@ class OnlinePlayer {
   final int totalMatches;
   final double winRate;
   final bool hasActiveMatch;
+  final bool isOnline;
   final String? lastOnline;
 
   OnlinePlayer({
@@ -878,6 +900,7 @@ class OnlinePlayer {
     required this.totalMatches,
     required this.winRate,
     required this.hasActiveMatch,
+    this.isOnline = false,
     this.lastOnline,
   });
 
@@ -891,6 +914,7 @@ class OnlinePlayer {
       totalMatches: json['total_matches'] ?? 0,
       winRate: (json['win_rate'] ?? 0).toDouble(),
       hasActiveMatch: json['has_active_match'] ?? false,
+      isOnline: json['is_online'] ?? false,
       lastOnline: json['last_online'],
     );
   }
@@ -914,6 +938,32 @@ class ChallengeResponse {
       opponent: json['opponent'] != null
           ? OnlinePlayer.fromJson(json['opponent'])
           : null,
+    );
+  }
+}
+
+class AllPlayersResponse {
+  final List<OnlinePlayer> players;
+  final int count;
+  final int totalOnline;
+  final String filter;
+
+  AllPlayersResponse({
+    required this.players,
+    required this.count,
+    required this.totalOnline,
+    required this.filter,
+  });
+
+  factory AllPlayersResponse.fromJson(Map<String, dynamic> json) {
+    return AllPlayersResponse(
+      players: (json['players'] as List?)
+              ?.map((e) => OnlinePlayer.fromJson(e))
+              .toList() ??
+          [],
+      count: json['count'] ?? 0,
+      totalOnline: json['total_online'] ?? 0,
+      filter: json['filter'] ?? 'all',
     );
   }
 }

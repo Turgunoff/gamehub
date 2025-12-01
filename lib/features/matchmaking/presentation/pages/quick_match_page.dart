@@ -25,6 +25,8 @@ class _QuickMatchPageState extends State<QuickMatchPage>
   late AnimationController _pulseController;
   late AnimationController _rotateController;
   Timer? _onlineStatusTimer;
+  String _currentFilter = 'all';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -41,8 +43,8 @@ class _QuickMatchPageState extends State<QuickMatchPage>
       vsync: this,
     )..repeat();
 
-    // Online o'yinchilarni yuklash
-    _matchmakingBloc.add(const OnlinePlayersRequested());
+    // Barcha o'yinchilarni yuklash
+    _matchmakingBloc.add(const PlayersRequested(filter: 'all'));
 
     // Har 30 sekundda online status yangilash
     _onlineStatusTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -55,6 +57,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     _pulseController.dispose();
     _rotateController.dispose();
     _onlineStatusTimer?.cancel();
+    _searchController.dispose();
     _matchmakingBloc.close();
     super.dispose();
   }
@@ -355,18 +358,28 @@ class _QuickMatchPageState extends State<QuickMatchPage>
   Widget _buildOnlinePlayersSection() {
     return BlocBuilder<MatchmakingBloc, MatchmakingState>(
       buildWhen: (prev, curr) =>
-          curr is OnlinePlayersLoaded || curr is MatchmakingInitial,
+          curr is PlayersLoaded || curr is MatchmakingInitial || curr is MatchmakingLoading,
       builder: (context, state) {
-        if (state is OnlinePlayersLoaded) {
+        if (state is MatchmakingLoading) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(color: Color(0xFF00D9FF)),
+            ),
+          );
+        }
+
+        if (state is PlayersLoaded) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with filter
               Row(
                 children: [
                   const Icon(Icons.people, color: Color(0xFF00D9FF), size: 20),
                   const SizedBox(width: 8),
                   const Text(
-                    'ONLINE O\'YINCHILAR',
+                    'O\'YINCHILAR',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -405,7 +418,66 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+
+              // Search and Filter Row
+              Row(
+                children: [
+                  // Search field
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Qidirish...',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.white.withOpacity(0.4),
+                            size: 20,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        onSubmitted: (value) {
+                          _matchmakingBloc.add(PlayersRequested(
+                            filter: _currentFilter,
+                            search: value.isNotEmpty ? value : null,
+                          ));
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Filter buttons
+                  _buildFilterButton('all', 'Hammasi', state.currentFilter),
+                  const SizedBox(width: 6),
+                  _buildFilterButton('online', 'Online', state.currentFilter),
+                ],
+              ),
               const SizedBox(height: 16),
+
+              // Players count
+              Text(
+                '${state.players.length} ta o\'yinchi',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 12),
+
               if (state.players.isEmpty)
                 _buildNoPlayersFound()
               else
@@ -418,6 +490,41 @@ class _QuickMatchPageState extends State<QuickMatchPage>
           child: CircularProgressIndicator(color: Color(0xFF00D9FF)),
         );
       },
+    );
+  }
+
+  Widget _buildFilterButton(String filter, String label, String currentFilter) {
+    final isActive = filter == currentFilter;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _currentFilter = filter);
+        _matchmakingBloc.add(PlayersRequested(
+          filter: filter,
+          search: _searchController.text.isNotEmpty ? _searchController.text : null,
+        ));
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF6C5CE7).withOpacity(0.3)
+              : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF6C5CE7)
+                : Colors.white.withOpacity(0.1),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? const Color(0xFF00D9FF) : Colors.white.withOpacity(0.6),
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 
@@ -502,7 +609,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                         ),
                 ),
               ),
-              // Online indicator
+              // Online/Offline indicator
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -510,7 +617,9 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00FB94),
+                    color: player.isOnline
+                        ? const Color(0xFF00FB94)
+                        : const Color(0xFF6B7280),
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xFF0A0E1A), width: 2),
                   ),
@@ -525,13 +634,37 @@ class _QuickMatchPageState extends State<QuickMatchPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  player.nickname,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      player.nickname,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (!player.isOnline) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'offline',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Row(

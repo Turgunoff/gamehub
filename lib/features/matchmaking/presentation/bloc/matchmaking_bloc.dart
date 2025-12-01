@@ -35,9 +35,24 @@ class MatchmakingStatusChecked extends MatchmakingEvent {
   const MatchmakingStatusChecked();
 }
 
-/// Online o'yinchilarni yuklash
-class OnlinePlayersRequested extends MatchmakingEvent {
-  const OnlinePlayersRequested();
+/// Timer tick - har sekundda
+class _SearchTimerTicked extends MatchmakingEvent {
+  final int duration;
+  const _SearchTimerTicked(this.duration);
+
+  @override
+  List<Object?> get props => [duration];
+}
+
+/// O'yinchilarni yuklash
+class PlayersRequested extends MatchmakingEvent {
+  final String? filter; // online, all
+  final String? search;
+
+  const PlayersRequested({this.filter, this.search});
+
+  @override
+  List<Object?> get props => [filter, search];
 }
 
 /// Challenge yuborish
@@ -79,7 +94,7 @@ class MatchmakingInitial extends MatchmakingState {
 class MatchmakingSearching extends MatchmakingState {
   final int position;
   final int queueSize;
-  final int searchDuration; // seconds
+  final int searchDuration;
 
   const MatchmakingSearching({
     required this.position,
@@ -105,18 +120,20 @@ class MatchmakingMatchFound extends MatchmakingState {
   List<Object?> get props => [matchId, opponent];
 }
 
-/// Online o'yinchilar yuklandi
-class OnlinePlayersLoaded extends MatchmakingState {
+/// O'yinchilar yuklandi
+class PlayersLoaded extends MatchmakingState {
   final List<OnlinePlayer> players;
   final int totalOnline;
+  final String currentFilter;
 
-  const OnlinePlayersLoaded({
+  const PlayersLoaded({
     required this.players,
     required this.totalOnline,
+    this.currentFilter = 'all',
   });
 
   @override
-  List<Object?> get props => [players, totalOnline];
+  List<Object?> get props => [players, totalOnline, currentFilter];
 }
 
 /// Challenge yuborildi
@@ -148,6 +165,11 @@ class MatchmakingCancelledState extends MatchmakingState {
   const MatchmakingCancelledState();
 }
 
+/// Loading
+class MatchmakingLoading extends MatchmakingState {
+  const MatchmakingLoading();
+}
+
 // ══════════════════════════════════════════════════════════
 // BLOC
 // ══════════════════════════════════════════════════════════
@@ -157,6 +179,8 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
   Timer? _searchTimer;
   Timer? _pollTimer;
   int _searchDuration = 0;
+  int _currentPosition = 1;
+  int _currentQueueSize = 1;
 
   MatchmakingBloc({ApiService? apiService})
       : _apiService = apiService ?? ApiService(),
@@ -164,7 +188,8 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     on<MatchmakingStarted>(_onStarted);
     on<MatchmakingCancelled>(_onCancelled);
     on<MatchmakingStatusChecked>(_onStatusChecked);
-    on<OnlinePlayersRequested>(_onOnlinePlayersRequested);
+    on<_SearchTimerTicked>(_onTimerTicked);
+    on<PlayersRequested>(_onPlayersRequested);
     on<ChallengeSent>(_onChallengeSent);
     on<MatchmakingReset>(_onReset);
   }
@@ -177,7 +202,6 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
       _log('Matchmaking boshlandi: ${event.mode}');
       _searchDuration = 0;
 
-      // Queuega qo'shilish
       final response = await _apiService.joinMatchmakingQueue(mode: event.mode);
 
       if (response.isMatchFound) {
@@ -189,15 +213,16 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
         ));
       } else {
         _log('Qidirilmoqda... Position: ${response.position}');
+        _currentPosition = response.position ?? 1;
+        _currentQueueSize = response.queueSize ?? 1;
+
         emit(MatchmakingSearching(
-          position: response.position ?? 1,
-          queueSize: response.queueSize ?? 1,
+          position: _currentPosition,
+          queueSize: _currentQueueSize,
           searchDuration: _searchDuration,
         ));
 
-        // Timer boshlash
-        _startSearchTimer(emit);
-        _startPolling();
+        _startTimers();
       }
     } catch (e) {
       _log('Xatolik: $e');
@@ -205,23 +230,16 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     }
   }
 
-  void _startSearchTimer(Emitter<MatchmakingState> emit) {
-    _searchTimer?.cancel();
+  void _startTimers() {
+    _stopTimers();
+
+    // Search timer - har sekundda event yuboradi
     _searchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _searchDuration++;
-      if (state is MatchmakingSearching) {
-        final current = state as MatchmakingSearching;
-        emit(MatchmakingSearching(
-          position: current.position,
-          queueSize: current.queueSize,
-          searchDuration: _searchDuration,
-        ));
-      }
+      add(_SearchTimerTicked(_searchDuration));
     });
-  }
 
-  void _startPolling() {
-    _pollTimer?.cancel();
+    // Poll timer - har 3 sekundda status tekshiradi
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       add(const MatchmakingStatusChecked());
     });
@@ -234,6 +252,19 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     _pollTimer = null;
   }
 
+  void _onTimerTicked(
+    _SearchTimerTicked event,
+    Emitter<MatchmakingState> emit,
+  ) {
+    if (state is MatchmakingSearching) {
+      emit(MatchmakingSearching(
+        position: _currentPosition,
+        queueSize: _currentQueueSize,
+        searchDuration: event.duration,
+      ));
+    }
+  }
+
   Future<void> _onStatusChecked(
     MatchmakingStatusChecked event,
     Emitter<MatchmakingState> emit,
@@ -244,9 +275,11 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
       final status = await _apiService.getQueueStatus();
 
       if (!status.inQueue) {
-        // Queueda emas - match topilgan bo'lishi mumkin
-        // Yoki bekor qilingan
         _stopTimers();
+        // TODO: Match topilganmi tekshirish
+      } else {
+        _currentPosition = status.position ?? _currentPosition;
+        _currentQueueSize = status.queueSize ?? _currentQueueSize;
       }
     } catch (e) {
       _log('Status tekshirishda xato: $e');
@@ -268,17 +301,24 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     }
   }
 
-  Future<void> _onOnlinePlayersRequested(
-    OnlinePlayersRequested event,
+  Future<void> _onPlayersRequested(
+    PlayersRequested event,
     Emitter<MatchmakingState> emit,
   ) async {
     try {
-      _log('Online o\'yinchilar yuklanmoqda...');
-      final response = await _apiService.getOnlinePlayers();
+      _log('O\'yinchilar yuklanmoqda... filter: ${event.filter}');
+      emit(const MatchmakingLoading());
+
+      final response = await _apiService.getAllPlayers(
+        filter: event.filter ?? 'all',
+        search: event.search,
+      );
+
       _log('${response.count} ta o\'yinchi topildi');
-      emit(OnlinePlayersLoaded(
+      emit(PlayersLoaded(
         players: response.players,
         totalOnline: response.totalOnline,
+        currentFilter: event.filter ?? 'all',
       ));
     } catch (e) {
       _log('Xatolik: $e');
