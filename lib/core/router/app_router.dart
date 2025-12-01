@@ -9,6 +9,7 @@ import '../../features/tournaments/presentation/pages/tournaments_page.dart';
 import '../../features/tournaments/presentation/pages/tournament_details_page.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
+import '../../features/matchmaking/presentation/pages/quick_match_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -59,6 +60,15 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // Matchmaking
+      GoRoute(
+        path: '/quick-match',
+        builder: (context, state) {
+          final mode = state.extra as String? ?? 'ranked';
+          return QuickMatchPage(mode: mode);
+        },
       ),
     ],
   );

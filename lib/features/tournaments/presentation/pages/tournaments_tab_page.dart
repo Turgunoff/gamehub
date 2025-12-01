@@ -6,6 +6,7 @@ import '../widgets/tournaments_tab_bar.dart';
 import '../widgets/tournament_card.dart';
 import '../widgets/completed_tournament_card.dart';
 import '../widgets/tournament_filter_dialog.dart';
+import '../../../../shared/widgets/empty_state_widget.dart';
 
 class TournamentsPage extends StatefulWidget {
   const TournamentsPage({super.key});
@@ -14,10 +15,15 @@ class TournamentsPage extends StatefulWidget {
   State<TournamentsPage> createState() => _TournamentsPageState();
 }
 
-class _TournamentsPageState extends State<TournamentsPage> 
+class _TournamentsPageState extends State<TournamentsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedFilter = 'all';
+
+  // TODO: Backend'dan ma'lumot olish kerak
+  // Hozircha bo'sh - user hali turnirlarda qatnashmagan
+  final List<Map<String, dynamic>> _myActiveTournaments = [];
+  final List<Map<String, dynamic>> _myCompletedTournaments = [];
 
   @override
   void initState() {
@@ -30,6 +36,10 @@ class _TournamentsPageState extends State<TournamentsPage>
     _tabController.dispose();
     super.dispose();
   }
+
+  // User birorta turnirda qatnashganmi?
+  bool get _hasParticipated =>
+      _myActiveTournaments.isNotEmpty || _myCompletedTournaments.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -50,38 +60,97 @@ class _TournamentsPageState extends State<TournamentsPage>
               ),
             ),
           ),
-          
+
           SafeArea(
-            child: Column(
-              children: [
-                // Header
-                TournamentsHeader(onFilterTap: _showFilterDialog),
-                
-                // Tab Bar
-                TournamentsTabBar(controller: _tabController),
-                
-                // Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildActiveTab(),
-                      _buildUpcomingTab(),
-                      _buildCompletedTab(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            child: _hasParticipated ? _buildWithData() : _buildEmptyState(),
           ),
         ],
       ),
     );
   }
 
+  // Ma'lumotlar bor bo'lganda
+  Widget _buildWithData() {
+    return Column(
+      children: [
+        // Header
+        TournamentsHeader(onFilterTap: _showFilterDialog),
 
-  /// Faol turnirlar ro'yxati
+        // Tab Bar
+        TournamentsTabBar(controller: _tabController),
+
+        // Content
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildActiveTab(),
+              _buildUpcomingTab(),
+              _buildCompletedTab(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Ma'lumotlar yo'q - Empty State
+  Widget _buildEmptyState() {
+    return Column(
+      children: [
+        // Header (soddalashtirilgan)
+        Container(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'TURNIRLAR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Chempionatlarda qatnashing',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Empty State
+        Expanded(
+          child: TournamentsEmptyState(
+            onBrowseTournaments: () {
+              // TODO: Barcha turnirlar sahifasiga o'tish
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Faol turnirlar ro'yxati (user qatnashayotgan)
   Widget _buildActiveTab() {
+    if (_myActiveTournaments.isEmpty) {
+      return const Center(
+        child: TournamentsEmptyState(),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -156,8 +225,14 @@ class _TournamentsPageState extends State<TournamentsPage>
     );
   }
 
-  /// Tugallangan turnirlar ro'yxati
+  /// Tugallangan turnirlar ro'yxati (user qatnashgan)
   Widget _buildCompletedTab() {
+    if (_myCompletedTournaments.isEmpty) {
+      return const Center(
+        child: TournamentsEmptyState(),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [

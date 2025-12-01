@@ -181,6 +181,102 @@ class ApiService {
       return false;
     }
   }
+
+  // ══════════════════════════════════════════════════════════
+  // HOME METHODS
+  // ══════════════════════════════════════════════════════════
+
+  /// Home dashboard ma'lumotlari
+  Future<HomeDashboardResponse> getHomeDashboard() async {
+    try {
+      final response = await _dio.get('/home/dashboard');
+      return HomeDashboardResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Leaderboard
+  Future<List<LeaderboardItem>> getLeaderboard({int limit = 10}) async {
+    try {
+      final response = await _dio.get('/home/leaderboard', queryParameters: {'limit': limit});
+      final list = response.data['leaderboard'] as List;
+      return list.map((e) => LeaderboardItem.fromJson(e)).toList();
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // MATCHMAKING METHODS
+  // ══════════════════════════════════════════════════════════
+
+  /// Matchmaking queuega qo'shilish
+  Future<MatchmakingResponse> joinMatchmakingQueue({String mode = 'ranked'}) async {
+    try {
+      final response = await _dio.post('/matches/queue/join', queryParameters: {'mode': mode});
+      return MatchmakingResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Queuedan chiqish
+  Future<void> leaveMatchmakingQueue() async {
+    try {
+      await _dio.delete('/matches/queue/leave');
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Queue holatini tekshirish
+  Future<QueueStatusResponse> getQueueStatus() async {
+    try {
+      final response = await _dio.get('/matches/queue/status');
+      return QueueStatusResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Online o'yinchilar
+  Future<OnlinePlayersResponse> getOnlinePlayers({int limit = 20}) async {
+    try {
+      final response = await _dio.get('/matches/online-players', queryParameters: {'limit': limit});
+      return OnlinePlayersResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Challenge yuborish
+  Future<ChallengeResponse> sendChallenge({
+    required String opponentId,
+    String mode = 'friendly',
+    int betAmount = 0,
+  }) async {
+    try {
+      final response = await _dio.post('/matches/challenge', data: {
+        'opponent_id': opponentId,
+        'mode': mode,
+        'bet_amount': betAmount,
+      });
+      return ChallengeResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Online statusni yangilash
+  Future<void> updateOnlineStatus() async {
+    try {
+      await _dio.post('/matches/update-online');
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
   // ══════════════════════════════════════════════════════════
   // TOKEN MANAGEMENT
   // ══════════════════════════════════════════════════════════
@@ -438,4 +534,386 @@ class AvatarUploadResponse {
   final String? message;
 
   AvatarUploadResponse({required this.success, this.avatarUrl, this.message});
+}
+
+// ══════════════════════════════════════════════════════════
+// HOME RESPONSE MODELS
+// ══════════════════════════════════════════════════════════
+
+class HomeDashboardResponse {
+  final HomeUser user;
+  final HomeStats stats;
+  final int onlineUsers;
+  final int pendingChallenges;
+  final List<HomeTournament> tournaments;
+  final List<HomeMatch> recentMatches;
+
+  HomeDashboardResponse({
+    required this.user,
+    required this.stats,
+    required this.onlineUsers,
+    required this.pendingChallenges,
+    required this.tournaments,
+    required this.recentMatches,
+  });
+
+  factory HomeDashboardResponse.fromJson(Map<String, dynamic> json) {
+    return HomeDashboardResponse(
+      user: HomeUser.fromJson(json['user']),
+      stats: HomeStats.fromJson(json['stats']),
+      onlineUsers: json['online_users'] ?? 0,
+      pendingChallenges: json['pending_challenges'] ?? 0,
+      tournaments: (json['tournaments'] as List?)
+              ?.map((e) => HomeTournament.fromJson(e))
+              .toList() ??
+          [],
+      recentMatches: (json['recent_matches'] as List?)
+              ?.map((e) => HomeMatch.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class HomeUser {
+  final String id;
+  final String email;
+  final String? nickname;
+  final String? avatarUrl;
+  final int level;
+  final int coins;
+  final int gems;
+
+  HomeUser({
+    required this.id,
+    required this.email,
+    this.nickname,
+    this.avatarUrl,
+    required this.level,
+    required this.coins,
+    required this.gems,
+  });
+
+  factory HomeUser.fromJson(Map<String, dynamic> json) {
+    return HomeUser(
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      nickname: json['nickname'],
+      avatarUrl: json['avatar_url'],
+      level: json['level'] ?? 1,
+      coins: json['coins'] ?? 0,
+      gems: json['gems'] ?? 0,
+    );
+  }
+}
+
+class HomeStats {
+  final int totalMatches;
+  final int wins;
+  final int losses;
+  final int draws;
+  final double winRate;
+  final int tournamentsPlayed;
+  final int tournamentsWon;
+  final int coins;
+  final int gems;
+  final int level;
+  final int experience;
+
+  HomeStats({
+    required this.totalMatches,
+    required this.wins,
+    required this.losses,
+    required this.draws,
+    required this.winRate,
+    required this.tournamentsPlayed,
+    required this.tournamentsWon,
+    required this.coins,
+    required this.gems,
+    required this.level,
+    required this.experience,
+  });
+
+  factory HomeStats.fromJson(Map<String, dynamic> json) {
+    return HomeStats(
+      totalMatches: json['total_matches'] ?? 0,
+      wins: json['wins'] ?? 0,
+      losses: json['losses'] ?? 0,
+      draws: json['draws'] ?? 0,
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+      tournamentsPlayed: json['tournaments_played'] ?? 0,
+      tournamentsWon: json['tournaments_won'] ?? 0,
+      coins: json['coins'] ?? 0,
+      gems: json['gems'] ?? 0,
+      level: json['level'] ?? 1,
+      experience: json['experience'] ?? 0,
+    );
+  }
+}
+
+class HomeTournament {
+  final String id;
+  final String name;
+  final String status;
+  final String format;
+  final int prizePool;
+  final int entryFee;
+  final int maxParticipants;
+  final int participantCount;
+  final String? startTime;
+  final bool isFeatured;
+  final bool isJoined;
+
+  HomeTournament({
+    required this.id,
+    required this.name,
+    required this.status,
+    required this.format,
+    required this.prizePool,
+    required this.entryFee,
+    required this.maxParticipants,
+    required this.participantCount,
+    this.startTime,
+    required this.isFeatured,
+    required this.isJoined,
+  });
+
+  factory HomeTournament.fromJson(Map<String, dynamic> json) {
+    return HomeTournament(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      status: json['status'] ?? '',
+      format: json['format'] ?? '',
+      prizePool: json['prize_pool'] ?? 0,
+      entryFee: json['entry_fee'] ?? 0,
+      maxParticipants: json['max_participants'] ?? 0,
+      participantCount: json['participant_count'] ?? 0,
+      startTime: json['start_time'],
+      isFeatured: json['is_featured'] ?? false,
+      isJoined: json['is_joined'] ?? false,
+    );
+  }
+}
+
+class HomeMatch {
+  final String id;
+  final String opponentNickname;
+  final String? opponentAvatar;
+  final String result;
+  final String score;
+  final int ratingChange;
+  final String mode;
+  final String? playedAt;
+
+  HomeMatch({
+    required this.id,
+    required this.opponentNickname,
+    this.opponentAvatar,
+    required this.result,
+    required this.score,
+    required this.ratingChange,
+    required this.mode,
+    this.playedAt,
+  });
+
+  factory HomeMatch.fromJson(Map<String, dynamic> json) {
+    return HomeMatch(
+      id: json['id'] ?? '',
+      opponentNickname: json['opponent_nickname'] ?? 'Unknown',
+      opponentAvatar: json['opponent_avatar'],
+      result: json['result'] ?? '',
+      score: json['score'] ?? '-',
+      ratingChange: json['rating_change'] ?? 0,
+      mode: json['mode'] ?? '',
+      playedAt: json['played_at'],
+    );
+  }
+}
+
+class LeaderboardItem {
+  final int rank;
+  final String odoserId;
+  final String nickname;
+  final String? avatarUrl;
+  final int level;
+  final int totalMatches;
+  final int wins;
+  final double winRate;
+  final int tournamentsWon;
+
+  LeaderboardItem({
+    required this.rank,
+    required this.odoserId,
+    required this.nickname,
+    this.avatarUrl,
+    required this.level,
+    required this.totalMatches,
+    required this.wins,
+    required this.winRate,
+    required this.tournamentsWon,
+  });
+
+  factory LeaderboardItem.fromJson(Map<String, dynamic> json) {
+    return LeaderboardItem(
+      rank: json['rank'] ?? 0,
+      odoserId: json['user_id'] ?? '',
+      nickname: json['nickname'] ?? '',
+      avatarUrl: json['avatar_url'],
+      level: json['level'] ?? 1,
+      totalMatches: json['total_matches'] ?? 0,
+      wins: json['wins'] ?? 0,
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+      tournamentsWon: json['tournaments_won'] ?? 0,
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// MATCHMAKING RESPONSE MODELS
+// ══════════════════════════════════════════════════════════
+
+class MatchmakingResponse {
+  final String status; // searching, match_found, already_in_queue
+  final String message;
+  final int? position;
+  final int? queueSize;
+  final String? matchId;
+  final OnlinePlayer? opponent;
+
+  MatchmakingResponse({
+    required this.status,
+    required this.message,
+    this.position,
+    this.queueSize,
+    this.matchId,
+    this.opponent,
+  });
+
+  factory MatchmakingResponse.fromJson(Map<String, dynamic> json) {
+    return MatchmakingResponse(
+      status: json['status'] ?? '',
+      message: json['message'] ?? '',
+      position: json['position'],
+      queueSize: json['queue_size'],
+      matchId: json['match_id'],
+      opponent: json['opponent'] != null
+          ? OnlinePlayer.fromJson(json['opponent'])
+          : null,
+    );
+  }
+
+  bool get isMatchFound => status == 'match_found';
+  bool get isSearching => status == 'searching';
+}
+
+class QueueStatusResponse {
+  final String status;
+  final bool inQueue;
+  final int? position;
+  final int? queueSize;
+  final String? mode;
+  final String? joinedAt;
+
+  QueueStatusResponse({
+    required this.status,
+    required this.inQueue,
+    this.position,
+    this.queueSize,
+    this.mode,
+    this.joinedAt,
+  });
+
+  factory QueueStatusResponse.fromJson(Map<String, dynamic> json) {
+    return QueueStatusResponse(
+      status: json['status'] ?? '',
+      inQueue: json['in_queue'] ?? false,
+      position: json['position'],
+      queueSize: json['queue_size'],
+      mode: json['mode'],
+      joinedAt: json['joined_at'],
+    );
+  }
+}
+
+class OnlinePlayersResponse {
+  final List<OnlinePlayer> players;
+  final int count;
+  final int totalOnline;
+
+  OnlinePlayersResponse({
+    required this.players,
+    required this.count,
+    required this.totalOnline,
+  });
+
+  factory OnlinePlayersResponse.fromJson(Map<String, dynamic> json) {
+    return OnlinePlayersResponse(
+      players: (json['players'] as List?)
+              ?.map((e) => OnlinePlayer.fromJson(e))
+              .toList() ??
+          [],
+      count: json['count'] ?? 0,
+      totalOnline: json['total_online'] ?? 0,
+    );
+  }
+}
+
+class OnlinePlayer {
+  final String id;
+  final String nickname;
+  final String? avatarUrl;
+  final int level;
+  final int wins;
+  final int totalMatches;
+  final double winRate;
+  final bool hasActiveMatch;
+  final String? lastOnline;
+
+  OnlinePlayer({
+    required this.id,
+    required this.nickname,
+    this.avatarUrl,
+    required this.level,
+    required this.wins,
+    required this.totalMatches,
+    required this.winRate,
+    required this.hasActiveMatch,
+    this.lastOnline,
+  });
+
+  factory OnlinePlayer.fromJson(Map<String, dynamic> json) {
+    return OnlinePlayer(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      avatarUrl: json['avatar_url'],
+      level: json['level'] ?? 1,
+      wins: json['wins'] ?? 0,
+      totalMatches: json['total_matches'] ?? 0,
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+      hasActiveMatch: json['has_active_match'] ?? false,
+      lastOnline: json['last_online'],
+    );
+  }
+}
+
+class ChallengeResponse {
+  final String message;
+  final String matchId;
+  final OnlinePlayer? opponent;
+
+  ChallengeResponse({
+    required this.message,
+    required this.matchId,
+    this.opponent,
+  });
+
+  factory ChallengeResponse.fromJson(Map<String, dynamic> json) {
+    return ChallengeResponse(
+      message: json['message'] ?? '',
+      matchId: json['match_id'] ?? '',
+      opponent: json['opponent'] != null
+          ? OnlinePlayer.fromJson(json['opponent'])
+          : null,
+    );
+  }
 }

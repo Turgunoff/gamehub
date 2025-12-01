@@ -11,6 +11,7 @@ import 'core/widgets/network_overlay.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
+import 'features/home/presentation/bloc/home_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +58,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
         BlocProvider<ProfileBloc>(
           create: (context) => ProfileBloc()..add(ProfileLoadRequested()),
+        ),
+        BlocProvider<HomeBloc>(
+          create: (context) => HomeBloc()..add(const HomeLoadRequested()),
         ),
       ],
       child: MaterialApp.router(

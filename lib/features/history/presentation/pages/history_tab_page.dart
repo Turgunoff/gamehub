@@ -8,6 +8,7 @@ import '../widgets/history_tab_bar.dart';
 import '../widgets/history_match_card.dart';
 import '../widgets/history_performance_chart.dart';
 import '../widgets/history_stat_card.dart';
+import '../../../../shared/widgets/empty_state_widget.dart';
 
 class HistoryTabPage extends StatefulWidget {
   const HistoryTabPage({super.key});
@@ -21,6 +22,10 @@ class _HistoryTabPageState extends State<HistoryTabPage>
   late TabController _tabController;
   String _selectedPeriod = 'week';
 
+  // TODO: Backend'dan ma'lumot olish kerak
+  // Hozircha bo'sh - user hali o'ynamagan
+  final List<Map<String, dynamic>> _matches = [];
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +38,9 @@ class _HistoryTabPageState extends State<HistoryTabPage>
     super.dispose();
   }
 
+  // Ma'lumotlar bormi?
+  bool get _hasData => _matches.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,34 +51,88 @@ class _HistoryTabPageState extends State<HistoryTabPage>
           _buildBackground(),
 
           SafeArea(
-            child: Column(
-              children: [
-                // Header
-                HistoryHeader(
-                  selectedPeriod: _selectedPeriod,
-                  onPeriodChanged: (period) {
-                    setState(() => _selectedPeriod = period);
-                  },
-                ),
-
-                // Stats Overview
-                const HistoryStatsOverview(),
-
-                // Tab Bar
-                HistoryTabBar(controller: _tabController),
-
-                // Tab Content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [_buildMatchesTab(), _buildStatisticsTab()],
-                  ),
-                ),
-              ],
-            ),
+            child: _hasData ? _buildWithData() : _buildEmptyState(),
           ),
         ],
       ),
+    );
+  }
+
+  // Ma'lumotlar bor bo'lganda
+  Widget _buildWithData() {
+    return Column(
+      children: [
+        // Header
+        HistoryHeader(
+          selectedPeriod: _selectedPeriod,
+          onPeriodChanged: (period) {
+            setState(() => _selectedPeriod = period);
+          },
+        ),
+
+        // Stats Overview
+        const HistoryStatsOverview(),
+
+        // Tab Bar
+        HistoryTabBar(controller: _tabController),
+
+        // Tab Content
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [_buildMatchesTab(), _buildStatisticsTab()],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Ma'lumotlar yo'q - Empty State
+  Widget _buildEmptyState() {
+    return Column(
+      children: [
+        // Header (soddalashtirilgan)
+        Container(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'O\'YIN TARIXI',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Natijalaringiz va statistikangiz',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Empty State
+        Expanded(
+          child: HistoryEmptyState(
+            onPlayNow: () {
+              // TODO: Play tab'ga o'tish (dashboard callback)
+            },
+          ),
+        ),
+      ],
     );
   }
 
