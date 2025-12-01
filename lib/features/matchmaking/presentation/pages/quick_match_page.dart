@@ -617,7 +617,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            // TODO: Show player profile
+            context.push('/player-profile/${player.id}');
           },
           child: Padding(
             padding: const EdgeInsets.all(14),

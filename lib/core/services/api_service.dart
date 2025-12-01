@@ -329,6 +329,87 @@ class ApiService {
   }
 
   // ══════════════════════════════════════════════════════════
+  // PLAYER PROFILE
+  // ══════════════════════════════════════════════════════════
+
+  /// O'yinchi profilini olish (batafsil)
+  Future<PlayerProfile> getPlayerProfile(String userId) async {
+    try {
+      final response = await _dio.get('/users/player/$userId');
+      return PlayerProfile.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // FRIENDSHIP
+  // ══════════════════════════════════════════════════════════
+
+  /// Do'stlik so'rovi yuborish
+  Future<Map<String, dynamic>> sendFriendRequest(String userId) async {
+    try {
+      final response = await _dio.post('/users/friends/request/$userId');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Do'stlik so'rovini qabul qilish
+  Future<Map<String, dynamic>> acceptFriendRequest(String userId) async {
+    try {
+      final response = await _dio.post('/users/friends/accept/$userId');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Do'stlik so'rovini rad etish
+  Future<Map<String, dynamic>> declineFriendRequest(String userId) async {
+    try {
+      final response = await _dio.post('/users/friends/decline/$userId');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Do'stlikdan chiqarish
+  Future<Map<String, dynamic>> removeFriend(String userId) async {
+    try {
+      final response = await _dio.delete('/users/friends/$userId');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Do'stlar ro'yxati
+  Future<FriendsListResponse> getFriends({String filter = 'all'}) async {
+    try {
+      final response = await _dio.get(
+        '/users/friends',
+        queryParameters: {'status_filter': filter},
+      );
+      return FriendsListResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Kutilayotgan do'stlik so'rovlari
+  Future<FriendRequestsResponse> getFriendRequests() async {
+    try {
+      final response = await _dio.get('/users/friends/requests');
+      return FriendRequestsResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
   // TOKEN MANAGEMENT
   // ══════════════════════════════════════════════════════════
 
@@ -1063,6 +1144,328 @@ class ChallengerInfo {
       nickname: json['nickname'],
       avatarUrl: json['avatar_url'],
       teamStrength: json['team_strength'],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// PLAYER PROFILE MODELS
+// ══════════════════════════════════════════════════════════
+
+class PlayerProfile {
+  final String id;
+  final String nickname;
+  final String? fullName;
+  final String? avatarUrl;
+  final String? bio;
+  final String? region;
+
+  // O'yin ma'lumotlari
+  final int level;
+  final int experience;
+  final int? teamStrength;
+  final String? favoriteTeam;
+  final String? playStyle;
+  final String? preferredFormation;
+  final String? availableHours;
+
+  // Ijtimoiy
+  final String? telegram;
+  final String? instagram;
+  final String? discord;
+
+  // Statistika
+  final PlayerStats stats;
+
+  // Status
+  final bool isOnline;
+  final String? lastOnline;
+  final bool isVerified;
+  final bool isPro;
+  final bool isPublic;
+
+  // Do'stlik
+  final String friendshipStatus;
+
+  // Head-to-head
+  final HeadToHead headToHead;
+
+  // Oxirgi o'yinlar
+  final List<RecentMatch> recentMatches;
+
+  final String memberSince;
+
+  PlayerProfile({
+    required this.id,
+    required this.nickname,
+    this.fullName,
+    this.avatarUrl,
+    this.bio,
+    this.region,
+    required this.level,
+    this.experience = 0,
+    this.teamStrength,
+    this.favoriteTeam,
+    this.playStyle,
+    this.preferredFormation,
+    this.availableHours,
+    this.telegram,
+    this.instagram,
+    this.discord,
+    required this.stats,
+    this.isOnline = false,
+    this.lastOnline,
+    this.isVerified = false,
+    this.isPro = false,
+    this.isPublic = true,
+    required this.friendshipStatus,
+    required this.headToHead,
+    required this.recentMatches,
+    required this.memberSince,
+  });
+
+  factory PlayerProfile.fromJson(Map<String, dynamic> json) {
+    return PlayerProfile(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      fullName: json['full_name'],
+      avatarUrl: json['avatar_url'],
+      bio: json['bio'],
+      region: json['region'],
+      level: json['level'] ?? 1,
+      experience: json['experience'] ?? 0,
+      teamStrength: json['team_strength'],
+      favoriteTeam: json['favorite_team'],
+      playStyle: json['play_style'],
+      preferredFormation: json['preferred_formation'],
+      availableHours: json['available_hours'],
+      telegram: json['telegram'],
+      instagram: json['instagram'],
+      discord: json['discord'],
+      stats: PlayerStats.fromJson(json['stats'] ?? {}),
+      isOnline: json['is_online'] ?? false,
+      lastOnline: json['last_online'],
+      isVerified: json['is_verified'] ?? false,
+      isPro: json['is_pro'] ?? false,
+      isPublic: json['is_public'] ?? true,
+      friendshipStatus: json['friendship_status'] ?? 'none',
+      headToHead: HeadToHead.fromJson(json['head_to_head'] ?? {}),
+      recentMatches: (json['recent_matches'] as List?)
+              ?.map((e) => RecentMatch.fromJson(e))
+              .toList() ??
+          [],
+      memberSince: json['member_since'] ?? '',
+    );
+  }
+}
+
+class PlayerStats {
+  final int totalMatches;
+  final int wins;
+  final int losses;
+  final int draws;
+  final double winRate;
+  final int tournamentsWon;
+  final int tournamentsPlayed;
+
+  PlayerStats({
+    this.totalMatches = 0,
+    this.wins = 0,
+    this.losses = 0,
+    this.draws = 0,
+    this.winRate = 0,
+    this.tournamentsWon = 0,
+    this.tournamentsPlayed = 0,
+  });
+
+  factory PlayerStats.fromJson(Map<String, dynamic> json) {
+    return PlayerStats(
+      totalMatches: json['total_matches'] ?? 0,
+      wins: json['wins'] ?? 0,
+      losses: json['losses'] ?? 0,
+      draws: json['draws'] ?? 0,
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+      tournamentsWon: json['tournaments_won'] ?? 0,
+      tournamentsPlayed: json['tournaments_played'] ?? 0,
+    );
+  }
+}
+
+class HeadToHead {
+  final int totalMatches;
+  final int wins;
+  final int losses;
+  final int draws;
+  final double winRate;
+
+  HeadToHead({
+    this.totalMatches = 0,
+    this.wins = 0,
+    this.losses = 0,
+    this.draws = 0,
+    this.winRate = 0,
+  });
+
+  factory HeadToHead.fromJson(Map<String, dynamic> json) {
+    return HeadToHead(
+      totalMatches: json['total_matches'] ?? 0,
+      wins: json['wins'] ?? 0,
+      losses: json['losses'] ?? 0,
+      draws: json['draws'] ?? 0,
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+    );
+  }
+}
+
+class RecentMatch {
+  final String id;
+  final MatchOpponent opponent;
+  final String result;
+  final String score;
+  final String mode;
+  final String? playedAt;
+
+  RecentMatch({
+    required this.id,
+    required this.opponent,
+    required this.result,
+    required this.score,
+    required this.mode,
+    this.playedAt,
+  });
+
+  factory RecentMatch.fromJson(Map<String, dynamic> json) {
+    return RecentMatch(
+      id: json['id'] ?? '',
+      opponent: MatchOpponent.fromJson(json['opponent'] ?? {}),
+      result: json['result'] ?? '',
+      score: json['score'] ?? '',
+      mode: json['mode'] ?? '',
+      playedAt: json['played_at'],
+    );
+  }
+}
+
+class MatchOpponent {
+  final String id;
+  final String nickname;
+  final String? avatarUrl;
+
+  MatchOpponent({
+    required this.id,
+    required this.nickname,
+    this.avatarUrl,
+  });
+
+  factory MatchOpponent.fromJson(Map<String, dynamic> json) {
+    return MatchOpponent(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      avatarUrl: json['avatar_url'],
+    );
+  }
+}
+
+class FriendsListResponse {
+  final List<FriendInfo> friends;
+  final int total;
+  final int onlineCount;
+
+  FriendsListResponse({
+    required this.friends,
+    required this.total,
+    required this.onlineCount,
+  });
+
+  factory FriendsListResponse.fromJson(Map<String, dynamic> json) {
+    return FriendsListResponse(
+      friends: (json['friends'] as List?)
+              ?.map((e) => FriendInfo.fromJson(e))
+              .toList() ??
+          [],
+      total: json['total'] ?? 0,
+      onlineCount: json['online_count'] ?? 0,
+    );
+  }
+}
+
+class FriendInfo {
+  final String id;
+  final String nickname;
+  final String? avatarUrl;
+  final int level;
+  final bool isOnline;
+  final String? lastOnline;
+  final double winRate;
+
+  FriendInfo({
+    required this.id,
+    required this.nickname,
+    this.avatarUrl,
+    required this.level,
+    this.isOnline = false,
+    this.lastOnline,
+    this.winRate = 0,
+  });
+
+  factory FriendInfo.fromJson(Map<String, dynamic> json) {
+    return FriendInfo(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      avatarUrl: json['avatar_url'],
+      level: json['level'] ?? 1,
+      isOnline: json['is_online'] ?? false,
+      lastOnline: json['last_online'],
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+    );
+  }
+}
+
+class FriendRequestsResponse {
+  final List<FriendRequest> requests;
+  final int count;
+
+  FriendRequestsResponse({
+    required this.requests,
+    required this.count,
+  });
+
+  factory FriendRequestsResponse.fromJson(Map<String, dynamic> json) {
+    return FriendRequestsResponse(
+      requests: (json['requests'] as List?)
+              ?.map((e) => FriendRequest.fromJson(e))
+              .toList() ??
+          [],
+      count: json['count'] ?? 0,
+    );
+  }
+}
+
+class FriendRequest {
+  final String id;
+  final String nickname;
+  final String? avatarUrl;
+  final int level;
+  final double winRate;
+  final String requestedAt;
+
+  FriendRequest({
+    required this.id,
+    required this.nickname,
+    this.avatarUrl,
+    required this.level,
+    this.winRate = 0,
+    required this.requestedAt,
+  });
+
+  factory FriendRequest.fromJson(Map<String, dynamic> json) {
+    return FriendRequest(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      avatarUrl: json['avatar_url'],
+      level: json['level'] ?? 1,
+      winRate: (json['win_rate'] ?? 0).toDouble(),
+      requestedAt: json['requested_at'] ?? '',
     );
   }
 }
