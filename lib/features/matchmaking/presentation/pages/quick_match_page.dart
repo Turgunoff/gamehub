@@ -1125,118 +1125,164 @@ class _QuickMatchPageState extends State<QuickMatchPage>
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              // Avatar
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
-                  ),
-                  border: Border.all(
-                    color: const Color(0xFFFFB800),
-                    width: 2,
-                  ),
-                ),
-                child: ClipOval(
-                  child: challenge.challenger.avatarUrl != null
-                      ? OptimizedImage(
-                          imageUrl: challenge.challenger.avatarUrl!,
-                          fit: BoxFit.cover,
-                          width: 50,
-                          height: 50,
-                          errorWidget: const Icon(
-                            Icons.person,
-                            color: Colors.white70,
-                            size: 24,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.person,
-                          color: Colors.white70,
-                          size: 24,
-                        ),
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Challenger info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      challenge.challenger.nickname ?? 'Unknown',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+          // Avatar va info - bosilganda profilga o'tadi
+          InkWell(
+            onTap: () {
+              Navigator.pop(dialogContext);
+              context.push('/player-profile/${challenge.challenger.id}');
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  // Avatar
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
+                      ),
+                      border: Border.all(
+                        color: const Color(0xFFFFB800),
+                        width: 2,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
+                    child: ClipOval(
+                      child: challenge.challenger.avatarUrl != null
+                          ? OptimizedImage(
+                              imageUrl: challenge.challenger.avatarUrl!,
+                              fit: BoxFit.cover,
+                              width: 56,
+                              height: 56,
+                              errorWidget: const Icon(
+                                Icons.person,
+                                color: Colors.white70,
+                                size: 28,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person,
+                              color: Colors.white70,
+                              size: 28,
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Challenger info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6C5CE7).withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            challenge.mode.toUpperCase(),
-                            style: const TextStyle(
-                              color: Color(0xFF00D9FF),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                challenge.challenger.nickname ?? 'Unknown',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: Colors.white.withOpacity(0.4),
+                            ),
+                          ],
                         ),
-                        if (challenge.betAmount > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFB800).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.monetization_on,
-                                  size: 12,
-                                  color: Color(0xFFFFB800),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6C5CE7).withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                challenge.mode.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Color(0xFF00D9FF),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${challenge.betAmount}',
-                                  style: const TextStyle(
-                                    color: Color(0xFFFFB800),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                            if (challenge.betAmount > 0) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFB800).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.monetization_on,
+                                      size: 12,
+                                      color: Color(0xFFFFB800),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${challenge.betAmount}',
+                                      style: const TextStyle(
+                                        color: Color(0xFFFFB800),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 14),
+
+          // Profil ko'rish tugmasi
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                context.push('/player-profile/${challenge.challenger.id}');
+              },
+              icon: const Icon(Icons.person_outline, size: 16),
+              label: const Text('PROFILNI KO\'RISH'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF00D9FF),
+                side: const BorderSide(color: Color(0xFF00D9FF)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
 
           // Action buttons
           Row(
@@ -1257,7 +1303,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFFF6B6B),
                     side: const BorderSide(color: Color(0xFFFF6B6B)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -1289,7 +1335,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00FB94),
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

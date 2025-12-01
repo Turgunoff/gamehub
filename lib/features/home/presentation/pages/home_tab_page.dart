@@ -17,11 +17,32 @@ class HomeTabPage extends StatefulWidget {
 }
 
 class _HomeTabPageState extends State<HomeTabPage> {
+  int _notificationCount = 0;
+
   @override
   void initState() {
     super.initState();
     // Ma'lumotlarni yuklash
     context.read<HomeBloc>().add(const HomeLoadRequested());
+    _loadNotificationCount();
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final results = await Future.wait([
+        ApiService().getPendingChallenges(),
+        ApiService().getFriendRequests(),
+      ]);
+      if (mounted) {
+        setState(() {
+          _notificationCount =
+              (results[0] as PendingChallengesResponse).count +
+              (results[1] as FriendRequestsResponse).count;
+        });
+      }
+    } catch (e) {
+      // Ignore
+    }
   }
 
   @override
@@ -355,24 +376,38 @@ class _HomeTabPageState extends State<HomeTabPage> {
             IconButton(
               onPressed: () {
                 HapticFeedback.lightImpact();
+                context.push('/notifications').then((_) {
+                  // Qaytganda countni yangilash
+                  _loadNotificationCount();
+                });
               },
               icon: Icon(
                 Icons.notifications_outlined,
                 color: Colors.white.withOpacity(0.8),
               ),
             ),
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFF6B6B),
-                  shape: BoxShape.circle,
+            if (_notificationCount > 0)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF6B6B),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    _notificationCount > 9 ? '9+' : '$_notificationCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ],
