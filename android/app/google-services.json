@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607685079576",
+    "project_id": "cyberpitch-e8970",
+    "storage_bucket": "cyberpitch-e8970.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607685079576:android:3f00e3d1dfffe5943b096d",
+        "android_client_info": {
+          "package_name": "dev.eldor.gamehub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA95JpyPKbO2PUBFFFBey_99sx8VCk6TXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
