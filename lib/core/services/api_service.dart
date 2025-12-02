@@ -410,6 +410,21 @@ class ApiService {
   }
 
   // ══════════════════════════════════════════════════════════
+  // ONESIGNAL (PUSH NOTIFICATIONS)
+  // ══════════════════════════════════════════════════════════
+
+  /// OneSignal Player ID ni backendga yuborish
+  Future<void> updateOneSignalPlayerId(String playerId) async {
+    try {
+      await _dio.patch('/users/me', data: {
+        'onesignal_player_id': playerId,
+      });
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
   // TOKEN MANAGEMENT
   // ══════════════════════════════════════════════════════════
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:gamehub/core/services/device_service.dart';
+import 'package:gamehub/core/services/onesignal_service.dart';
 import 'package:gamehub/core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/network_service.dart';
@@ -19,11 +20,14 @@ void main() async {
   // Initialize localization
   await EasyLocalization.ensureInitialized();
 
-  await DeviceService.instance.init(); // 👈 Shu yerda
+  await DeviceService.instance.init();
 
   // Initialize services
   await NetworkService().initialize();
   await ApiService().initialize();
+
+  // OneSignal Push Notifications
+  await OneSignalService().initialize();
 
   // Status bar style
   SystemChrome.setSystemUIOverlayStyle(
