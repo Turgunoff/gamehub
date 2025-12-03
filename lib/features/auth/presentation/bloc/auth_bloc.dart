@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/device_service.dart';
 import '../../../../core/services/onesignal_service.dart';
+import '../../../../core/services/websocket_service.dart';
 
 // ══════════════════════════════════════════════════════════
 // EVENTS
@@ -141,6 +141,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // OneSignal Player ID ni backend ga yuborish
         await OneSignalService().registerPlayerIdAfterLogin();
 
+        // WebSocket ga ulanish
+        await WebSocketService().connect();
+
         emit(const AuthAuthenticated());
       } else {
         emit(AuthUnauthenticated());
@@ -162,6 +165,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading(message: 'Chiqilmoqda...'));
 
     try {
+      // WebSocket disconnect
+      WebSocketService().disconnect();
+
       await _apiService.logout();
     } catch (e) {
       // Xato bo'lsa ham chiqarish
@@ -270,6 +276,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (response.success) {
       // OneSignal Player ID ni backend ga yuborish
       await OneSignalService().registerPlayerIdAfterLogin();
+
+      // WebSocket ga ulanish
+      await WebSocketService().connect();
 
       emit(AuthAuthenticated(isNewUser: response.isNewUser));
     } else {

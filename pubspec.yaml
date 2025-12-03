@@ -60,6 +60,9 @@ dependencies:
   onesignal_flutter: ^5.2.9
   firebase_core: ^4.2.1
 
+  # --- 9. WebSocket ---
+  web_socket_channel: ^3.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

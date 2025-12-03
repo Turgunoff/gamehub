@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    hide Options;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'device_service.dart';
 import '../models/profile_model.dart';
 
 class ApiService {

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:logger/logger.dart';
-import 'package:go_router/go_router.dart';
 import '../router/app_router.dart';
 import 'api_service.dart';
 
