@@ -1,5 +1,5 @@
 // lib/core/services/websocket_service.dart
-import 'dart:async';
+import 'dart:async' show Stream, StreamController, Timer, TimeoutException;
 import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:logger/logger.dart';
@@ -69,10 +69,14 @@ class WebSocketService {
 
   /// WebSocket ga ulanish
   Future<bool> connect() async {
-    if (_state == WebSocketState.connected ||
-        _state == WebSocketState.connecting) {
-      _logger.w('WebSocket already connected or connecting');
+    if (_state == WebSocketState.connected) {
+      _logger.w('WebSocket already connected');
       return true;
+    }
+
+    if (_state == WebSocketState.connecting) {
+      _logger.w('WebSocket connection in progress');
+      return false;
     }
 
     final token = ApiService().accessToken;
@@ -85,13 +89,24 @@ class WebSocketService {
 
     try {
       final wsUrl = Uri.parse('$_wsBaseUrl?token=$token');
+      _logger.d('Connecting to WebSocket: $wsUrl');
+
       _channel = WebSocketChannel.connect(wsUrl);
+
+      // Ready holati kutish
+      await _channel!.ready.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('WebSocket connection timeout');
+        },
+      );
 
       // Listen to messages
       _channel!.stream.listen(
         _onMessage,
         onError: _onError,
         onDone: _onDone,
+        cancelOnError: false,
       );
 
       _setState(WebSocketState.connected);
@@ -100,10 +115,12 @@ class WebSocketService {
       // Start ping timer
       _startPingTimer();
 
-      _logger.i('🔌 WebSocket connected');
+      _logger.i('🔌 WebSocket connected successfully');
       return true;
     } catch (e) {
       _logger.e('WebSocket connection error: $e');
+      _channel?.sink.close();
+      _channel = null;
       _setState(WebSocketState.disconnected);
       _scheduleReconnect();
       return false;
@@ -122,18 +139,26 @@ class WebSocketService {
 
   /// Qayta ulanish
   void _scheduleReconnect() {
+    // Agar allaqachon reconnect qilinayotgan bo'lsa, qaytadan schedule qilmaslik
+    if (_state == WebSocketState.reconnecting) {
+      return;
+    }
+
     if (_reconnectAttempts >= _maxReconnectAttempts) {
-      _logger.e('Max reconnect attempts reached');
+      _logger.e('Max reconnect attempts reached. Stopping reconnection.');
+      _setState(WebSocketState.disconnected);
       return;
     }
 
     _reconnectAttempts++;
     _setState(WebSocketState.reconnecting);
 
-    _reconnectTimer = Timer(_reconnectDelay * _reconnectAttempts, () {
+    final delay = _reconnectDelay * _reconnectAttempts;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(delay, () async {
       _logger.i(
           'Reconnecting... (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
-      connect();
+      await connect();
     });
   }
 
