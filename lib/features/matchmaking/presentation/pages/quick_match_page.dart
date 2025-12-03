@@ -848,72 +848,131 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                 ),
                 const SizedBox(width: 10),
 
-                // Challenge button
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    gradient: player.hasActiveMatch
-                        ? null
-                        : const LinearGradient(
-                            colors: [Color(0xFFFFB800), Color(0xFFFF8C00)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    color: player.hasActiveMatch ? const Color(0xFF3A3F5A) : null,
-                    boxShadow: player.hasActiveMatch
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: const Color(0xFFFFB800).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: player.hasActiveMatch
-                          ? null
-                          : () {
-                              HapticFeedback.lightImpact();
-                              _matchmakingBloc
-                                  .add(ChallengeSent(opponentId: player.id));
-                            },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              player.hasActiveMatch
-                                  ? Icons.hourglass_top
-                                  : Icons.sports_esports,
-                              size: 16,
-                              color: player.hasActiveMatch
-                                  ? Colors.white.withOpacity(0.4)
-                                  : Colors.black87,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              player.hasActiveMatch ? 'BAND' : 'CHALLENGE',
-                              style: TextStyle(
-                                color: player.hasActiveMatch
-                                    ? Colors.white.withOpacity(0.4)
-                                    : Colors.black87,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                // Challenge button - 3 holat: BAND, YUBORILDI, CHALLENGE
+                _buildChallengeButton(player),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChallengeButton(OnlinePlayer player) {
+    // 1. O'yinchi band - boshqa o'yinda
+    if (player.isBusy) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF3A3F5A),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.sports_esports,
+              size: 16,
+              color: Colors.white.withOpacity(0.4),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'BAND',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 2. Taklif allaqachon yuborilgan
+    if (player.hasPendingChallenge) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF00FB94), Color(0xFF00D9A5)],
+          ),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00FB94).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle,
+              size: 16,
+              color: Colors.black87,
+            ),
+            SizedBox(width: 6),
+            Text(
+              'YUBORILDI',
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 3. Normal - challenge yuborish mumkin
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFB800), Color(0xFFFF8C00)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFFB800).withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            _matchmakingBloc.add(ChallengeSent(opponentId: player.id));
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.sports_esports,
+                  size: 16,
+                  color: Colors.black87,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'CHALLENGE',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],

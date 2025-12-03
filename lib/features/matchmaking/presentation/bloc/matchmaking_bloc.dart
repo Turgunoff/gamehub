@@ -343,9 +343,13 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
         matchId: response.matchId,
         opponentNickname: response.opponent?.nickname ?? 'Unknown',
       ));
+      // O'yinchilar ro'yxatini qayta yuklash
+      add(const PlayersRequested(filter: 'all'));
     } catch (e) {
       _log('Challenge xatosi: $e');
       emit(MatchmakingError(e.toString()));
+      // Xatolik bo'lsa ham ro'yxatni yangilash
+      add(const PlayersRequested(filter: 'all'));
     }
   }
 

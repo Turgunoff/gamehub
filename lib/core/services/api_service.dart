@@ -1164,7 +1164,8 @@ class OnlinePlayer {
   final int wins;
   final int totalMatches;
   final double winRate;
-  final bool hasActiveMatch;
+  final bool hasPendingChallenge;  // Men yuborgan taklif
+  final bool isBusy;  // O'yinchi boshqa o'yinda band
   final bool isOnline;
   final String? lastOnline;
 
@@ -1176,10 +1177,14 @@ class OnlinePlayer {
     required this.wins,
     required this.totalMatches,
     required this.winRate,
-    required this.hasActiveMatch,
+    this.hasPendingChallenge = false,
+    this.isBusy = false,
     this.isOnline = false,
     this.lastOnline,
   });
+
+  // Eski API uchun backward compatibility
+  bool get hasActiveMatch => hasPendingChallenge || isBusy;
 
   factory OnlinePlayer.fromJson(Map<String, dynamic> json) {
     return OnlinePlayer(
@@ -1190,7 +1195,8 @@ class OnlinePlayer {
       wins: json['wins'] ?? 0,
       totalMatches: json['total_matches'] ?? 0,
       winRate: (json['win_rate'] ?? 0).toDouble(),
-      hasActiveMatch: json['has_active_match'] ?? false,
+      hasPendingChallenge: json['has_pending_challenge'] ?? false,
+      isBusy: json['is_busy'] ?? false,
       isOnline: json['is_online'] ?? false,
       lastOnline: json['last_online'],
     );
