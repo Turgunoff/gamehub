@@ -436,6 +436,16 @@ class ApiService {
     }
   }
 
+  /// Challenge bekor qilish (o'zim yuborgan)
+  Future<Map<String, dynamic>> cancelChallenge(String matchId) async {
+    try {
+      final response = await _dio.post('/matches/$matchId/cancel');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
   /// O'yin natijasini yuborish
   Future<MatchResultResponse> submitMatchResult({
     required String matchId,
@@ -1345,6 +1355,8 @@ class PlayerProfile {
 
   // Challenge holati
   final bool hasPendingChallenge;
+  final String? pendingChallengeId;  // Bekor qilish uchun
+  final bool isBusy;  // O'yinchi boshqa o'yinda band
 
   // Head-to-head
   final HeadToHead headToHead;
@@ -1379,6 +1391,8 @@ class PlayerProfile {
     this.isPublic = true,
     required this.friendshipStatus,
     this.hasPendingChallenge = false,
+    this.pendingChallengeId,
+    this.isBusy = false,
     required this.headToHead,
     required this.recentMatches,
     required this.memberSince,
@@ -1410,6 +1424,8 @@ class PlayerProfile {
       isPublic: json['is_public'] ?? true,
       friendshipStatus: json['friendship_status'] ?? 'none',
       hasPendingChallenge: json['has_pending_challenge'] ?? false,
+      pendingChallengeId: json['pending_challenge_id'],
+      isBusy: json['is_busy'] ?? false,
       headToHead: HeadToHead.fromJson(json['head_to_head'] ?? {}),
       recentMatches: (json['recent_matches'] as List?)
               ?.map((e) => RecentMatch.fromJson(e))

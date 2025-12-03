@@ -26,6 +26,8 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   bool _isFriendLoading = false;
   bool _isChallengeLoading = false;
   bool _isChallengeSent = false; // Challenge yuborilganmi
+  bool _isCancelling = false; // Bekor qilish loading
+  String? _pendingChallengeId; // Bekor qilish uchun challenge ID
 
   @override
   void initState() {
@@ -45,6 +47,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         setState(() {
           _profile = profile;
           _isChallengeSent = profile.hasPendingChallenge;
+          _pendingChallengeId = profile.pendingChallengeId;
           _isLoading = false;
         });
       }
@@ -538,17 +541,140 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           ],
         ),
 
-        // 2-qator: Challenge (katta button) - faqat yuborilmagan bo'lsa
-        if (!_isChallengeSent) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: _buildChallengeButton(
-              onTap: () => _sendChallenge(profile),
+        // 2-qator: Challenge button
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: _buildChallengeSection(profile),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChallengeSection(PlayerProfile profile) {
+    // 1. O'yinchi band - boshqa o'yinda
+    if (profile.isBusy) {
+      return _buildBusyButton();
+    }
+
+    // 2. Challenge allaqachon yuborilgan - bekor qilish imkoniyati bilan
+    if (_isChallengeSent) {
+      return _buildChallengeSentButton();
+    }
+
+    // 3. Normal - challenge yuborish mumkin
+    return _buildChallengeButton(
+      onTap: () => _sendChallenge(profile),
+    );
+  }
+
+  Widget _buildBusyButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF3A3F5A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF6B7280).withOpacity(0.3),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.sports_esports,
+              color: Color(0xFF6B7280),
+              size: 24,
             ),
+            const SizedBox(width: 10),
+            const Text(
+              'O\'YINCHI BAND',
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChallengeSentButton() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF00FB94), Color(0xFF00D9A5)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00FB94).withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
-      ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _isCancelling ? null : _cancelChallenge,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (_isCancelling)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.black,
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.check_circle,
+                    color: Colors.black,
+                    size: 24,
+                  ),
+                const SizedBox(width: 10),
+                const Text(
+                  'TAKLIF YUBORILDI',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Bekor qilish tugmasi
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'BEKOR QILISH',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1322,9 +1448,12 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     HapticFeedback.mediumImpact();
     try {
       setState(() => _isChallengeLoading = true);
-      await ApiService().sendChallenge(opponentId: profile.id);
+      final response = await ApiService().sendChallenge(opponentId: profile.id);
       if (mounted) {
-        setState(() => _isChallengeSent = true);
+        setState(() {
+          _isChallengeSent = true;
+          _pendingChallengeId = response.matchId;
+        });
         _showSnackBar('O\'yin taklifi yuborildi!', const Color(0xFF00FB94));
       }
     } catch (e) {
@@ -1334,6 +1463,31 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     } finally {
       if (mounted) {
         setState(() => _isChallengeLoading = false);
+      }
+    }
+  }
+
+  Future<void> _cancelChallenge() async {
+    if (_pendingChallengeId == null) return;
+
+    HapticFeedback.mediumImpact();
+    try {
+      setState(() => _isCancelling = true);
+      await ApiService().cancelChallenge(_pendingChallengeId!);
+      if (mounted) {
+        setState(() {
+          _isChallengeSent = false;
+          _pendingChallengeId = null;
+        });
+        _showSnackBar('Taklif bekor qilindi', const Color(0xFFFFB800));
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Xatolik: $e', const Color(0xFFFF6B6B));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCancelling = false);
       }
     }
   }
