@@ -102,9 +102,13 @@ class OneSignalService {
   Future<void> registerPlayerIdAfterLogin() async {
     // Player ID ni yangilash
     _playerId = OneSignal.User.pushSubscription.id;
+    _logger.i('🔔 registerPlayerIdAfterLogin called, playerId: $_playerId');
 
-    if (_playerId != null) {
+    if (_playerId != null && _playerId!.isNotEmpty) {
       await _sendPlayerIdToBackend();
+      _logger.i('🔔 Player ID backend ga yuborildi: $_playerId');
+    } else {
+      _logger.w('🔔 Player ID topilmadi! OneSignal permission tekshiring.');
     }
   }
 

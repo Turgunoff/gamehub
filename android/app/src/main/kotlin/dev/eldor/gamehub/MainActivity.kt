@@ -18,6 +18,20 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = getSystemService(NotificationManager::class.java)
 
+            // High Priority Channel - Telegram style heads-up
+            val highPriorityChannel = NotificationChannel(
+                "high_priority_channel",
+                "Muhim Xabarlar",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Muhim xabarlar - yuqoridan ko'rinadi"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 500, 200, 500)
+                enableLights(true)
+                setShowBadge(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            }
+
             // Challenge notification channel
             val challengeChannel = NotificationChannel(
                 "challenge_channel",
@@ -27,6 +41,9 @@ class MainActivity : FlutterActivity() {
                 description = "O'yinga taklif qilinganingizda xabar olasiz"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 200, 500)
+                enableLights(true)
+                setShowBadge(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 val soundUri = Uri.parse("android.resource://${packageName}/raw/challenge")
                 setSound(soundUri, AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION)
@@ -43,6 +60,9 @@ class MainActivity : FlutterActivity() {
                 description = "Yangi do'stlik so'rovlari haqida xabar olasiz"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 300, 100, 300)
+                enableLights(true)
+                setShowBadge(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 val soundUri = Uri.parse("android.resource://${packageName}/raw/friend_request")
                 setSound(soundUri, AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION)
@@ -61,7 +81,7 @@ class MainActivity : FlutterActivity() {
             }
 
             notificationManager.createNotificationChannels(
-                listOf(challengeChannel, friendChannel, defaultChannel)
+                listOf(highPriorityChannel, challengeChannel, friendChannel, defaultChannel)
             )
         }
     }
