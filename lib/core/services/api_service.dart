@@ -1343,6 +1343,9 @@ class PlayerProfile {
   // Do'stlik
   final String friendshipStatus;
 
+  // Challenge holati
+  final bool hasPendingChallenge;
+
   // Head-to-head
   final HeadToHead headToHead;
 
@@ -1375,6 +1378,7 @@ class PlayerProfile {
     this.isPro = false,
     this.isPublic = true,
     required this.friendshipStatus,
+    this.hasPendingChallenge = false,
     required this.headToHead,
     required this.recentMatches,
     required this.memberSince,
@@ -1405,6 +1409,7 @@ class PlayerProfile {
       isPro: json['is_pro'] ?? false,
       isPublic: json['is_public'] ?? true,
       friendshipStatus: json['friendship_status'] ?? 'none',
+      hasPendingChallenge: json['has_pending_challenge'] ?? false,
       headToHead: HeadToHead.fromJson(json['head_to_head'] ?? {}),
       recentMatches: (json['recent_matches'] as List?)
               ?.map((e) => RecentMatch.fromJson(e))

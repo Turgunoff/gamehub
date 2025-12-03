@@ -232,7 +232,7 @@ class _ProfileFriendsSectionState extends State<ProfileFriendsSection> {
 
   Widget _buildFriendsList() {
     return SizedBox(
-      height: 140,
+      height: 130,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: _friends.length,
@@ -284,9 +284,9 @@ class _FriendCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 110,
+        width: 100,
         margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -307,13 +307,14 @@ class _FriendCard extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Avatar with online indicator
             Stack(
               children: [
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
@@ -331,8 +332,8 @@ class _FriendCard extends StatelessWidget {
                         ? OptimizedImage(
                             imageUrl: friend.avatarUrl!,
                             fit: BoxFit.cover,
-                            width: 50,
-                            height: 50,
+                            width: 44,
+                            height: 44,
                             errorWidget: _buildDefaultAvatar(),
                           )
                         : _buildDefaultAvatar(),
@@ -358,13 +359,13 @@ class _FriendCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             // Nickname
             Text(
               friend.nickname,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -372,37 +373,36 @@ class _FriendCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
 
             // Level
             Text(
               'LVL ${friend.level}',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 color: Colors.white.withOpacity(0.5),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
 
             // Chat button
             GestureDetector(
               onTap: onChatTap,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFF00D9FF).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.chat_bubble_outline, size: 12, color: Color(0xFF00D9FF)),
-                    SizedBox(width: 4),
+                    Icon(Icons.chat_bubble_outline, size: 10, color: Color(0xFF00D9FF)),
+                    SizedBox(width: 3),
                     Text(
                       'Chat',
                       style: TextStyle(
                         color: Color(0xFF00D9FF),
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

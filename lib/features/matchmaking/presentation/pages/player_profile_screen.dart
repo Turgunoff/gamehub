@@ -21,7 +21,11 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   PlayerProfile? _profile;
   bool _isLoading = true;
   String? _error;
-  bool _isActionLoading = false;
+
+  // Alohida loading state'lar
+  bool _isFriendLoading = false;
+  bool _isChallengeLoading = false;
+  bool _isChallengeSent = false; // Challenge yuborilganmi
 
   @override
   void initState() {
@@ -40,6 +44,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       if (mounted) {
         setState(() {
           _profile = profile;
+          _isChallengeSent = profile.hasPendingChallenge;
           _isLoading = false;
         });
       }
@@ -350,14 +355,19 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           // Nickname and badges
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                profile.nickname,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+              Flexible(
+                child: Text(
+                  profile.nickname,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
               if (profile.isPro) ...[
@@ -506,40 +516,97 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
 
     return Column(
       children: [
+        // 1-qator: Do'stlik va Xabar
         Row(
           children: [
-            // Challenge button
-            Expanded(
-              child: _buildActionButton(
-                icon: Icons.sports_esports,
-                label: 'CHALLENGE',
-                gradient: const [Color(0xFFFFB800), Color(0xFFFF8C00)],
-                onTap: () => _sendChallenge(profile),
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Friend button based on status
+            // Do'stlik button
             Expanded(
               child: _buildFriendButton(profile),
             ),
+            // Xabar button - faqat do'stlar uchun
+            if (isFriend) ...[
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'XABAR',
+                  gradient: const [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
+                  onTap: () => _openChat(profile),
+                ),
+              ),
+            ],
           ],
         ),
 
-        // Chat button - faqat do'stlar uchun
-        if (isFriend) ...[
+        // 2-qator: Challenge (katta button) - faqat yuborilmagan bo'lsa
+        if (!_isChallengeSent) ...[
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: _buildActionButton(
-              icon: Icons.chat_bubble_outline,
-              label: 'XABAR YOZISH',
-              gradient: const [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
-              onTap: () => _openChat(profile),
+            child: _buildChallengeButton(
+              onTap: () => _sendChallenge(profile),
             ),
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildChallengeButton({VoidCallback? onTap}) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFB800), Color(0xFFFF8C00)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFFB800).withOpacity(0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _isChallengeLoading ? null : onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (_isChallengeLoading)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.black,
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.sports_esports,
+                    color: Colors.black,
+                    size: 24,
+                  ),
+                const SizedBox(width: 10),
+                const Text(
+                  'O\'YIN TAKLIF QILISH',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -551,6 +618,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           label: 'DO\'ST',
           gradient: const [Color(0xFF00FB94), Color(0xFF00D9A5)],
           onTap: () => _showRemoveFriendDialog(profile),
+          isLoading: _isFriendLoading,
         );
       case 'request_sent':
         return _buildActionButton(
@@ -558,6 +626,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           label: 'YUBORILDI',
           gradient: const [Color(0xFF6B7280), Color(0xFF4B5563)],
           onTap: null,
+          isLoading: false,
         );
       case 'request_received':
         return _buildActionButton(
@@ -565,6 +634,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           label: 'QABUL QILISH',
           gradient: const [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
           onTap: () => _acceptFriendRequest(profile),
+          isLoading: _isFriendLoading,
         );
       case 'blocked':
         return _buildActionButton(
@@ -572,6 +642,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           label: 'BLOKLANGAN',
           gradient: const [Color(0xFFFF6B6B), Color(0xFFEE5A5A)],
           onTap: null,
+          isLoading: false,
         );
       default: // 'none'
         return _buildActionButton(
@@ -579,6 +650,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           label: 'DO\'ST QO\'SHISH',
           gradient: const [Color(0xFF6C5CE7), Color(0xFF8B7CF7)],
           onTap: () => _sendFriendRequest(profile),
+          isLoading: _isFriendLoading,
         );
     }
   }
@@ -588,6 +660,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     required String label,
     required List<Color> gradient,
     VoidCallback? onTap,
+    bool isLoading = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -608,13 +681,13 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: _isActionLoading ? null : onTap,
+          onTap: isLoading ? null : onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_isActionLoading)
+                if (isLoading)
                   const SizedBox(
                     width: 16,
                     height: 16,
@@ -1248,10 +1321,11 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   Future<void> _sendChallenge(PlayerProfile profile) async {
     HapticFeedback.mediumImpact();
     try {
-      setState(() => _isActionLoading = true);
+      setState(() => _isChallengeLoading = true);
       await ApiService().sendChallenge(opponentId: profile.id);
       if (mounted) {
-        _showSnackBar('Challenge yuborildi!', const Color(0xFF00FB94));
+        setState(() => _isChallengeSent = true);
+        _showSnackBar('O\'yin taklifi yuborildi!', const Color(0xFF00FB94));
       }
     } catch (e) {
       if (mounted) {
@@ -1259,7 +1333,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isActionLoading = false);
+        setState(() => _isChallengeLoading = false);
       }
     }
   }
@@ -1267,7 +1341,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   Future<void> _sendFriendRequest(PlayerProfile profile) async {
     HapticFeedback.lightImpact();
     try {
-      setState(() => _isActionLoading = true);
+      setState(() => _isFriendLoading = true);
       await ApiService().sendFriendRequest(profile.id);
       if (mounted) {
         _showSnackBar('Do\'stlik so\'rovi yuborildi!', const Color(0xFF00FB94));
@@ -1279,7 +1353,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isActionLoading = false);
+        setState(() => _isFriendLoading = false);
       }
     }
   }
@@ -1287,7 +1361,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   Future<void> _acceptFriendRequest(PlayerProfile profile) async {
     HapticFeedback.lightImpact();
     try {
-      setState(() => _isActionLoading = true);
+      setState(() => _isFriendLoading = true);
       await ApiService().acceptFriendRequest(profile.id);
       if (mounted) {
         _showSnackBar('Do\'stlik qabul qilindi!', const Color(0xFF00FB94));
@@ -1299,7 +1373,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isActionLoading = false);
+        setState(() => _isFriendLoading = false);
       }
     }
   }
@@ -1343,7 +1417,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
 
   Future<void> _removeFriend(PlayerProfile profile) async {
     try {
-      setState(() => _isActionLoading = true);
+      setState(() => _isFriendLoading = true);
       await ApiService().removeFriend(profile.id);
       if (mounted) {
         _showSnackBar('Do\'stlikdan chiqarildi', const Color(0xFFFFB800));
@@ -1355,7 +1429,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isActionLoading = false);
+        setState(() => _isFriendLoading = false);
       }
     }
   }
