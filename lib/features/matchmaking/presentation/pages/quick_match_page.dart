@@ -580,278 +580,189 @@ class _QuickMatchPageState extends State<QuickMatchPage>
 
   Widget _buildPlayerCard(OnlinePlayer player) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: player.isOnline
               ? [
-                  const Color(0xFF1A2A3A).withOpacity(0.8),
-                  const Color(0xFF0F1A2A).withOpacity(0.9),
+                  const Color(0xFF1E2D3D),
+                  const Color(0xFF152232),
                 ]
               : [
-                  const Color(0xFF1A1F2E).withOpacity(0.6),
-                  const Color(0xFF0A0E1A).withOpacity(0.7),
+                  const Color(0xFF1A1F2E),
+                  const Color(0xFF12161F),
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: player.isOnline
-              ? const Color(0xFF00FB94).withOpacity(0.3)
-              : Colors.white.withOpacity(0.05),
+              ? const Color(0xFF00FB94).withOpacity(0.4)
+              : Colors.white.withOpacity(0.06),
           width: 1.5,
         ),
-        boxShadow: player.isOnline
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF00FB94).withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : [],
+        boxShadow: [
+          if (player.isOnline)
+            BoxShadow(
+              color: const Color(0xFF00FB94).withOpacity(0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           onTap: () async {
             await context.push('/player-profile/${player.id}');
-            // Qaytib kelganda faqat shu player ma'lumotini yangilash (scroll saqlanadi)
             _matchmakingBloc.add(SinglePlayerRefreshed(player.id));
           },
           child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               children: [
-                // Avatar with glow effect for online
-                Container(
-                  decoration: player.isOnline
-                      ? BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF00FB94).withOpacity(0.4),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        )
-                      : null,
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: player.isOnline
-                                ? [const Color(0xFF6C5CE7), const Color(0xFF00D9FF)]
-                                : [const Color(0xFF3A3F5A), const Color(0xFF2A2F4A)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          border: Border.all(
-                            color: player.isOnline
-                                ? const Color(0xFF00FB94)
-                                : Colors.white.withOpacity(0.2),
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipOval(
-                          child: player.avatarUrl != null
-                              ? OptimizedImage(
-                                  imageUrl: player.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  width: 56,
-                                  height: 56,
-                                  errorWidget: const Icon(
-                                    Icons.person,
-                                    color: Colors.white70,
-                                    size: 28,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.person,
-                                  color: Colors.white70,
-                                  size: 28,
-                                ),
-                        ),
-                      ),
-                      // Online indicator with pulse
-                      Positioned(
-                        bottom: 2,
-                        right: 2,
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: player.isOnline
-                                ? const Color(0xFF00FB94)
-                                : const Color(0xFF6B7280),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFF0A0E1A),
-                              width: 2.5,
-                            ),
-                            boxShadow: player.isOnline
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(0xFF00FB94).withOpacity(0.6),
-                                      blurRadius: 6,
-                                      spreadRadius: 1,
-                                    ),
-                                  ]
-                                : [],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
+                // Yuqori qism: Avatar, Info va Button
+                Row(
+                  children: [
+                    // Avatar with glow
+                    _buildPlayerAvatar(player),
+                    const SizedBox(width: 14),
 
-                // Player info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Nickname with status badge
-                      Row(
+                    // Player info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Flexible(
-                            child: Text(
-                              player.nickname,
-                              style: TextStyle(
-                                color: player.isOnline
-                                    ? Colors.white
-                                    : Colors.white.withOpacity(0.7),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
+                          // Nickname
+                          Text(
+                            player.nickname,
+                            style: TextStyle(
                               color: player.isOnline
-                                  ? const Color(0xFF00FB94).withOpacity(0.15)
-                                  : Colors.white.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: player.isOnline
-                                    ? const Color(0xFF00FB94).withOpacity(0.3)
-                                    : Colors.white.withOpacity(0.1),
-                              ),
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.75),
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
                             ),
-                            child: Text(
-                              player.isOnline ? 'ONLINE' : 'OFFLINE',
-                              style: TextStyle(
-                                color: player.isOnline
-                                    ? const Color(0xFF00FB94)
-                                    : Colors.white.withOpacity(0.4),
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
+                          const SizedBox(height: 6),
 
-                      // Stats row
-                      Row(
-                        children: [
-                          // Level badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6C5CE7), Color(0xFF8B7CF7)],
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'LVL ${player.level}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Win rate
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: (player.winRate >= 50
+                          // Status va Level
+                          Row(
+                            children: [
+                              // Online status dot
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: player.isOnline
                                       ? const Color(0xFF00FB94)
-                                      : const Color(0xFFFF6B6B))
-                                  .withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  player.winRate >= 50
-                                      ? Icons.trending_up
-                                      : Icons.trending_down,
-                                  size: 12,
-                                  color: player.winRate >= 50
-                                      ? const Color(0xFF00FB94)
-                                      : const Color(0xFFFF6B6B),
+                                      : const Color(0xFF6B7280),
+                                  shape: BoxShape.circle,
+                                  boxShadow: player.isOnline
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF00FB94)
+                                                .withOpacity(0.6),
+                                            blurRadius: 6,
+                                          ),
+                                        ]
+                                      : null,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${player.winRate.toStringAsFixed(0)}%',
-                                  style: TextStyle(
-                                    color: player.winRate >= 50
-                                        ? const Color(0xFF00FB94)
-                                        : const Color(0xFFFF6B6B),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                player.isOnline ? 'Online' : 'Offline',
+                                style: TextStyle(
+                                  color: player.isOnline
+                                      ? const Color(0xFF00FB94)
+                                      : Colors.white.withOpacity(0.4),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Level
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF6C5CE7), Color(0xFF8B5CF6)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'LVL ${player.level}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Total matches
-                          Text(
-                            '${player.totalMatches} o\'yin',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 11,
-                            ),
+                              ),
+                            ],
                           ),
                         ],
+                      ),
+                    ),
+
+                    // Challenge button
+                    _buildChallengeButton(player),
+                  ],
+                ),
+
+                // Pastki qism: Stats
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // Win Rate
+                      _buildStatItem(
+                        icon: player.winRate >= 50
+                            ? Icons.trending_up_rounded
+                            : Icons.trending_down_rounded,
+                        iconColor: player.winRate >= 50
+                            ? const Color(0xFF00FB94)
+                            : const Color(0xFFFF6B6B),
+                        value: '${player.winRate.toStringAsFixed(0)}%',
+                        label: 'Win Rate',
+                      ),
+                      _buildStatDivider(),
+                      // Total Matches
+                      _buildStatItem(
+                        icon: Icons.sports_esports_rounded,
+                        iconColor: const Color(0xFF00D9FF),
+                        value: '${player.totalMatches}',
+                        label: 'O\'yinlar',
+                      ),
+                      _buildStatDivider(),
+                      // Wins
+                      _buildStatItem(
+                        icon: Icons.emoji_events_rounded,
+                        iconColor: const Color(0xFFFFB800),
+                        value: '${player.wins}',
+                        label: 'G\'alabalar',
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
-
-                // Challenge button - 3 holat: BAND, YUBORILDI, CHALLENGE
-                _buildChallengeButton(player),
               ],
             ),
           ),
@@ -860,31 +771,165 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     );
   }
 
+  Widget _buildPlayerAvatar(OnlinePlayer player) {
+    return Container(
+      decoration: player.isOnline
+          ? BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00FB94).withOpacity(0.4),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            )
+          : null,
+      child: Stack(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: player.isOnline
+                    ? [const Color(0xFF6C5CE7), const Color(0xFF00D9FF)]
+                    : [const Color(0xFF3A3F5A), const Color(0xFF2A2F4A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: player.isOnline
+                    ? const Color(0xFF00FB94)
+                    : Colors.white.withOpacity(0.15),
+                width: 2.5,
+              ),
+            ),
+            child: ClipOval(
+              child: player.avatarUrl != null
+                  ? OptimizedImage(
+                      imageUrl: player.avatarUrl!,
+                      fit: BoxFit.cover,
+                      width: 58,
+                      height: 58,
+                      errorWidget: const Icon(
+                        Icons.person_rounded,
+                        color: Colors.white70,
+                        size: 28,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.person_rounded,
+                      color: Colors.white70,
+                      size: 28,
+                    ),
+            ),
+          ),
+          // Online indicator
+          Positioned(
+            bottom: 2,
+            right: 2,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: player.isOnline
+                    ? const Color(0xFF00FB94)
+                    : const Color(0xFF6B7280),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF152232),
+                  width: 3,
+                ),
+                boxShadow: player.isOnline
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF00FB94).withOpacity(0.6),
+                          blurRadius: 8,
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: iconColor),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatDivider() {
+    return Container(
+      width: 1,
+      height: 30,
+      color: Colors.white.withOpacity(0.1),
+    );
+  }
+
   Widget _buildChallengeButton(OnlinePlayer player) {
     // 1. O'yinchi band - boshqa o'yinda
     if (player.isBusy) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF3A3F5A),
-          borderRadius: BorderRadius.circular(10),
+          color: const Color(0xFF2A2F3E),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF3A3F5A),
+            width: 1,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.sports_esports,
-              size: 16,
-              color: Colors.white.withOpacity(0.4),
+              Icons.hourglass_top_rounded,
+              size: 18,
+              color: Colors.white.withOpacity(0.35),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Text(
               'BAND',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+                color: Colors.white.withOpacity(0.35),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
               ),
             ),
           ],
@@ -895,17 +940,19 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     // 2. Taklif allaqachon yuborilgan
     if (player.hasPendingChallenge) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF00FB94), Color(0xFF00D9A5)],
+            colors: [Color(0xFF00FB94), Color(0xFF00E187)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF00FB94).withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: const Color(0xFF00FB94).withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -913,17 +960,17 @@ class _QuickMatchPageState extends State<QuickMatchPage>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.check_circle,
-              size: 16,
-              color: Colors.black87,
+              Icons.check_circle_rounded,
+              size: 18,
+              color: Color(0xFF0A3D2A),
             ),
-            SizedBox(width: 6),
+            SizedBox(width: 8),
             Text(
-              'YUBORILDI',
+              'KUTILMOQDA',
               style: TextStyle(
-                color: Colors.black87,
+                color: Color(0xFF0A3D2A),
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),
             ),
@@ -935,45 +982,45 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     // 3. Normal - challenge yuborish mumkin
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFB800), Color(0xFFFF8C00)],
+          colors: [Color(0xFFFFB800), Color(0xFFFF9500)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFB800).withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFFFFB800).withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             HapticFeedback.lightImpact();
             _matchmakingBloc.add(ChallengeSent(opponentId: player.id));
           },
           child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.sports_esports,
-                  size: 16,
-                  color: Colors.black87,
+                  Icons.bolt_rounded,
+                  size: 18,
+                  color: Color(0xFF3D2800),
                 ),
                 SizedBox(width: 6),
                 Text(
                   'CHALLENGE',
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: Color(0xFF3D2800),
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                   ),
                 ),
