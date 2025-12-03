@@ -75,6 +75,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         discord: event.discord,
         pesId: event.pesId,
         teamStrength: event.teamStrength,
+        favoriteTeam: event.favoriteTeam,
+        playStyle: event.playStyle,
+        preferredFormation: event.preferredFormation,
         availableHours: event.availableHours,
       );
 

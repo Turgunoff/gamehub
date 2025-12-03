@@ -53,9 +53,15 @@ class OneSignalService {
       // Notification ruxsatini so'rash
       await OneSignal.Notifications.requestPermission(true);
 
-      // Player ID ni olish
+      // Player ID ni olish (bir oz kutish kerak)
+      await Future.delayed(const Duration(milliseconds: 500));
       _playerId = OneSignal.User.pushSubscription.id;
-      _logger.i('OneSignal Player ID: $_playerId');
+
+      if (_playerId != null && _playerId!.isNotEmpty) {
+        _logger.i('OneSignal Player ID: $_playerId');
+      } else {
+        _logger.w('OneSignal Player ID hali tayyor emas, observer orqali olinadi');
+      }
 
       // Notification listener
       OneSignal.Notifications.addClickListener(_onNotificationClicked);

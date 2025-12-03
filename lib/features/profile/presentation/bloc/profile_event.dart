@@ -51,6 +51,9 @@ class ProfileUpdateRequested extends ProfileEvent {
   // ═══════════════════════════════════════════
   final String? pesId;
   final int? teamStrength;
+  final String? favoriteTeam;
+  final String? playStyle;
+  final String? preferredFormation;
   final String? availableHours;
 
   const ProfileUpdateRequested({
@@ -68,6 +71,9 @@ class ProfileUpdateRequested extends ProfileEvent {
     this.discord,
     this.pesId,
     this.teamStrength,
+    this.favoriteTeam,
+    this.playStyle,
+    this.preferredFormation,
     this.availableHours,
   });
 
@@ -75,6 +81,6 @@ class ProfileUpdateRequested extends ProfileEvent {
   List<Object?> get props => [
     nickname, fullName, phone, birthDate, gender, region, bio, language,
     telegram, instagram, youtube, discord,
-    pesId, teamStrength, availableHours,
+    pesId, teamStrength, favoriteTeam, playStyle, preferredFormation, availableHours,
   ];
 }
