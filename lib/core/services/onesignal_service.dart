@@ -1,5 +1,7 @@
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:go_router/go_router.dart';
+import '../router/app_router.dart';
 import 'api_service.dart';
 
 class OneSignalService {
@@ -58,22 +60,45 @@ class OneSignalService {
     final data = event.notification.additionalData;
     if (data != null) {
       final type = data['type'] as String?;
-      final id = data['id'] as String?;
+      final userId = data['user_id'] as String?;
+      final matchId = data['match_id'] as String?;
+
+      _logger.i('Notification type: $type, userId: $userId, matchId: $matchId');
 
       // Notification turiga qarab navigatsiya
       switch (type) {
         case 'challenge':
-          // Challenge sahifasiga o'tish
-          _logger.i('Challenge notification: $id');
+          // Challenge/Match sahifasiga o'tish
+          _logger.i('Challenge notification - navigating to notifications');
+          AppRouter.router.go('/notifications');
           break;
         case 'friend_request':
-          // Do'stlik so'rovi sahifasiga o'tish
-          _logger.i('Friend request notification: $id');
+          // Do'stlik so'rovi - player profile ga o'tish
+          if (userId != null) {
+            _logger.i('Friend request - navigating to player profile: $userId');
+            AppRouter.router.go('/player-profile/$userId');
+          } else {
+            AppRouter.router.go('/notifications');
+          }
+          break;
+        case 'friend_accepted':
+          // Do'stlik qabul qilindi - player profile ga o'tish
+          if (userId != null) {
+            _logger.i('Friend accepted - navigating to player profile: $userId');
+            AppRouter.router.go('/player-profile/$userId');
+          } else {
+            AppRouter.router.go('/notifications');
+          }
           break;
         case 'match_start':
+        case 'match_reminder':
           // Match sahifasiga o'tish
-          _logger.i('Match start notification: $id');
+          _logger.i('Match notification - navigating to quick-match');
+          AppRouter.router.go('/quick-match');
           break;
+        default:
+          // Default - notifications sahifasiga
+          AppRouter.router.go('/notifications');
       }
     }
   }
