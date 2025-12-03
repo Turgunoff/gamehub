@@ -618,8 +618,8 @@ class _QuickMatchPageState extends State<QuickMatchPage>
           borderRadius: BorderRadius.circular(16),
           onTap: () async {
             await context.push('/player-profile/${player.id}');
-            // Qaytib kelganda o'yinchilar ro'yxatini yangilash
-            _matchmakingBloc.add(PlayersRequested(filter: _currentFilter));
+            // Qaytib kelganda faqat shu player ma'lumotini yangilash (scroll saqlanadi)
+            _matchmakingBloc.add(SinglePlayerRefreshed(player.id));
           },
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -1191,8 +1191,8 @@ class _QuickMatchPageState extends State<QuickMatchPage>
             onTap: () async {
               Navigator.pop(dialogContext);
               await context.push('/player-profile/${challenge.challenger.id}');
-              // Qaytib kelganda ro'yxatni yangilash
-              _matchmakingBloc.add(PlayersRequested(filter: _currentFilter));
+              // Qaytib kelganda faqat shu player ma'lumotini yangilash
+              _matchmakingBloc.add(SinglePlayerRefreshed(challenge.challenger.id));
             },
             borderRadius: BorderRadius.circular(10),
             child: Padding(
@@ -1333,8 +1333,8 @@ class _QuickMatchPageState extends State<QuickMatchPage>
               onPressed: () async {
                 Navigator.pop(dialogContext);
                 await context.push('/player-profile/${challenge.challenger.id}');
-                // Qaytib kelganda ro'yxatni yangilash
-                _matchmakingBloc.add(PlayersRequested(filter: _currentFilter));
+                // Qaytib kelganda faqat shu player ma'lumotini yangilash
+                _matchmakingBloc.add(SinglePlayerRefreshed(challenge.challenger.id));
               },
               icon: const Icon(Icons.person_outline, size: 16),
               label: const Text('PROFILNI KO\'RISH'),

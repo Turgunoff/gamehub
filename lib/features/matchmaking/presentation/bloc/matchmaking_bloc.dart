@@ -74,6 +74,16 @@ class MatchmakingReset extends MatchmakingEvent {
   const MatchmakingReset();
 }
 
+/// Bitta player ma'lumotini yangilash (scroll pozitsiyasini saqlab)
+class SinglePlayerRefreshed extends MatchmakingEvent {
+  final String playerId;
+
+  const SinglePlayerRefreshed(this.playerId);
+
+  @override
+  List<Object?> get props => [playerId];
+}
+
 // ══════════════════════════════════════════════════════════
 // STATES
 // ══════════════════════════════════════════════════════════
@@ -192,6 +202,7 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     on<PlayersRequested>(_onPlayersRequested);
     on<ChallengeSent>(_onChallengeSent);
     on<MatchmakingReset>(_onReset);
+    on<SinglePlayerRefreshed>(_onSinglePlayerRefreshed);
   }
 
   Future<void> _onStarted(
@@ -332,6 +343,9 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     ChallengeSent event,
     Emitter<MatchmakingState> emit,
   ) async {
+    // Oldingi state'ni saqlab qo'yamiz
+    final previousState = state;
+
     try {
       _log('Challenge yuborilmoqda: ${event.opponentId}');
       final response = await _apiService.sendChallenge(
@@ -343,13 +357,41 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
         matchId: response.matchId,
         opponentNickname: response.opponent?.nickname ?? 'Unknown',
       ));
-      // O'yinchilar ro'yxatini qayta yuklash
-      add(const PlayersRequested(filter: 'all'));
+
+      // Faqat shu player ma'lumotini yangilash (scroll saqlanadi)
+      if (previousState is PlayersLoaded) {
+        final updatedPlayers = previousState.players.map((player) {
+          if (player.id == event.opponentId) {
+            return OnlinePlayer(
+              id: player.id,
+              nickname: player.nickname,
+              avatarUrl: player.avatarUrl,
+              level: player.level,
+              wins: player.wins,
+              totalMatches: player.totalMatches,
+              winRate: player.winRate,
+              hasPendingChallenge: true, // Challenge yuborildi
+              isBusy: player.isBusy,
+              isOnline: player.isOnline,
+              lastOnline: player.lastOnline,
+            );
+          }
+          return player;
+        }).toList();
+
+        emit(PlayersLoaded(
+          players: updatedPlayers,
+          totalOnline: previousState.totalOnline,
+          currentFilter: previousState.currentFilter,
+        ));
+      }
     } catch (e) {
       _log('Challenge xatosi: $e');
       emit(MatchmakingError(e.toString()));
-      // Xatolik bo'lsa ham ro'yxatni yangilash
-      add(const PlayersRequested(filter: 'all'));
+      // Xatolik bo'lsa eski state'ga qaytish
+      if (previousState is PlayersLoaded) {
+        emit(previousState);
+      }
     }
   }
 
@@ -360,6 +402,50 @@ class MatchmakingBloc extends Bloc<MatchmakingEvent, MatchmakingState> {
     _stopTimers();
     _searchDuration = 0;
     emit(const MatchmakingInitial());
+  }
+
+  Future<void> _onSinglePlayerRefreshed(
+    SinglePlayerRefreshed event,
+    Emitter<MatchmakingState> emit,
+  ) async {
+    // Faqat PlayersLoaded state'da ishlaydi
+    if (state is! PlayersLoaded) return;
+
+    final currentState = state as PlayersLoaded;
+
+    try {
+      // Player profile'dan yangi ma'lumotni olish
+      final profile = await _apiService.getPlayerProfile(event.playerId);
+
+      // Mavjud ro'yxatda player'ni yangilash
+      final updatedPlayers = currentState.players.map((player) {
+        if (player.id == event.playerId) {
+          return OnlinePlayer(
+            id: player.id,
+            nickname: player.nickname,
+            avatarUrl: player.avatarUrl,
+            level: player.level,
+            wins: player.wins,
+            totalMatches: player.totalMatches,
+            winRate: player.winRate,
+            hasPendingChallenge: profile.hasPendingChallenge,
+            isBusy: profile.isBusy,
+            isOnline: profile.isOnline,
+            lastOnline: player.lastOnline,
+          );
+        }
+        return player;
+      }).toList();
+
+      emit(PlayersLoaded(
+        players: updatedPlayers,
+        totalOnline: currentState.totalOnline,
+        currentFilter: currentState.currentFilter,
+      ));
+    } catch (e) {
+      _log('Player yangilashda xato: $e');
+      // Xatolik bo'lsa ham eski state'ni saqlab qo'yamiz
+    }
   }
 
   void _log(String message) {
