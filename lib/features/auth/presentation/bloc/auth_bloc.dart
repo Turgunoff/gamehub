@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/device_service.dart';
+import '../../../../core/services/onesignal_service.dart';
 
 // ══════════════════════════════════════════════════════════
 // EVENTS
@@ -137,6 +138,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final isAuth = await _apiService.checkAuth();
 
       if (isAuth) {
+        // OneSignal Player ID ni backend ga yuborish
+        await OneSignalService().registerPlayerIdAfterLogin();
+
         emit(const AuthAuthenticated());
       } else {
         emit(AuthUnauthenticated());
@@ -264,6 +268,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     if (response.success) {
+      // OneSignal Player ID ni backend ga yuborish
+      await OneSignalService().registerPlayerIdAfterLogin();
+
       emit(AuthAuthenticated(isNewUser: response.isNewUser));
     } else {
       emit(
