@@ -616,8 +616,10 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            context.push('/player-profile/${player.id}');
+          onTap: () async {
+            await context.push('/player-profile/${player.id}');
+            // Qaytib kelganda o'yinchilar ro'yxatini yangilash
+            _matchmakingBloc.add(PlayersRequested(filter: _currentFilter));
           },
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -1186,9 +1188,11 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         children: [
           // Avatar va info - bosilganda profilga o'tadi
           InkWell(
-            onTap: () {
+            onTap: () async {
               Navigator.pop(dialogContext);
-              context.push('/player-profile/${challenge.challenger.id}');
+              await context.push('/player-profile/${challenge.challenger.id}');
+              // Qaytib kelganda ro'yxatni yangilash
+              _matchmakingBloc.add(PlayersRequested(filter: _currentFilter));
             },
             borderRadius: BorderRadius.circular(10),
             child: Padding(
@@ -1326,9 +1330,11 @@ class _QuickMatchPageState extends State<QuickMatchPage>
             width: double.infinity,
             margin: const EdgeInsets.only(bottom: 10),
             child: OutlinedButton.icon(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(dialogContext);
-                context.push('/player-profile/${challenge.challenger.id}');
+                await context.push('/player-profile/${challenge.challenger.id}');
+                // Qaytib kelganda ro'yxatni yangilash
+                _matchmakingBloc.add(PlayersRequested(filter: _currentFilter));
               },
               icon: const Icon(Icons.person_outline, size: 16),
               label: const Text('PROFILNI KO\'RISH'),
