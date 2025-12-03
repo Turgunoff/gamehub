@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/onesignal_service.dart';
 import '../../../../core/widgets/optimized_image.dart';
+import '../../../chat/presentation/pages/chat_page.dart';
 
 class NotificationsScreen extends StatefulWidget {
   final int initialTab;
@@ -900,6 +901,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       setState(() {
         _friendRequests.remove(request);
       });
+
+      // Do'stlik qabul qilingandan keyin chat sahifasiga o'tish
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(
+              otherUserId: request.id,
+              otherUserNickname: request.nickname,
+              otherUserAvatar: request.avatarUrl,
+            ),
+          ),
+        );
+      }
     } catch (e) {
       _showSnackBar('Xatolik: $e', const Color(0xFFFF6B6B));
     }
