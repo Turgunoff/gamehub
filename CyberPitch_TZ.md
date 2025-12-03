@@ -41,7 +41,7 @@ O'zbekiston va Markaziy Osiyo mintaqasidagi PES o'yinchilari uchun markazlashgan
 | **Navigation** | Go Router |
 | **Dizayn Tizimi** | Faqat "Dark Mode" (Tungi rejim) |
 | **Lokalizatsiya** | Easy Localization |
-| **Min SDK** | Android 21 (5.0), iOS 12.0 |
+| **Min SDK** | Android 21 (5.0), iOS 15.0 |
 
 ### 2.2 Server (Backend)
 
@@ -111,11 +111,11 @@ font-size: 14px-18px;
 
 ### 4.1 🔐 Ro'yxatdan O'tish va Kirish (Auth)
 
-#### 4.1.1 Telefon raqam orqali kirish
+#### 4.1.1 Email orqali kirish ✅
 
 ```mermaid
 graph LR
-    A[Telefon raqam kiritish] --> B[OTP yuborish]
+    A[Email kiritish] --> B[OTP yuborish]
     B --> C[6-xonali kod kiritish]
     C --> D{Tekshirish}
     D -->|To'g'ri| E[Kirish/Ro'yxatdan o'tish]
@@ -123,10 +123,10 @@ graph LR
 ```
 
 **Talablar:**
-- Faqat telefon raqami orqali kirish
-- 6 xonali SMS/Email OTP kodi
-- Avtomatik sessiya saqlash
-- Biometric authentication (Touch ID/Face ID)
+- ✅ Email orqali kirish (Resend service)
+- ✅ 6 xonali Email OTP kodi
+- ✅ Avtomatik sessiya saqlash (JWT tokens)
+- ⏳ Biometric authentication (Touch ID/Face ID)
 
 #### 4.1.2 Social Login (Opsional)
 
@@ -134,36 +134,40 @@ graph LR
 - Discord OAuth
 - Apple Sign-In (iOS uchun majburiy)
 
-### 4.2 👤 Foydalanuvchi Profili
+### 4.2 👤 Foydalanuvchi Profili ✅
 
 #### Majburiy maydonlar:
 
-| Maydon | Turi | Validatsiya |
-|--------|------|-------------|
-| **Nickname** | String | 3-20 belgi, unique |
-| **PES ID** | Number | Qat'iy 9 raqam |
-| **Team Strength** | Number | 1000-5000 oralig'ida |
-| **Avatar** | Image | Max 5MB, JPG/PNG |
-| **Region** | Select | Predefined list |
-| **Preferred Position** | Select | GK/DEF/MID/FWD |
+| Maydon | Turi | Validatsiya | Status |
+|--------|------|-------------|--------|
+| **Nickname** | String | 3-20 belgi, unique | ✅ |
+| **PES ID** | Number | Qat'iy 9 raqam | ✅ |
+| **Team Strength** | Number | 1000-5000 oralig'ida | ✅ |
+| **Avatar** | Image | Max 5MB, JPG/PNG | ✅ |
+| **Region** | Select | Predefined list | ✅ |
+| **Email** | String | Valid email format | ✅ |
 
 #### Qo'shimcha maydonlar:
 
-- Bio (160 belgi)
-- Social media links
-- Achievements showcase
-- Statistics dashboard
+- ✅ Level & Experience system
+- ✅ Coins balance
+- ✅ Statistics dashboard (wins, losses, draws, win rate)
+- ✅ Online status
+- ⏳ Bio (160 belgi)
+- ⏳ Social media links
+- ⏳ Achievements showcase
 
 ### 4.3 🏆 Turnirlar Tizimi
 
 #### 4.3.1 Turnir Turlari
 
-| Turi | Tavsif | Davomiyligi |
-|------|--------|-------------|
-| **Quick Match** | 1v1 tezkor o'yin | 15-20 daqiqa |
-| **Daily Tournament** | Kunlik turnir, 16 ishtirokchi | 2-3 soat |
-| **Weekly League** | Haftalik liga formati | 7 kun |
-| **Championship** | Oylik chempionat | 30 kun |
+| Turi | Tavsif | Davomiyligi | Status |
+|------|--------|-------------|--------|
+| **Quick Match** | 1v1 tezkor o'yin | 15-20 daqiqa | ✅ |
+| **Challenge** | Do'stga challenge yuborish | 15-20 daqiqa | ✅ |
+| **Daily Tournament** | Kunlik turnir, 16 ishtirokchi | 2-3 soat | ⏳ |
+| **Weekly League** | Haftalik liga formati | 7 kun | ⏳ |
+| **Championship** | Oylik chempionat | 30 kun | ⏳ |
 
 #### 4.3.2 Turnir Holatlari
 
@@ -214,6 +218,25 @@ MatchRoom = {
 2. **Mojaro holati:** Har xil natija → Admin tekshiruvi
 3. **Screenshot yuklash:** Majburiy, max 10MB
 4. **Vaqt chegarasi:** O'yin tugaganidan 10 daqiqa ichida
+
+### 4.4.3 Do'stlik Tizimi ✅
+
+**Amalga oshirilgan funksiyalar:**
+- ✅ O'yinchi qidirish (nickname bo'yicha)
+- ✅ Do'stlik so'rovi yuborish
+- ✅ Do'stlik so'rovini qabul qilish/rad etish
+- ✅ Do'stlar ro'yxati
+- ✅ O'yinchi profili ko'rish
+- ✅ Online status ko'rsatish
+
+### 4.4.4 Push Notifications ✅
+
+**OneSignal integratsiyasi:**
+- ✅ Challenge notification (custom sound)
+- ✅ Do'stlik so'rovi notification (custom sound)
+- ✅ Do'stlik qabul qilindi notification
+- ✅ Real-time UI yangilanishi
+- ✅ Notification click handling (to'g'ri sahifaga yo'naltirish)
 
 ### 4.5 👥 Jamoa (Klan) Tizimi
 
@@ -717,17 +740,17 @@ Alerts:
 
 | Oy | Vazifalar |
 |----|-----------|
-| **1-oy** | ✅ Project setup<br>✅ Authentication system<br>✅ User profiles<br>✅ Basic UI/UX |
-| **2-oy** | ✅ Tournament creation<br>✅ Match system<br>✅ Result submission<br>✅ Basic chat |
-| **3-oy** | ✅ Team system<br>✅ Admin panel (basic)<br>✅ Testing & bug fixes<br>✅ Beta release |
+| **1-oy** | ✅ Project setup<br>✅ Authentication system (Email OTP)<br>✅ User profiles<br>✅ Basic UI/UX |
+| **2-oy** | ✅ Quick Match system<br>✅ Challenge system<br>✅ Result submission<br>✅ Push Notifications (OneSignal) |
+| **3-oy** | ✅ Friends system<br>✅ Player search<br>✅ Notifications screen<br>🔄 Beta release |
 
 ### Phase 2: Enhancement (3 oy)
 
 | Oy | Vazifalar |
 |----|-----------|
-| **4-oy** | 🔄 Advanced tournaments<br>🔄 Ranking system<br>🔄 Achievements |
-| **5-oy** | 🔄 Payment integration<br>🔄 Premium features<br>🔄 Shop system |
-| **6-oy** | 🔄 Performance optimization<br>🔄 Security audit<br>🔄 Production release |
+| **4-oy** | 🔄 Tournament system<br>🔄 Ranking system<br>🔄 Achievements |
+| **5-oy** | 🔄 Team/Clan system<br>🔄 Chat system<br>🔄 Shop system |
+| **6-oy** | 🔄 Payment integration<br>🔄 Premium features<br>🔄 Production release |
 
 ### Phase 3: Growth (6 oy)
 
@@ -1062,6 +1085,7 @@ Product:
 | 1.0.1 | 2024-02-01 | Admin panel qo'shildi |
 | 1.0.2 | 2024-02-15 | Security talablari |
 | 1.1.0 | 2024-03-01 | Monetization strategiyasi |
+| 1.2.0 | 2024-12-03 | Do'stlik tizimi, Push notifications, Email OTP, iOS 15.0 min SDK |
 
 ---
 
