@@ -9,6 +9,7 @@ import '../../features/tournaments/presentation/pages/tournaments_page.dart';
 import '../../features/tournaments/presentation/pages/tournament_details_page.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
+import '../../features/profile/presentation/pages/friends_page.dart';
 import '../../features/matchmaking/presentation/pages/quick_match_page.dart';
 import '../../features/matchmaking/presentation/pages/player_profile_screen.dart';
 import '../../features/notifications/presentation/pages/notifications_screen.dart';
@@ -62,6 +63,10 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/friends',
+        builder: (context, state) => const FriendsPage(),
       ),
 
       // Matchmaking

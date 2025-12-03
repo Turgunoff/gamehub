@@ -23,9 +23,7 @@ void main() async {
   await EasyLocalization.ensureInitialized();
 
   // Firebase (OneSignal FCM uchun kerak)
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await DeviceService.instance.init();
 

@@ -7,11 +7,11 @@ import '../../../../core/models/profile_model.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
-import '../widgets/profile_header.dart';
 import '../widgets/profile_stats_section.dart';
 import '../widgets/profile_pes_info_card.dart';
 import '../widgets/profile_performance_chart.dart';
 import '../widgets/profile_achievements_section.dart';
+import '../widgets/profile_friends_section.dart';
 import '../widgets/profile_recent_activity.dart';
 import '../widgets/profile_floating_edit_button.dart';
 import '../widgets/profile_background.dart';
@@ -131,6 +131,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // PES ma'lumotlari
         ProfilePESInfoCard(profile: profile),
+
+        // Do'stlar
+        const SizedBox(height: 24),
+        const ProfileFriendsSection(),
 
         // Grafik
         const ProfilePerformanceChart(),
