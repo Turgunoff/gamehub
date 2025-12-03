@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gamehub/core/gen/assets/assets.gen.dart';
 import 'package:gamehub/core/widgets/optimized_image.dart';
 import 'package:gamehub/core/services/api_service.dart';
+import 'package:gamehub/core/services/onesignal_service.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/quick_play_section.dart';
 
@@ -18,6 +20,7 @@ class HomeTabPage extends StatefulWidget {
 
 class _HomeTabPageState extends State<HomeTabPage> {
   int _notificationCount = 0;
+  StreamSubscription<NotificationEvent>? _notificationSubscription;
 
   @override
   void initState() {
@@ -25,6 +28,18 @@ class _HomeTabPageState extends State<HomeTabPage> {
     // Ma'lumotlarni yuklash
     context.read<HomeBloc>().add(const HomeLoadRequested());
     _loadNotificationCount();
+
+    // Real-time notification listener
+    _notificationSubscription = OneSignalService().onNotificationReceived.listen((event) {
+      // Notification kelganda badge ni yangilash
+      _loadNotificationCount();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadNotificationCount() async {

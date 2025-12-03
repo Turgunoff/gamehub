@@ -1,8 +1,28 @@
+import 'dart:async';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:go_router/go_router.dart';
 import '../router/app_router.dart';
 import 'api_service.dart';
+
+/// Notification event model for real-time UI updates
+class NotificationEvent {
+  final String type;
+  final String? userId;
+  final String? matchId;
+  final String? title;
+  final String? message;
+  final Map<String, dynamic>? data;
+
+  NotificationEvent({
+    required this.type,
+    this.userId,
+    this.matchId,
+    this.title,
+    this.message,
+    this.data,
+  });
+}
 
 class OneSignalService {
   static final OneSignalService _instance = OneSignalService._internal();
@@ -16,6 +36,10 @@ class OneSignalService {
 
   String? _playerId;
   String? get playerId => _playerId;
+
+  // Stream controller for notification events (real-time UI updates)
+  final _notificationController = StreamController<NotificationEvent>.broadcast();
+  Stream<NotificationEvent> get onNotificationReceived => _notificationController.stream;
 
   /// OneSignal ni ishga tushirish
   Future<void> initialize() async {
@@ -66,29 +90,22 @@ class OneSignalService {
       _logger.i('Notification type: $type, userId: $userId, matchId: $matchId');
 
       // Notification turiga qarab navigatsiya
+      // Har doim notifications ekraniga o'tish
       switch (type) {
         case 'challenge':
-          // Challenge/Match sahifasiga o'tish
+          // Challenge - notifications sahifasiga (tab 0 - challenges)
           _logger.i('Challenge notification - navigating to notifications');
-          AppRouter.router.go('/notifications');
+          AppRouter.router.go('/notifications?tab=0');
           break;
         case 'friend_request':
-          // Do'stlik so'rovi - player profile ga o'tish
-          if (userId != null) {
-            _logger.i('Friend request - navigating to player profile: $userId');
-            AppRouter.router.go('/player-profile/$userId');
-          } else {
-            AppRouter.router.go('/notifications');
-          }
+          // Do'stlik so'rovi - notifications sahifasiga (tab 1 - friends)
+          _logger.i('Friend request - navigating to notifications friends tab');
+          AppRouter.router.go('/notifications?tab=1');
           break;
         case 'friend_accepted':
-          // Do'stlik qabul qilindi - player profile ga o'tish
-          if (userId != null) {
-            _logger.i('Friend accepted - navigating to player profile: $userId');
-            AppRouter.router.go('/player-profile/$userId');
-          } else {
-            AppRouter.router.go('/notifications');
-          }
+          // Do'stlik qabul qilindi - notifications sahifasiga
+          _logger.i('Friend accepted - navigating to notifications friends tab');
+          AppRouter.router.go('/notifications?tab=1');
           break;
         case 'match_start':
         case 'match_reminder':
@@ -109,6 +126,21 @@ class OneSignalService {
 
     // Notification ni ko'rsatish
     event.notification.display();
+
+    // Real-time UI yangilash uchun event yuborish
+    final data = event.notification.additionalData;
+    if (data != null) {
+      final notificationEvent = NotificationEvent(
+        type: data['type'] as String? ?? 'unknown',
+        userId: data['user_id'] as String?,
+        matchId: data['match_id'] as String?,
+        title: event.notification.title,
+        message: event.notification.body,
+        data: data,
+      );
+      _notificationController.add(notificationEvent);
+      _logger.i('NotificationEvent emitted: ${notificationEvent.type}');
+    }
   }
 
   /// Player ID ni backend ga yuborish

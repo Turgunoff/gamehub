@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/onesignal_service.dart';
 import '../../../../core/widgets/optimized_image.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+  final int initialTab;
+
+  const NotificationsScreen({super.key, this.initialTab = 0});
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -14,6 +18,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  StreamSubscription<NotificationEvent>? _notificationSubscription;
 
   // Data
   List<PendingChallenge> _challenges = [];
@@ -24,13 +29,26 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab,
+    );
     _loadData();
+
+    // Real-time notification listener
+    _notificationSubscription = OneSignalService().onNotificationReceived.listen((event) {
+      // Notification kelganda data ni yangilash
+      if (event.type == 'challenge' || event.type == 'friend_request') {
+        _loadData();
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _notificationSubscription?.cancel();
     super.dispose();
   }
 
@@ -108,7 +126,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       child: Row(
         children: [
           IconButton(
-            onPressed: () => context.pop(),
+            onPressed: () {
+              // Agar pop mumkin bo'lsa pop, aks holda dashboard ga o'tish
+              if (Navigator.of(context).canPop()) {
+                context.pop();
+              } else {
+                context.go('/dashboard');
+              }
+            },
             icon: const Icon(Icons.arrow_back, color: Colors.white),
           ),
           const SizedBox(width: 8),

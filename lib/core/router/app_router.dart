@@ -81,7 +81,11 @@ class AppRouter {
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        builder: (context, state) {
+          final tabStr = state.uri.queryParameters['tab'];
+          final initialTab = tabStr != null ? int.tryParse(tabStr) ?? 0 : 0;
+          return NotificationsScreen(initialTab: initialTab);
+        },
       ),
     ],
   );
