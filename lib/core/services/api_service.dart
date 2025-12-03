@@ -181,6 +181,62 @@ class ApiService {
   }
 
   // ══════════════════════════════════════════════════════════
+  // TOURNAMENT METHODS
+  // ══════════════════════════════════════════════════════════
+
+  /// Turnirlar ro'yxati
+  Future<TournamentsResponse> getTournaments({String? status, int limit = 20}) async {
+    try {
+      final params = <String, dynamic>{'limit': limit};
+      if (status != null) params['status'] = status;
+      final response = await _dio.get('/tournaments', queryParameters: params);
+      return TournamentsResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Turnir tafsilotlari
+  Future<TournamentDetail> getTournamentDetail(String tournamentId) async {
+    try {
+      final response = await _dio.get('/tournaments/$tournamentId');
+      return TournamentDetail.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Turnir bracket
+  Future<TournamentBracket> getTournamentBracket(String tournamentId) async {
+    try {
+      final response = await _dio.get('/tournaments/$tournamentId/bracket');
+      return TournamentBracket.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Turnirga qo'shilish
+  Future<Map<String, dynamic>> joinTournament(String tournamentId) async {
+    try {
+      final response = await _dio.post('/tournaments/$tournamentId/join');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Turnirdan chiqish
+  Future<Map<String, dynamic>> leaveTournament(String tournamentId) async {
+    try {
+      final response = await _dio.post('/tournaments/$tournamentId/leave');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
   // HOME METHODS
   // ══════════════════════════════════════════════════════════
 
@@ -200,6 +256,60 @@ class ApiService {
       final response = await _dio.get('/home/leaderboard', queryParameters: {'limit': limit});
       final list = response.data['leaderboard'] as List;
       return list.map((e) => LeaderboardItem.fromJson(e)).toList();
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // CHAT METHODS
+  // ══════════════════════════════════════════════════════════
+
+  /// Suhbatlar ro'yxatini olish
+  Future<ConversationsResponse> getConversations({int limit = 20, int offset = 0}) async {
+    try {
+      final response = await _dio.get('/chat/conversations', queryParameters: {
+        'limit': limit,
+        'offset': offset,
+      });
+      return ConversationsResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Foydalanuvchi bilan xabarlarni olish
+  Future<MessagesResponse> getMessages(String userId, {int limit = 50, DateTime? before}) async {
+    try {
+      final params = <String, dynamic>{'limit': limit};
+      if (before != null) {
+        params['before'] = before.toIso8601String();
+      }
+      final response = await _dio.get('/chat/messages/$userId', queryParameters: params);
+      return MessagesResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Xabar yuborish
+  Future<ChatMessage> sendChatMessage(String receiverId, String content) async {
+    try {
+      final response = await _dio.post('/chat/messages', data: {
+        'receiver_id': receiverId,
+        'content': content,
+      });
+      return ChatMessage.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// O'qilmagan xabarlar sonini olish
+  Future<int> getUnreadMessagesCount() async {
+    try {
+      final response = await _dio.get('/chat/unread-count');
+      return response.data['unread_count'] ?? 0;
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
     }
@@ -321,6 +431,39 @@ class ApiService {
     try {
       final response = await _dio.post('/matches/$matchId/decline');
       return response.data;
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// O'yin natijasini yuborish
+  Future<MatchResultResponse> submitMatchResult({
+    required String matchId,
+    required int myScore,
+    required int opponentScore,
+    String? screenshotUrl,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/matches/$matchId/result',
+        data: {
+          'my_score': myScore,
+          'opponent_score': opponentScore,
+          if (screenshotUrl != null) 'screenshot_url': screenshotUrl,
+        },
+      );
+      return MatchResultResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(_getErrorMessage(e));
+    }
+  }
+
+  /// Faol o'yinlarni olish (natija yuborilmagan)
+  Future<List<ActiveMatch>> getActiveMatches() async {
+    try {
+      final response = await _dio.get('/matches/active');
+      final List<dynamic> data = response.data['matches'] ?? [];
+      return data.map((json) => ActiveMatch.fromJson(json)).toList();
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
     }
@@ -1481,4 +1624,457 @@ class FriendRequest {
       requestedAt: json['requested_at'] ?? '',
     );
   }
+}
+
+// ══════════════════════════════════════════════════════════
+// MATCH RESULT MODELS
+// ══════════════════════════════════════════════════════════
+
+class MatchResultResponse {
+  final bool success;
+  final String message;
+  final String status; // waiting_opponent, completed, disputed
+  final int? ratingChange;
+  final int? coinsWon;
+
+  MatchResultResponse({
+    required this.success,
+    required this.message,
+    required this.status,
+    this.ratingChange,
+    this.coinsWon,
+  });
+
+  factory MatchResultResponse.fromJson(Map<String, dynamic> json) {
+    return MatchResultResponse(
+      success: json['success'] ?? true,
+      message: json['message'] ?? '',
+      status: json['status'] ?? 'waiting_opponent',
+      ratingChange: json['rating_change'],
+      coinsWon: json['coins_won'],
+    );
+  }
+}
+
+class ActiveMatch {
+  final String id;
+  final String mode;
+  final MatchOpponentInfo opponent;
+  final int? betAmount;
+  final String status;
+  final DateTime createdAt;
+  final DateTime? acceptedAt;
+
+  ActiveMatch({
+    required this.id,
+    required this.mode,
+    required this.opponent,
+    this.betAmount,
+    required this.status,
+    required this.createdAt,
+    this.acceptedAt,
+  });
+
+  factory ActiveMatch.fromJson(Map<String, dynamic> json) {
+    return ActiveMatch(
+      id: json['id'] ?? '',
+      mode: json['mode'] ?? 'friendly',
+      opponent: MatchOpponentInfo.fromJson(json['opponent'] ?? {}),
+      betAmount: json['bet_amount'],
+      status: json['status'] ?? '',
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      acceptedAt: json['accepted_at'] != null
+          ? DateTime.tryParse(json['accepted_at'])
+          : null,
+    );
+  }
+}
+
+class MatchOpponentInfo {
+  final String id;
+  final String nickname;
+  final String? avatarUrl;
+  final int? level;
+  final int? teamStrength;
+
+  MatchOpponentInfo({
+    required this.id,
+    required this.nickname,
+    this.avatarUrl,
+    this.level,
+    this.teamStrength,
+  });
+
+  factory MatchOpponentInfo.fromJson(Map<String, dynamic> json) {
+    return MatchOpponentInfo(
+      id: json['id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      avatarUrl: json['avatar_url'],
+      level: json['level'],
+      teamStrength: json['team_strength'],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// CHAT MODELS
+// ══════════════════════════════════════════════════════════
+
+class Conversation {
+  final String id;
+  final String otherUserId;
+  final String otherUserNickname;
+  final String? otherUserAvatar;
+  final String? lastMessage;
+  final DateTime? lastMessageAt;
+  final bool hasUnread;
+
+  Conversation({
+    required this.id,
+    required this.otherUserId,
+    required this.otherUserNickname,
+    this.otherUserAvatar,
+    this.lastMessage,
+    this.lastMessageAt,
+    required this.hasUnread,
+  });
+
+  factory Conversation.fromJson(Map<String, dynamic> json) {
+    return Conversation(
+      id: json['id'] ?? '',
+      otherUserId: json['other_user_id'] ?? '',
+      otherUserNickname: json['other_user_nickname'] ?? 'Unknown',
+      otherUserAvatar: json['other_user_avatar'],
+      lastMessage: json['last_message'],
+      lastMessageAt: json['last_message_at'] != null
+          ? DateTime.tryParse(json['last_message_at'])
+          : null,
+      hasUnread: json['has_unread'] ?? false,
+    );
+  }
+}
+
+class ConversationsResponse {
+  final List<Conversation> conversations;
+  final int total;
+
+  ConversationsResponse({
+    required this.conversations,
+    required this.total,
+  });
+
+  factory ConversationsResponse.fromJson(Map<String, dynamic> json) {
+    final list = json['conversations'] as List? ?? [];
+    return ConversationsResponse(
+      conversations: list.map((e) => Conversation.fromJson(e)).toList(),
+      total: json['total'] ?? 0,
+    );
+  }
+}
+
+class ChatMessage {
+  final String id;
+  final String senderId;
+  final String receiverId;
+  final String content;
+  final bool isRead;
+  final DateTime createdAt;
+  final String? senderNickname;
+  final String? senderAvatar;
+
+  ChatMessage({
+    required this.id,
+    required this.senderId,
+    required this.receiverId,
+    required this.content,
+    required this.isRead,
+    required this.createdAt,
+    this.senderNickname,
+    this.senderAvatar,
+  });
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] ?? '',
+      senderId: json['sender_id'] ?? '',
+      receiverId: json['receiver_id'] ?? '',
+      content: json['content'] ?? '',
+      isRead: json['is_read'] ?? false,
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      senderNickname: json['sender_nickname'],
+      senderAvatar: json['sender_avatar'],
+    );
+  }
+}
+
+class MessagesResponse {
+  final List<ChatMessage> messages;
+  final int total;
+  final bool hasMore;
+
+  MessagesResponse({
+    required this.messages,
+    required this.total,
+    required this.hasMore,
+  });
+
+  factory MessagesResponse.fromJson(Map<String, dynamic> json) {
+    final list = json['messages'] as List? ?? [];
+    return MessagesResponse(
+      messages: list.map((e) => ChatMessage.fromJson(e)).toList(),
+      total: json['total'] ?? 0,
+      hasMore: json['has_more'] ?? false,
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// TOURNAMENT MODELS
+// ══════════════════════════════════════════════════════════
+
+class TournamentItem {
+  final String id;
+  final String name;
+  final String? description;
+  final String status;
+  final String format;
+  final int prizePool;
+  final int entryFee;
+  final int maxParticipants;
+  final int participantCount;
+  final DateTime? startTime;
+  final bool isFeatured;
+  final bool isJoined;
+
+  TournamentItem({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.status,
+    required this.format,
+    required this.prizePool,
+    required this.entryFee,
+    required this.maxParticipants,
+    required this.participantCount,
+    this.startTime,
+    required this.isFeatured,
+    required this.isJoined,
+  });
+
+  factory TournamentItem.fromJson(Map<String, dynamic> json) {
+    return TournamentItem(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'],
+      status: json['status'] ?? '',
+      format: json['format'] ?? '',
+      prizePool: json['prize_pool'] ?? 0,
+      entryFee: json['entry_fee'] ?? 0,
+      maxParticipants: json['max_participants'] ?? 0,
+      participantCount: json['participant_count'] ?? 0,
+      startTime: json['start_time'] != null
+          ? DateTime.tryParse(json['start_time'])
+          : null,
+      isFeatured: json['is_featured'] ?? false,
+      isJoined: json['is_joined'] ?? false,
+    );
+  }
+}
+
+class TournamentsResponse {
+  final List<TournamentItem> tournaments;
+  final int total;
+
+  TournamentsResponse({
+    required this.tournaments,
+    required this.total,
+  });
+
+  factory TournamentsResponse.fromJson(Map<String, dynamic> json) {
+    final list = json['tournaments'] as List? ?? [];
+    return TournamentsResponse(
+      tournaments: list.map((e) => TournamentItem.fromJson(e)).toList(),
+      total: json['total'] ?? 0,
+    );
+  }
+}
+
+class TournamentDetail {
+  final String id;
+  final String name;
+  final String? description;
+  final String status;
+  final String format;
+  final int prizePool;
+  final int entryFee;
+  final int maxParticipants;
+  final int participantCount;
+  final DateTime? startTime;
+  final DateTime? endTime;
+  final bool isFeatured;
+  final bool isJoined;
+  final String? rules;
+  final List<TournamentParticipant> participants;
+
+  TournamentDetail({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.status,
+    required this.format,
+    required this.prizePool,
+    required this.entryFee,
+    required this.maxParticipants,
+    required this.participantCount,
+    this.startTime,
+    this.endTime,
+    required this.isFeatured,
+    required this.isJoined,
+    this.rules,
+    required this.participants,
+  });
+
+  factory TournamentDetail.fromJson(Map<String, dynamic> json) {
+    final participantsList = json['participants'] as List? ?? [];
+    return TournamentDetail(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'],
+      status: json['status'] ?? '',
+      format: json['format'] ?? '',
+      prizePool: json['prize_pool'] ?? 0,
+      entryFee: json['entry_fee'] ?? 0,
+      maxParticipants: json['max_participants'] ?? 0,
+      participantCount: json['participant_count'] ?? 0,
+      startTime: json['start_time'] != null
+          ? DateTime.tryParse(json['start_time'])
+          : null,
+      endTime: json['end_time'] != null
+          ? DateTime.tryParse(json['end_time'])
+          : null,
+      isFeatured: json['is_featured'] ?? false,
+      isJoined: json['is_joined'] ?? false,
+      rules: json['rules'],
+      participants: participantsList
+          .map((e) => TournamentParticipant.fromJson(e))
+          .toList(),
+    );
+  }
+}
+
+class TournamentParticipant {
+  final String odoserId;
+  final String nickname;
+  final String? avatarUrl;
+  final int? seed;
+
+  TournamentParticipant({
+    required this.odoserId,
+    required this.nickname,
+    this.avatarUrl,
+    this.seed,
+  });
+
+  factory TournamentParticipant.fromJson(Map<String, dynamic> json) {
+    return TournamentParticipant(
+      odoserId: json['user_id'] ?? '',
+      nickname: json['nickname'] ?? 'Unknown',
+      avatarUrl: json['avatar_url'],
+      seed: json['seed'],
+    );
+  }
+}
+
+class TournamentBracket {
+  final String tournamentId;
+  final String format;
+  final int totalRounds;
+  final List<BracketMatch> matches;
+
+  TournamentBracket({
+    required this.tournamentId,
+    required this.format,
+    required this.totalRounds,
+    required this.matches,
+  });
+
+  factory TournamentBracket.fromJson(Map<String, dynamic> json) {
+    final matchesList = json['matches'] as List? ?? [];
+    return TournamentBracket(
+      tournamentId: json['tournament_id'] ?? '',
+      format: json['format'] ?? '',
+      totalRounds: json['total_rounds'] ?? 0,
+      matches: matchesList.map((e) => BracketMatch.fromJson(e)).toList(),
+    );
+  }
+
+  /// Raund bo'yicha matchlar
+  List<BracketMatch> getMatchesByRound(int round) {
+    return matches.where((m) => m.roundNumber == round).toList();
+  }
+}
+
+class BracketMatch {
+  final String id;
+  final String tournamentId;
+  final String? player1Id;
+  final String? player2Id;
+  final String? player1Nickname;
+  final String? player2Nickname;
+  final String? winnerId;
+  final int? player1Score;
+  final int? player2Score;
+  final int roundNumber;
+  final int matchNumber;
+  final String status;
+  final DateTime? scheduledTime;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+
+  BracketMatch({
+    required this.id,
+    required this.tournamentId,
+    this.player1Id,
+    this.player2Id,
+    this.player1Nickname,
+    this.player2Nickname,
+    this.winnerId,
+    this.player1Score,
+    this.player2Score,
+    required this.roundNumber,
+    required this.matchNumber,
+    required this.status,
+    this.scheduledTime,
+    this.startedAt,
+    this.completedAt,
+  });
+
+  factory BracketMatch.fromJson(Map<String, dynamic> json) {
+    return BracketMatch(
+      id: json['id'] ?? '',
+      tournamentId: json['tournament_id'] ?? '',
+      player1Id: json['player1_id'],
+      player2Id: json['player2_id'],
+      player1Nickname: json['player1_nickname'],
+      player2Nickname: json['player2_nickname'],
+      winnerId: json['winner_id'],
+      player1Score: json['player1_score'],
+      player2Score: json['player2_score'],
+      roundNumber: json['round_number'] ?? 1,
+      matchNumber: json['match_number'] ?? 1,
+      status: json['status'] ?? '',
+      scheduledTime: json['scheduled_time'] != null
+          ? DateTime.tryParse(json['scheduled_time'])
+          : null,
+      startedAt: json['started_at'] != null
+          ? DateTime.tryParse(json['started_at'])
+          : null,
+      completedAt: json['completed_at'] != null
+          ? DateTime.tryParse(json['completed_at'])
+          : null,
+    );
+  }
+
+  bool get isCompleted => status == 'completed';
+  bool get hasBothPlayers => player1Id != null && player2Id != null;
 }
