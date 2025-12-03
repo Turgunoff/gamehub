@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/widgets/optimized_image.dart';
+import '../../../chat/presentation/pages/chat_page.dart';
 
 class PlayerProfileScreen extends StatefulWidget {
   final String playerId;
@@ -501,23 +502,43 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       return const SizedBox.shrink();
     }
 
-    return Row(
-      children: [
-        // Challenge button
-        Expanded(
-          child: _buildActionButton(
-            icon: Icons.sports_esports,
-            label: 'CHALLENGE',
-            gradient: const [Color(0xFFFFB800), Color(0xFFFF8C00)],
-            onTap: () => _sendChallenge(profile),
-          ),
-        ),
-        const SizedBox(width: 12),
+    final isFriend = profile.friendshipStatus == 'friends';
 
-        // Friend button based on status
-        Expanded(
-          child: _buildFriendButton(profile),
+    return Column(
+      children: [
+        Row(
+          children: [
+            // Challenge button
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.sports_esports,
+                label: 'CHALLENGE',
+                gradient: const [Color(0xFFFFB800), Color(0xFFFF8C00)],
+                onTap: () => _sendChallenge(profile),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Friend button based on status
+            Expanded(
+              child: _buildFriendButton(profile),
+            ),
+          ],
         ),
+
+        // Chat button - faqat do'stlar uchun
+        if (isFriend) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: _buildActionButton(
+              icon: Icons.chat_bubble_outline,
+              label: 'XABAR YOZISH',
+              gradient: const [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
+              onTap: () => _openChat(profile),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1209,6 +1230,20 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   // ════════════════════════════════════════════════════════════
   // ACTIONS
   // ════════════════════════════════════════════════════════════
+
+  void _openChat(PlayerProfile profile) {
+    HapticFeedback.lightImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatPage(
+          otherUserId: profile.id,
+          otherUserNickname: profile.nickname,
+          otherUserAvatar: profile.avatarUrl,
+        ),
+      ),
+    );
+  }
 
   Future<void> _sendChallenge(PlayerProfile profile) async {
     HapticFeedback.mediumImpact();

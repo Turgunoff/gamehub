@@ -10,6 +10,7 @@ import 'package:gamehub/core/services/api_service.dart';
 import 'package:gamehub/core/services/onesignal_service.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/quick_play_section.dart';
+import '../../../chat/presentation/pages/conversations_page.dart';
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -20,6 +21,7 @@ class HomeTabPage extends StatefulWidget {
 
 class _HomeTabPageState extends State<HomeTabPage> {
   int _notificationCount = 0;
+  int _unreadMessagesCount = 0;
   StreamSubscription<NotificationEvent>? _notificationSubscription;
 
   @override
@@ -28,11 +30,15 @@ class _HomeTabPageState extends State<HomeTabPage> {
     // Ma'lumotlarni yuklash
     context.read<HomeBloc>().add(const HomeLoadRequested());
     _loadNotificationCount();
+    _loadUnreadMessagesCount();
 
     // Real-time notification listener
     _notificationSubscription = OneSignalService().onNotificationReceived.listen((event) {
       // Notification kelganda badge ni yangilash
       _loadNotificationCount();
+      if (event.type == 'chat_message') {
+        _loadUnreadMessagesCount();
+      }
     });
   }
 
@@ -53,6 +59,19 @@ class _HomeTabPageState extends State<HomeTabPage> {
           _notificationCount =
               (results[0] as PendingChallengesResponse).count +
               (results[1] as FriendRequestsResponse).count;
+        });
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  Future<void> _loadUnreadMessagesCount() async {
+    try {
+      final count = await ApiService().getUnreadMessagesCount();
+      if (mounted) {
+        setState(() {
+          _unreadMessagesCount = count;
         });
       }
     } catch (e) {
@@ -384,6 +403,49 @@ class _HomeTabPageState extends State<HomeTabPage> {
               ),
             ],
           ),
+        ),
+        // Chat/Messages
+        Stack(
+          children: [
+            IconButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ConversationsPage()),
+                ).then((_) {
+                  // Qaytganda countni yangilash
+                  _loadUnreadMessagesCount();
+                });
+              },
+              icon: Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+            if (_unreadMessagesCount > 0)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF00D9FF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    _unreadMessagesCount > 9 ? '9+' : '$_unreadMessagesCount',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
         ),
         // Notifications
         Stack(
