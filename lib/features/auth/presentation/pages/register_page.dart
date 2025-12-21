@@ -6,29 +6,35 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(AuthLoginRequested(
+    context.read<AuthBloc>().add(AuthRegisterRequested(
+      username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
     ));
@@ -38,6 +44,14 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -63,68 +77,82 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
-
-                  // Logo Section
-                  Column(
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppColors.primaryGradient,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 30,
-                              spreadRadius: 5,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.sports_esports_rounded,
-                          size: 50,
-                          color: Colors.white,
-                        ),
-                      ).animate().scale(
-                        begin: const Offset(0.8, 0.8),
-                        end: const Offset(1.0, 1.0),
-                        duration: const Duration(milliseconds: 600),
-                        curve: Curves.easeOutBack,
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Text(
-                        'app_name'.tr(),
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 32,
-                          letterSpacing: 2,
-                        ),
-                      ).animate().fadeIn(
-                        duration: const Duration(milliseconds: 800),
-                        delay: const Duration(milliseconds: 200),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'auth.login_title'.tr(),
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 16,
-                        ),
-                      ).animate().fadeIn(
-                        duration: const Duration(milliseconds: 800),
-                        delay: const Duration(milliseconds: 400),
-                      ),
-                    ],
+                  // Title
+                  Text(
+                    'auth.register_title'.tr(),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 600),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'auth.register_subtitle'.tr(),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 100),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Username Field
+                  TextFormField(
+                    controller: _usernameController,
+                    keyboardType: TextInputType.text,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'auth.username_label'.tr(),
+                      hintText: 'auth.username_hint'.tr(),
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      hintStyle: TextStyle(color: AppColors.textTertiary),
+                      prefixIcon: Icon(
+                        Icons.person_outline,
+                        color: AppColors.textSecondary,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.bgDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'auth.username_required'.tr();
+                      }
+                      if (value.length < 3) {
+                        return 'auth.username_min_length'.tr();
+                      }
+                      return null;
+                    },
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 200),
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Email Field
                   TextFormField(
@@ -156,13 +184,6 @@ class _LoginPageState extends State<LoginPage> {
                           width: 2,
                         ),
                       ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppColors.error,
-                          width: 1,
-                        ),
-                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 16,
@@ -178,8 +199,8 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ).animate().fadeIn(
-                    duration: const Duration(milliseconds: 800),
-                    delay: const Duration(milliseconds: 500),
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 300),
                   ),
 
                   const SizedBox(height: 16),
@@ -227,13 +248,6 @@ class _LoginPageState extends State<LoginPage> {
                           width: 2,
                         ),
                       ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppColors.error,
-                          width: 1,
-                        ),
-                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 16,
@@ -243,23 +257,90 @@ class _LoginPageState extends State<LoginPage> {
                       if (value == null || value.isEmpty) {
                         return 'auth.password_required'.tr();
                       }
+                      if (value.length < 6) {
+                        return 'auth.password_min_length'.tr();
+                      }
                       return null;
                     },
                   ).animate().fadeIn(
-                    duration: const Duration(milliseconds: 800),
-                    delay: const Duration(milliseconds: 600),
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 400),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
-                  // Login Button
+                  // Confirm Password Field
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: _obscureConfirmPassword,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'auth.confirm_password_label'.tr(),
+                      hintText: 'auth.confirm_password_hint'.tr(),
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      hintStyle: TextStyle(color: AppColors.textTertiary),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: AppColors.textSecondary,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
+                      filled: true,
+                      fillColor: AppColors.bgDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'auth.confirm_password_required'.tr();
+                      }
+                      if (value != _passwordController.text) {
+                        return 'auth.passwords_not_match'.tr();
+                      }
+                      return null;
+                    },
+                  ).animate().fadeIn(
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 500),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Register Button
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       final isLoading = state is AuthLoading;
                       return SizedBox(
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: isLoading ? null : _login,
+                          onPressed: isLoading ? null : _register,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -279,7 +360,7 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 )
                               : Text(
-                                  'auth.login_button'.tr(),
+                                  'auth.register_button'.tr(),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -289,27 +370,27 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     },
                   ).animate().fadeIn(
-                    duration: const Duration(milliseconds: 800),
-                    delay: const Duration(milliseconds: 700),
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 600),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Register Link
+                  // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'auth.no_account'.tr(),
+                        'auth.have_account'.tr(),
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
                       ),
                       TextButton(
-                        onPressed: () => context.push('/register'),
+                        onPressed: () => context.pop(),
                         child: Text(
-                          'auth.register_link'.tr(),
+                          'auth.login_link'.tr(),
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 14,
@@ -319,8 +400,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ).animate().fadeIn(
-                    duration: const Duration(milliseconds: 800),
-                    delay: const Duration(milliseconds: 800),
+                    duration: const Duration(milliseconds: 600),
+                    delay: const Duration(milliseconds: 700),
                   ),
                 ],
               ),

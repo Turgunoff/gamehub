@@ -1,5 +1,5 @@
 {
-  "app_name": "GameHub",
+  "app_name": "CyberPitch",
   "tagline": "KURASH • YUTISH • HUKMRONLIK",
 
   "onboarding": {
@@ -18,28 +18,34 @@
 
   "auth": {
     "login_title": "Xush kelibsiz",
-    "login_subtitle": "Gaming jamiyatiga qo'shiling",
+    "login_subtitle": "Davom etish uchun kiring",
+    "register_title": "Ro'yxatdan o'tish",
+    "register_subtitle": "Gaming jamiyatiga qo'shiling",
     "email_label": "Email",
     "email_hint": "example@email.com",
     "email_required": "Email kiriting",
     "email_invalid": "To'g'ri email kiriting",
-    "send_code": "Kod yuborish",
+    "username_label": "Username",
+    "username_hint": "O'yin nomi",
+    "username_required": "Username kiriting",
+    "username_min_length": "Username kamida 3 ta belgi bo'lishi kerak",
+    "password_label": "Parol",
+    "password_hint": "Parolingizni kiriting",
+    "password_required": "Parol kiriting",
+    "password_min_length": "Parol kamida 6 ta belgi bo'lishi kerak",
+    "confirm_password_label": "Parolni tasdiqlash",
+    "confirm_password_hint": "Parolni qayta kiriting",
+    "confirm_password_required": "Parolni tasdiqlang",
+    "passwords_not_match": "Parollar mos kelmadi",
+    "login_button": "Kirish",
+    "register_button": "Ro'yxatdan o'tish",
+    "no_account": "Hisobingiz yo'qmi?",
+    "register_link": "Ro'yxatdan o'tish",
+    "have_account": "Hisobingiz bormi?",
+    "login_link": "Kirish",
     "or": "yoki",
     "google": "Google",
-    "discord": "Discord",
-    "verify_title": "Kodni tasdiqlang",
-    "code_sent_to": "{email} ga kod yuborildi",
-    "change_email": "Email ni o'zgartirish",
-    "verify": "Tasdiqlash",
-    "resend_code": "Kodni qayta yuborish",
-    "resend_in": "Qayta yuborish",
-    "code_expires": "Kod 2 daqiqa davomida amal qiladi",
-    "check_spam": "Agar kod kelmasa, spam papkasini tekshiring yoki qayta yuborishni bosing",
-    "enter_code": "Kodni kiriting",
-    "enter_6_digit": "6 xonali kod kiriting",
-    "only_numbers": "Faqat raqamlar kiriting",
-    "code_error": "Kod noto'g'ri yoki eskirgan",
-    "new_code_sent": "Yangi kod yuborildi!"
+    "discord": "Discord"
   },
 
   "dashboard": {

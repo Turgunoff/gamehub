@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gamehub/core/widgets/section_header.dart';
+import 'package:cyberpitch/core/widgets/section_header.dart';
 
 class RecentMatchesSection extends StatelessWidget {
   final VoidCallback? onViewAllTap;

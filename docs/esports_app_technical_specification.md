@@ -3,7 +3,7 @@
 ## 1. LOYIHA HAQIDA UMUMIY MA'LUMOT
 
 ### 1.1 Loyiha nomi
-**GameHub Pro** - Gaming va Esports professional platformasi
+**CyberPitch** - Gaming va Esports professional platformasi
 
 ### 1.2 Loyiha maqsadi
 O'yinchilar uchun turnirlar tashkil etish, jamoalar yaratish va professional coaching xizmatlarini ta'minlovchi mobil ilova yaratish.

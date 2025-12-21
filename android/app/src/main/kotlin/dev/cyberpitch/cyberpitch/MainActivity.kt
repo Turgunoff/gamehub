@@ -1,4 +1,4 @@
-package dev.eldor.gamehub
+package dev.cyberpitch.cyberpitch
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -86,3 +86,4 @@ class MainActivity : FlutterActivity() {
         }
     }
 }
+

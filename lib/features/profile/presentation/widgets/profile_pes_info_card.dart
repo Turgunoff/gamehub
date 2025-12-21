@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-import 'package:gamehub/core/models/profile_model.dart';
+import 'package:cyberpitch/core/models/profile_model.dart';
 
 /// Profile ekranidagi PES info card widget'i
 /// PES ID va Team Strength ma'lumotlarini ko'rsatadi
 class ProfilePESInfoCard extends StatelessWidget {
-  final ProfileModel? profile;
+  final UserMeModel? user;
 
-  const ProfilePESInfoCard({super.key, this.profile});
+  const ProfilePESInfoCard({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
-    final pesId = profile?.pesId ?? '-';
-    final teamStrength = profile?.teamStrength;
+    final pesId = user?.profile?.pesId ?? '-';
+    final teamStrength = user?.profile?.teamStrength;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),

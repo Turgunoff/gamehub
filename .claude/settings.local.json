@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"c:\\\\Users\\\\Developer\\\\Projects\\\\cyberpitch\\\\lib\\\\features\\\\auth\\\\presentation\\\\pages\\\\otp_verification_page.dart\")",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter build:*)"
+    ]
+  }
+}

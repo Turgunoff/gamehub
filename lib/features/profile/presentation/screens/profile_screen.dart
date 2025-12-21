@@ -62,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, state) {
-        final profile = _getProfile(state);
+        final user = _getUser(state);
         final isLoading = state is ProfileLoading;
 
         return Scaffold(
@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 slivers: [
                   // App Bar
                   ProfileAppBar(
-                    profile: profile,
+                    user: user,
                     scrollOffset: _scrollOffset,
                     onSettingsTap: () => _navigateToSettings(context),
                   ),
@@ -89,7 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SliverToBoxAdapter(
                     child: isLoading
                         ? _buildLoadingIndicator()
-                        : _buildContent(profile),
+                        : _buildContent(user),
                   ),
                 ],
               ),
@@ -103,10 +103,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// Profilni state dan olish
-  ProfileModel? _getProfile(ProfileState state) {
-    if (state is ProfileLoaded) return state.profile;
-    if (state is ProfileUpdating) return state.user.profile;
+  /// Userni state dan olish
+  UserMeModel? _getUser(ProfileState state) {
+    if (state is ProfileLoaded) return state.user;
+    if (state is ProfileUpdating) return state.user;
     return null;
   }
 
@@ -123,14 +123,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   /// Asosiy kontent
-  Widget _buildContent(ProfileModel? profile) {
+  Widget _buildContent(UserMeModel? user) {
     return Column(
       children: [
         // Statistika
-        ProfileStatsSection(profile: profile),
+        ProfileStatsSection(user: user),
 
         // PES ma'lumotlari
-        ProfilePESInfoCard(profile: profile),
+        ProfilePESInfoCard(user: user),
 
         // Do'stlar
         const SizedBox(height: 24),

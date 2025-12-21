@@ -44,7 +44,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Scaffold(
         backgroundColor: AppColors.bgDark,
         body: _pages[_currentIndex],
-        bottomNavigationBar: GameHubBottomNavBar(
+        bottomNavigationBar: CyberPitchBottomNavBar(
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {

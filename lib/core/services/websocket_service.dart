@@ -38,7 +38,7 @@ class WebSocketService {
   final _logger = Logger();
 
   // WebSocket configuration
-  static const String _wsBaseUrl = 'wss://nights.uz/api/v1/ws';
+  static const String _wsBaseUrl = 'ws://45.93.201.167:8080/api/v1/ws';
   static const Duration _pingInterval = Duration(seconds: 30);
   static const Duration _reconnectDelay = Duration(seconds: 5);
   static const int _maxReconnectAttempts = 5;

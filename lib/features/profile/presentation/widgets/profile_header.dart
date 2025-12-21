@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:gamehub/core/widgets/optimized_image.dart';
-import 'package:gamehub/core/models/profile_model.dart';
+import 'package:cyberpitch/core/widgets/optimized_image.dart';
+import 'package:cyberpitch/core/models/profile_model.dart';
 
 /// Profile ekranining header qismi
 /// Avatar, username va online statusni ko'rsatadi
 class ProfileHeader extends StatelessWidget {
-  final ProfileModel? profile;
+  final UserMeModel? user;
 
-  const ProfileHeader({super.key, this.profile});
+  const ProfileHeader({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
-    final nickname = profile?.nickname ?? 'GAMER';
-    final level = profile?.level ?? 1;
-    final avatarUrl = profile?.avatarUrl;
-    final isVerified = profile?.isVerified ?? false;
+    final nickname = user?.nickname ?? 'GAMER';
+    final level = user?.level ?? 1;
+    final avatarUrl = user?.avatarUrl;
+    final isVerified = user?.isVerified ?? false;
 
     return Column(
       children: [
@@ -186,4 +186,3 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 }
-

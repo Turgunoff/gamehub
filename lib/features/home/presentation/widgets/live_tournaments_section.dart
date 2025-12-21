@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gamehub/core/widgets/section_header.dart';
+import 'package:cyberpitch/core/widgets/section_header.dart';
 
 class LiveTournamentsSection extends StatelessWidget {
   final VoidCallback? onViewAllTap;

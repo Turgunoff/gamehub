@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:gamehub/core/models/profile_model.dart';
+import 'package:cyberpitch/core/models/profile_model.dart';
 import 'profile_stat_card.dart';
 
 /// Profile ekranining stats section qismi
 /// Umumiy statistikalarni ko'rsatadi (Wins, Matches, Win Rate, Rating)
 class ProfileStatsSection extends StatelessWidget {
-  final ProfileModel? profile;
+  final UserMeModel? user;
 
-  const ProfileStatsSection({super.key, this.profile});
+  const ProfileStatsSection({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
-    final wins = profile?.wins ?? 0;
-    final totalMatches = profile?.totalMatches ?? 0;
-    final winRate = profile?.winRate ?? 0.0;
-    final level = profile?.level ?? 1;
+    final wins = user?.stats?.wins ?? 0;
+    final totalMatches = user?.stats?.totalMatches ?? 0;
+    final winRate = user?.stats?.winRate ?? 0.0;
+    final level = user?.level ?? 1;
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -68,4 +68,3 @@ class ProfileStatsSection extends StatelessWidget {
     );
   }
 }
-

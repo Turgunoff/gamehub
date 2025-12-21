@@ -8,13 +8,13 @@ import 'profile_header.dart';
 ///
 /// Parallax effekt va profil header ni o'z ichiga oladi.
 class ProfileAppBar extends StatelessWidget {
-  final ProfileModel? profile;
+  final UserMeModel? user;
   final double scrollOffset;
   final VoidCallback onSettingsTap;
 
   const ProfileAppBar({
     super.key,
-    this.profile,
+    this.user,
     required this.scrollOffset,
     required this.onSettingsTap,
   });
@@ -54,7 +54,7 @@ class ProfileAppBar extends StatelessWidget {
               bottom: 40,
               left: 0,
               right: 0,
-              child: ProfileHeader(profile: profile),
+              child: ProfileHeader(user: user),
             ),
           ],
         ),

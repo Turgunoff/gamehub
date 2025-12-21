@@ -50,19 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA95JpyPKbO2PUBFFFBey_99sx8VCk6TXc',
-    appId: '1:607685079576:android:3f00e3d1dfffe5943b096d',
-    messagingSenderId: '607685079576',
-    projectId: 'cyberpitch-e8970',
-    storageBucket: 'cyberpitch-e8970.firebasestorage.app',
+    apiKey: 'AIzaSyD7Fhd3rw4NYx3xvI3D2pp_42XVvB22DW8',
+    appId: '1:708630350976:android:34d40440a91d811b1f2a65',
+    messagingSenderId: '708630350976',
+    projectId: 'cyberpitch-6bf90',
+    storageBucket: 'cyberpitch-6bf90.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyC_e-WW5CU-fP5uGNViTjzZg_E1F94P3GU',
-    appId: '1:607685079576:ios:8728be7521f946133b096d',
-    messagingSenderId: '607685079576',
-    projectId: 'cyberpitch-e8970',
-    storageBucket: 'cyberpitch-e8970.firebasestorage.app',
+    apiKey: 'AIzaSyA4OKjL1TH2yHabzD-n177ZssnOhB_A8js',
+    appId: '1:708630350976:ios:e2bf58d383bf0bea1f2a65',
+    messagingSenderId: '708630350976',
+    projectId: 'cyberpitch-6bf90',
+    storageBucket: 'cyberpitch-6bf90.firebasestorage.app',
     iosBundleId: 'dev.eldor.gamehub',
   );
+
 }

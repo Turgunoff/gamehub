@@ -1,8 +1,8 @@
-# GameHub Pro - Gaming va Esports Platformasi
+# CyberPitch - Gaming va Esports Platformasi
 
 ## 🎮 Loyiha haqida
 
-GameHub Pro - professional gaming va esports platformasi. O'yinchilar uchun turnirlar tashkil etish, jamoalar yaratish va coaching xizmatlarini ta'minlovchi mobil ilova.
+CyberPitch - professional gaming va esports platformasi. O'yinchilar uchun turnirlar tashkil etish, jamoalar yaratish va coaching xizmatlarini ta'minlovchi mobil ilova.
 
 ## 🏗️ Project Structure (Clean Architecture)
 

@@ -8,7 +8,8 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  static const String baseUrl = 'https://nights.uz/api/v1';
+  // Production server
+  static const String baseUrl = 'http://45.93.201.167:8080/api/v1';
 
   late Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -52,7 +53,7 @@ class ApiService {
         onError: (error, handler) async {
           _log(
             'ERROR',
-            '${error.response?.statusCode} ${error.requestOptions.path}',
+            '${error.response?.statusCode} ${error.requestOptions.path} - ${error.type.name}: ${error.message}',
           );
 
           // 401 bo'lsa token refresh qilish
@@ -652,48 +653,76 @@ class ApiService {
   // AUTH METHODS
   // ══════════════════════════════════════════════════════════
 
-  /// OTP kod yuborish
-  Future<OTPResponse> sendOTP(String email) async {
-    try {
-      final response = await _dio.post(
-        '/auth/send-code',
-        data: {'email': email},
-      );
-
-      return OTPResponse(
-        success: true,
-        message: response.data['message'],
-        expiresIn: response.data['expires_in'] ?? 120,
-      );
-    } on DioException catch (e) {
-      return OTPResponse(success: false, message: _getErrorMessage(e));
-    }
-  }
-
-  /// OTP tekshirish va login
-  Future<AuthResponse> verifyOTP(
-    String email,
-    String code, {
-    Map<String, dynamic>? deviceInfo,
+  /// Ro'yxatdan o'tish
+  Future<AuthResponse> register({
+    required String username,
+    required String email,
+    required String password,
   }) async {
     try {
       final response = await _dio.post(
-        '/auth/verify-code',
+        '/auth/register',
         data: {
+          'username': username,
           'email': email,
-          'code': code,
-          if (deviceInfo != null) 'device_info': deviceInfo,
+          'password': password,
         },
       );
 
       final data = response.data;
 
-      // Tokenlarni saqlash
-      await _saveTokens(data['access_token'], data['refresh_token']);
+      if (data['success'] == true) {
+        // Token saqlash
+        final token = data['data']['token'];
+        await _saveTokens(token, token);
+
+        return AuthResponse(
+          success: true,
+          isNewUser: true,
+          message: data['message'],
+        );
+      }
 
       return AuthResponse(
-        success: true,
-        isNewUser: data['is_new_user'] ?? false,
+        success: false,
+        message: data['message'] ?? 'Ro\'yxatdan o\'tishda xatolik',
+      );
+    } on DioException catch (e) {
+      return AuthResponse(success: false, message: _getErrorMessage(e));
+    }
+  }
+
+  /// Tizimga kirish
+  Future<AuthResponse> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/auth/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      final data = response.data;
+
+      if (data['success'] == true) {
+        // Token saqlash
+        final token = data['data']['token'];
+        await _saveTokens(token, token);
+
+        return AuthResponse(
+          success: true,
+          isNewUser: false,
+          message: data['message'],
+        );
+      }
+
+      return AuthResponse(
+        success: false,
+        message: data['message'] ?? 'Kirish xatosi',
       );
     } on DioException catch (e) {
       return AuthResponse(success: false, message: _getErrorMessage(e));
@@ -718,12 +747,12 @@ class ApiService {
 
     try {
       // Token ishlashini tekshirish
-      await _dio.get('/users/me');
-      return true;
+      final response = await _dio.get('/auth/me');
+      return response.data['success'] == true;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        // Token eskirgan, refresh qilib ko'rish
-        return await _tryRefreshToken();
+        // Token eskirgan
+        await _clearTokens();
       }
       return false;
     }
@@ -808,14 +837,6 @@ class ApiResponse {
   final dynamic data;
 
   ApiResponse({required this.success, this.message, this.data});
-}
-
-class OTPResponse {
-  final bool success;
-  final String? message;
-  final int expiresIn;
-
-  OTPResponse({required this.success, this.message, this.expiresIn = 120});
 }
 
 class AuthResponse {

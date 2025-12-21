@@ -116,55 +116,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _initializeWithProfile(ProfileModel? profile) {
+  void _initializeWithUser(UserMeModel? user) {
     if (_isInitialized) return;
     _isInitialized = true;
 
-    if (profile == null) {
-      // Profil yo'q - default qiymatlar bilan qoldirish
+    if (user == null) {
+      // User yo'q - default qiymatlar bilan qoldirish
       setState(() {});
       return;
     }
 
+    final profile = user.profile;
+
     // Shaxsiy - mavjud ma'lumotlarni to'ldirish, null bo'lsa bo'sh qoldirish
-    _nicknameController.text = profile.nickname ?? '';
-    _fullNameController.text = profile.fullName ?? '';
-    _phoneController.text = profile.phone ?? '';
-    _bioController.text = profile.bio ?? '';
+    _nicknameController.text = user.nickname ?? '';
+    _fullNameController.text = profile?.fullName ?? '';
+    _phoneController.text = profile?.phone ?? '';
+    _bioController.text = profile?.bio ?? '';
 
     // Dropdown uchun - faqat qiymat mavjud bo'lsa o'zgartirish
-    if (profile.region != null && _regions.contains(profile.region)) {
+    if (profile?.region != null && _regions.contains(profile!.region)) {
       _selectedRegion = profile.region!;
     }
-    if (profile.gender != null && _genders.contains(profile.gender)) {
+    if (profile?.gender != null && _genders.contains(profile!.gender)) {
       _selectedGender = profile.gender!;
     }
-    if (profile.language != null && _languages.contains(profile.language)) {
+    if (profile?.language != null && _languages.contains(profile!.language)) {
       _selectedLanguage = profile.language!;
     }
 
-    _isPhoneVerified = profile.isVerified;
+    _isPhoneVerified = user.isVerified;
 
-    if (profile.birthDate != null) {
-      _selectedBirthDate = DateTime.tryParse(profile.birthDate!);
+    if (profile?.birthDate != null) {
+      _selectedBirthDate = DateTime.tryParse(profile!.birthDate!);
     }
 
     // Ijtimoiy
-    _telegramController.text = profile.telegram ?? '';
-    _instagramController.text = profile.instagram ?? '';
-    _youtubeController.text = profile.youtube ?? '';
-    _discordController.text = profile.discord ?? '';
+    _telegramController.text = profile?.telegram ?? '';
+    _instagramController.text = profile?.instagram ?? '';
+    _youtubeController.text = profile?.youtube ?? '';
+    _discordController.text = profile?.discord ?? '';
 
     // O'yin
-    _pesIdController.text = profile.pesId ?? '';
-    _strengthController.text = profile.teamStrength?.toString() ?? '';
-    _availableHoursController.text = profile.availableHours ?? '';
+    _pesIdController.text = profile?.pesId ?? '';
+    _strengthController.text = profile?.teamStrength?.toString() ?? '';
+    _availableHoursController.text = profile?.availableHours ?? '';
 
-    // Avatar - listener da yangilanadi, bu yerda faqat birinchi marta
-    // _currentAvatarUrl listener orqali boshqariladi
+    // Avatar
+    _currentAvatarUrl = user.avatarUrl;
 
     // O'ynash vaqtini parse qilish
-    if (profile.availableHours != null && profile.availableHours!.contains('-')) {
+    if (profile?.availableHours != null && profile!.availableHours!.contains('-')) {
       final parts = profile.availableHours!.split('-');
       if (parts.length == 2) {
         final startParts = parts[0].split(':');
@@ -340,12 +342,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, state) {
         if (state is ProfileLoaded) {
-          _initializeWithProfile(state.user.profile);
+          _initializeWithUser(state.user);
           // Avatar URL ni har doim serverdan yangilash
           // (lokal o'zgarish bo'lmagan bo'lsa - ya'ni upload qilinmagan bo'lsa)
           if (_selectedImage == null) {
             setState(() {
-              _currentAvatarUrl = state.user.profile?.avatarUrl;
+              _currentAvatarUrl = state.user.avatarUrl;
             });
           }
         } else if (state is ProfileUpdateSuccess) {
@@ -363,7 +365,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // Profil yuklanganda ma'lumotlarni to'ldirish
         if (state is ProfileLoaded && !_isInitialized) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _initializeWithProfile(state.user.profile);
+            _initializeWithUser(state.user);
           });
         }
 

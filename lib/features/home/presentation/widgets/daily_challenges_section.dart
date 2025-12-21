@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gamehub/core/widgets/section_header.dart';
+import 'package:cyberpitch/core/widgets/section_header.dart';
 
 class DailyChallengesSection extends StatelessWidget {
   const DailyChallengesSection({super.key});

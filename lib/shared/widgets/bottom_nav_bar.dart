@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 
 /// CyberPitch Bottom Navigation Bar
 /// 4 ta tab: Home, Tournaments, History, Profile
-class GameHubBottomNavBar extends StatelessWidget {
+class CyberPitchBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
-  const GameHubBottomNavBar({
+  const CyberPitchBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,

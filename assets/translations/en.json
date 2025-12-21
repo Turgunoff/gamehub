@@ -1,5 +1,5 @@
 {
-  "app_name": "GameHub",
+  "app_name": "CyberPitch",
   "tagline": "COMPETE • WIN • DOMINATE",
 
   "onboarding": {
@@ -18,28 +18,34 @@
 
   "auth": {
     "login_title": "Welcome Back",
-    "login_subtitle": "Join the gaming community",
+    "login_subtitle": "Sign in to continue",
+    "register_title": "Create Account",
+    "register_subtitle": "Join the gaming community",
     "email_label": "Email",
     "email_hint": "example@email.com",
     "email_required": "Please enter your email",
     "email_invalid": "Please enter a valid email",
-    "send_code": "Send Code",
+    "username_label": "Username",
+    "username_hint": "Your gaming name",
+    "username_required": "Please enter username",
+    "username_min_length": "Username must be at least 3 characters",
+    "password_label": "Password",
+    "password_hint": "Enter your password",
+    "password_required": "Please enter password",
+    "password_min_length": "Password must be at least 6 characters",
+    "confirm_password_label": "Confirm Password",
+    "confirm_password_hint": "Re-enter your password",
+    "confirm_password_required": "Please confirm your password",
+    "passwords_not_match": "Passwords do not match",
+    "login_button": "Sign In",
+    "register_button": "Sign Up",
+    "no_account": "Don't have an account?",
+    "register_link": "Sign Up",
+    "have_account": "Already have an account?",
+    "login_link": "Sign In",
     "or": "or",
     "google": "Google",
-    "discord": "Discord",
-    "verify_title": "Verify Code",
-    "code_sent_to": "Code sent to {email}",
-    "change_email": "Change email",
-    "verify": "Verify",
-    "resend_code": "Resend code",
-    "resend_in": "Resend in",
-    "code_expires": "Code expires in 2 minutes",
-    "check_spam": "If you don't receive the code, check your spam folder or resend",
-    "enter_code": "Enter code",
-    "enter_6_digit": "Enter 6-digit code",
-    "only_numbers": "Only numbers allowed",
-    "code_error": "Invalid or expired code",
-    "new_code_sent": "New code sent!"
+    "discord": "Discord"
   },
 
   "dashboard": {

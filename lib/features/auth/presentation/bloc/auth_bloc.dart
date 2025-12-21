@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/services/api_service.dart';
-import '../../../../core/services/device_service.dart';
 import '../../../../core/services/onesignal_service.dart';
 import '../../../../core/services/websocket_service.dart';
 
@@ -23,25 +22,34 @@ class AuthCheckRequested extends AuthEvent {}
 /// Tizimdan chiqish
 class AuthLogoutRequested extends AuthEvent {}
 
-/// OTP kod yuborish
-class AuthOTPSent extends AuthEvent {
+/// Ro'yxatdan o'tish
+class AuthRegisterRequested extends AuthEvent {
+  final String username;
   final String email;
+  final String password;
 
-  const AuthOTPSent(this.email);
+  const AuthRegisterRequested({
+    required this.username,
+    required this.email,
+    required this.password,
+  });
 
   @override
-  List<Object?> get props => [email];
+  List<Object?> get props => [username, email, password];
 }
 
-/// OTP kodni tekshirish
-class AuthOTPVerified extends AuthEvent {
+/// Tizimga kirish
+class AuthLoginRequested extends AuthEvent {
   final String email;
-  final String otp;
+  final String password;
 
-  const AuthOTPVerified({required this.email, required this.otp});
+  const AuthLoginRequested({
+    required this.email,
+    required this.password,
+  });
 
   @override
-  List<Object?> get props => [email, otp];
+  List<Object?> get props => [email, password];
 }
 
 /// Xatolikni tozalash
@@ -84,27 +92,15 @@ class AuthAuthenticated extends AuthState {
 /// Tizimga kirmagan
 class AuthUnauthenticated extends AuthState {}
 
-/// OTP yuborildi
-class AuthOTPSentSuccess extends AuthState {
-  final String email;
-  final int expiresIn;
-
-  const AuthOTPSentSuccess({required this.email, this.expiresIn = 120});
-
-  @override
-  List<Object?> get props => [email, expiresIn];
-}
-
 /// Xatolik
 class AuthError extends AuthState {
   final String message;
   final String? errorCode;
-  final String? email; // OTP qayta yuborish uchun
 
-  const AuthError({required this.message, this.errorCode, this.email});
+  const AuthError({required this.message, this.errorCode});
 
   @override
-  List<Object?> get props => [message, errorCode, email];
+  List<Object?> get props => [message, errorCode];
 }
 
 // ══════════════════════════════════════════════════════════
@@ -119,8 +115,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
-    on<AuthOTPSent>(_onAuthOTPSent);
-    on<AuthOTPVerified>(_onAuthOTPVerified);
+    on<AuthRegisterRequested>(_onAuthRegisterRequested);
+    on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthErrorCleared>(_onAuthErrorCleared);
   }
 
@@ -149,7 +145,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthUnauthenticated());
       }
     } catch (e) {
-      // Xato bo'lsa ham unauthenticated
       emit(AuthUnauthenticated());
     }
   }
@@ -165,9 +160,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading(message: 'Chiqilmoqda...'));
 
     try {
-      // WebSocket disconnect
       WebSocketService().disconnect();
-
       await _apiService.logout();
     } catch (e) {
       // Xato bo'lsa ham chiqarish
@@ -177,118 +170,138 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   // ══════════════════════════════════════════════════════════
-  // SEND OTP - Kod yuborish
+  // REGISTER - Ro'yxatdan o'tish
   // ══════════════════════════════════════════════════════════
 
-  Future<void> _onAuthOTPSent(
-    AuthOTPSent event,
+  Future<void> _onAuthRegisterRequested(
+    AuthRegisterRequested event,
     Emitter<AuthState> emit,
   ) async {
+    final username = event.username.trim();
     final email = event.email.trim().toLowerCase();
+    final password = event.password;
 
     // Validation
+    if (username.isEmpty) {
+      emit(const AuthError(
+        message: 'Username kiriting',
+        errorCode: 'EMPTY_USERNAME',
+      ));
+      return;
+    }
+
+    if (username.length < 3) {
+      emit(const AuthError(
+        message: 'Username kamida 3 ta belgi bo\'lishi kerak',
+        errorCode: 'SHORT_USERNAME',
+      ));
+      return;
+    }
+
     if (email.isEmpty) {
-      emit(
-        const AuthError(message: 'Email kiriting', errorCode: 'EMPTY_EMAIL'),
-      );
+      emit(const AuthError(
+        message: 'Email kiriting',
+        errorCode: 'EMPTY_EMAIL',
+      ));
       return;
     }
 
     if (!_isValidEmail(email)) {
-      emit(
-        const AuthError(
-          message: 'Email formati noto\'g\'ri',
-          errorCode: 'INVALID_EMAIL',
-        ),
-      );
+      emit(const AuthError(
+        message: 'Email formati noto\'g\'ri',
+        errorCode: 'INVALID_EMAIL',
+      ));
       return;
     }
 
-    emit(const AuthLoading(message: 'Kod yuborilmoqda...'));
+    if (password.isEmpty) {
+      emit(const AuthError(
+        message: 'Parol kiriting',
+        errorCode: 'EMPTY_PASSWORD',
+      ));
+      return;
+    }
 
-    final response = await _apiService.sendOTP(email);
+    if (password.length < 6) {
+      emit(const AuthError(
+        message: 'Parol kamida 6 ta belgi bo\'lishi kerak',
+        errorCode: 'SHORT_PASSWORD',
+      ));
+      return;
+    }
+
+    emit(const AuthLoading(message: 'Ro\'yxatdan o\'tilmoqda...'));
+
+    final response = await _apiService.register(
+      username: username,
+      email: email,
+      password: password,
+    );
 
     if (response.success) {
-      emit(AuthOTPSentSuccess(email: email, expiresIn: response.expiresIn));
+      await OneSignalService().registerPlayerIdAfterLogin();
+      await WebSocketService().connect();
+      emit(AuthAuthenticated(isNewUser: response.isNewUser));
     } else {
-      emit(
-        AuthError(
-          message: response.message ?? 'Kod yuborishda xatolik',
-          errorCode: 'OTP_SEND_FAILED',
-        ),
-      );
+      emit(AuthError(
+        message: response.message ?? 'Ro\'yxatdan o\'tishda xatolik',
+        errorCode: 'REGISTER_FAILED',
+      ));
     }
   }
 
   // ══════════════════════════════════════════════════════════
-  // VERIFY OTP - Kodni tekshirish
+  // LOGIN - Tizimga kirish
   // ══════════════════════════════════════════════════════════
 
-  Future<void> _onAuthOTPVerified(
-    AuthOTPVerified event,
+  Future<void> _onAuthLoginRequested(
+    AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
     final email = event.email.trim().toLowerCase();
-    final otp = event.otp.trim();
+    final password = event.password;
 
     // Validation
-    if (otp.isEmpty) {
-      emit(
-        AuthError(
-          message: 'Kodni kiriting',
-          errorCode: 'EMPTY_OTP',
-          email: email,
-        ),
-      );
+    if (email.isEmpty) {
+      emit(const AuthError(
+        message: 'Email kiriting',
+        errorCode: 'EMPTY_EMAIL',
+      ));
       return;
     }
 
-    if (otp.length != 6) {
-      emit(
-        AuthError(
-          message: 'Kod 6 ta raqamdan iborat bo\'lishi kerak',
-          errorCode: 'INVALID_OTP_LENGTH',
-          email: email,
-        ),
-      );
+    if (!_isValidEmail(email)) {
+      emit(const AuthError(
+        message: 'Email formati noto\'g\'ri',
+        errorCode: 'INVALID_EMAIL',
+      ));
       return;
     }
 
-    if (!RegExp(r'^\d{6}$').hasMatch(otp)) {
-      emit(
-        AuthError(
-          message: 'Kod faqat raqamlardan iborat bo\'lishi kerak',
-          errorCode: 'INVALID_OTP_FORMAT',
-          email: email,
-        ),
-      );
+    if (password.isEmpty) {
+      emit(const AuthError(
+        message: 'Parol kiriting',
+        errorCode: 'EMPTY_PASSWORD',
+      ));
       return;
     }
 
-    emit(const AuthLoading(message: 'Tekshirilmoqda...'));
+    emit(const AuthLoading(message: 'Kirilmoqda...'));
 
-    final response = await _apiService.verifyOTP(
-      email,
-      otp,
-      deviceInfo: DeviceService.instance.toJson(),
+    final response = await _apiService.login(
+      email: email,
+      password: password,
     );
 
     if (response.success) {
-      // OneSignal Player ID ni backend ga yuborish
       await OneSignalService().registerPlayerIdAfterLogin();
-
-      // WebSocket ga ulanish
       await WebSocketService().connect();
-
-      emit(AuthAuthenticated(isNewUser: response.isNewUser));
+      emit(const AuthAuthenticated());
     } else {
-      emit(
-        AuthError(
-          message: response.message ?? 'Kod noto\'g\'ri',
-          errorCode: 'OTP_VERIFY_FAILED',
-          email: email,
-        ),
-      );
+      emit(AuthError(
+        message: response.message ?? 'Kirish xatosi',
+        errorCode: 'LOGIN_FAILED',
+      ));
     }
   }
 

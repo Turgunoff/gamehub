@@ -1,6 +1,6 @@
 # Tournaments Feature
 
-This feature provides a comprehensive tournaments browsing experience for the GameHub app.
+This feature provides a comprehensive tournaments browsing experience for the CyberPitch app.
 
 ## Features
 
