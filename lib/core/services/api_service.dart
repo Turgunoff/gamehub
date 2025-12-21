@@ -905,7 +905,7 @@ class HomeDashboardResponse {
 }
 
 class HomeUser {
-  final String id;
+  final int id;
   final String email;
   final String? nickname;
   final String? avatarUrl;
@@ -925,7 +925,7 @@ class HomeUser {
 
   factory HomeUser.fromJson(Map<String, dynamic> json) {
     return HomeUser(
-      id: json['id'] ?? '',
+      id: json['id'] ?? 0,
       email: json['email'] ?? '',
       nickname: json['nickname'],
       avatarUrl: json['avatar_url'],
