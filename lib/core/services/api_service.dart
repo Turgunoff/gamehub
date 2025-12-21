@@ -16,6 +16,7 @@ class ApiService {
 
   String? _accessToken;
   String? _refreshToken;
+  bool _isRefreshing = false; // Cheksiz loop oldini olish uchun
 
   // ══════════════════════════════════════════════════════════
   // INITIALIZATION
@@ -56,13 +57,26 @@ class ApiService {
             '${error.response?.statusCode} ${error.requestOptions.path} - ${error.type.name}: ${error.message}',
           );
 
-          // 401 bo'lsa token refresh qilish
-          if (error.response?.statusCode == 401 && _refreshToken != null) {
-            final refreshed = await _tryRefreshToken();
-            if (refreshed) {
-              // Qayta so'rov yuborish
-              final retryResponse = await _retry(error.requestOptions);
-              return handler.resolve(retryResponse);
+          final path = error.requestOptions.path;
+
+          // Auth endpointlari uchun refresh qilmaslik (cheksiz loop oldini olish)
+          final isAuthEndpoint = path.contains('/auth/');
+
+          // 401 bo'lsa token refresh qilish (faqat auth bo'lmagan endpointlar uchun)
+          if (error.response?.statusCode == 401 &&
+              _refreshToken != null &&
+              !isAuthEndpoint &&
+              !_isRefreshing) {
+            _isRefreshing = true;
+            try {
+              final refreshed = await _tryRefreshToken();
+              if (refreshed) {
+                // Qayta so'rov yuborish
+                final retryResponse = await _retry(error.requestOptions);
+                return handler.resolve(retryResponse);
+              }
+            } finally {
+              _isRefreshing = false;
             }
           }
 
