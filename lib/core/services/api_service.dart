@@ -783,15 +783,25 @@ class ApiService {
   // ══════════════════════════════════════════════════════════
 
   String _getErrorMessage(DioException e) {
-    // Server xatosi
+    // Server xatosi - backend "message" fieldini qaytaradi
     if (e.response?.data != null) {
       final data = e.response!.data;
-      if (data is Map && data['detail'] != null) {
-        return data['detail'].toString();
+      if (data is Map) {
+        // Backend response: {"success": false, "message": "..."}
+        if (data['message'] != null) {
+          return data['message'].toString();
+        }
+        // Boshqa API formatlari uchun
+        if (data['detail'] != null) {
+          return data['detail'].toString();
+        }
+        if (data['error'] != null) {
+          return data['error'].toString();
+        }
       }
     }
 
-    // Status code bo'yicha
+    // Status code bo'yicha (agar message topilmasa)
     switch (e.response?.statusCode) {
       case 400:
         return 'Noto\'g\'ri so\'rov';
