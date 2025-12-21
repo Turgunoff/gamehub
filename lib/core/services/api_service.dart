@@ -653,7 +653,7 @@ class ApiService {
   // AUTH METHODS
   // ══════════════════════════════════════════════════════════
 
-  /// Ro'yxatdan o'tish
+  /// Ro'yxatdan o'tish (1-qadam: OTP yuborish)
   Future<AuthResponse> register({
     required String username,
     required String email,
@@ -666,6 +666,40 @@ class ApiService {
           'username': username,
           'email': email,
           'password': password,
+        },
+      );
+
+      final data = response.data;
+
+      if (data['success'] == true) {
+        // OTP yuborildi, token hali yo'q
+        return AuthResponse(
+          success: true,
+          isNewUser: true,
+          message: data['message'],
+        );
+      }
+
+      return AuthResponse(
+        success: false,
+        message: data['message'] ?? 'Ro\'yxatdan o\'tishda xatolik',
+      );
+    } on DioException catch (e) {
+      return AuthResponse(success: false, message: _getErrorMessage(e));
+    }
+  }
+
+  /// OTP tasdiqlash (2-qadam: account yaratish)
+  Future<AuthResponse> verifyRegistration({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/auth/verify-registration',
+        data: {
+          'email': email,
+          'code': code,
         },
       );
 
@@ -685,7 +719,26 @@ class ApiService {
 
       return AuthResponse(
         success: false,
-        message: data['message'] ?? 'Ro\'yxatdan o\'tishda xatolik',
+        message: data['message'] ?? 'Tasdiqlashda xatolik',
+      );
+    } on DioException catch (e) {
+      return AuthResponse(success: false, message: _getErrorMessage(e));
+    }
+  }
+
+  /// OTP qayta yuborish
+  Future<AuthResponse> resendRegistrationCode({required String email}) async {
+    try {
+      final response = await _dio.post(
+        '/auth/resend-code',
+        data: {'email': email},
+      );
+
+      final data = response.data;
+
+      return AuthResponse(
+        success: data['success'] == true,
+        message: data['message'],
       );
     } on DioException catch (e) {
       return AuthResponse(success: false, message: _getErrorMessage(e));

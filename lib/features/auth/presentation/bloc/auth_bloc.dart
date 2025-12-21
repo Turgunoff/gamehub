@@ -55,6 +55,30 @@ class AuthLoginRequested extends AuthEvent {
 /// Xatolikni tozalash
 class AuthErrorCleared extends AuthEvent {}
 
+/// OTP tasdiqlash (ro'yxatdan o'tish uchun)
+class AuthVerifyOtpRequested extends AuthEvent {
+  final String email;
+  final String code;
+
+  const AuthVerifyOtpRequested({
+    required this.email,
+    required this.code,
+  });
+
+  @override
+  List<Object?> get props => [email, code];
+}
+
+/// OTP qayta yuborish
+class AuthResendOtpRequested extends AuthEvent {
+  final String email;
+
+  const AuthResendOtpRequested({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 // ══════════════════════════════════════════════════════════
 // STATES
 // ══════════════════════════════════════════════════════════
@@ -103,6 +127,19 @@ class AuthError extends AuthState {
   List<Object?> get props => [message, errorCode];
 }
 
+/// OTP talab qilinmoqda (ro'yxatdan o'tish uchun)
+class AuthOtpRequired extends AuthState {
+  final String email;
+
+  const AuthOtpRequired({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
+/// OTP qayta yuborildi
+class AuthOtpResent extends AuthState {}
+
 // ══════════════════════════════════════════════════════════
 // BLOC
 // ══════════════════════════════════════════════════════════
@@ -116,6 +153,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
+    on<AuthVerifyOtpRequested>(_onAuthVerifyOtpRequested);
+    on<AuthResendOtpRequested>(_onAuthResendOtpRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthErrorCleared>(_onAuthErrorCleared);
   }
@@ -170,7 +209,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   // ══════════════════════════════════════════════════════════
-  // REGISTER - Ro'yxatdan o'tish
+  // REGISTER - Ro'yxatdan o'tish (1-qadam: OTP yuborish)
   // ══════════════════════════════════════════════════════════
 
   Future<void> _onAuthRegisterRequested(
@@ -230,7 +269,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       return;
     }
 
-    emit(const AuthLoading(message: 'Ro\'yxatdan o\'tilmoqda...'));
+    emit(const AuthLoading(message: 'Tekshirilmoqda...'));
 
     final response = await _apiService.register(
       username: username,
@@ -239,13 +278,72 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     if (response.success) {
-      await OneSignalService().registerPlayerIdAfterLogin();
-      await WebSocketService().connect();
-      emit(AuthAuthenticated(isNewUser: response.isNewUser));
+      // OTP yuborildi, tasdiqlash sahifasiga o'tish kerak
+      emit(AuthOtpRequired(email: email));
     } else {
       emit(AuthError(
         message: response.message ?? 'Ro\'yxatdan o\'tishda xatolik',
         errorCode: 'REGISTER_FAILED',
+      ));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // VERIFY OTP - OTP tasdiqlash (2-qadam: account yaratish)
+  // ══════════════════════════════════════════════════════════
+
+  Future<void> _onAuthVerifyOtpRequested(
+    AuthVerifyOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (event.code.isEmpty || event.code.length != 6) {
+      emit(const AuthError(
+        message: '6 raqamli kodni kiriting',
+        errorCode: 'INVALID_CODE',
+      ));
+      return;
+    }
+
+    emit(const AuthLoading(message: 'Tasdiqlanmoqda...'));
+
+    final response = await _apiService.verifyRegistration(
+      email: event.email,
+      code: event.code,
+    );
+
+    if (response.success) {
+      await OneSignalService().registerPlayerIdAfterLogin();
+      await WebSocketService().connect();
+      emit(const AuthAuthenticated(isNewUser: true));
+    } else {
+      emit(AuthError(
+        message: response.message ?? 'Tasdiqlashda xatolik',
+        errorCode: 'VERIFY_FAILED',
+      ));
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // RESEND OTP - OTP qayta yuborish
+  // ══════════════════════════════════════════════════════════
+
+  Future<void> _onAuthResendOtpRequested(
+    AuthResendOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading(message: 'Yuborilmoqda...'));
+
+    final response = await _apiService.resendRegistrationCode(email: event.email);
+
+    if (response.success) {
+      emit(AuthOtpResent());
+      // Keyin yana OTP required holatiga qaytish
+      await Future.delayed(const Duration(milliseconds: 100));
+      emit(AuthOtpRequired(email: event.email));
+    } else {
+      emit(AuthError(
+        message: response.message ?? 'Kod yuborishda xatolik',
+        errorCode: 'RESEND_FAILED',
       ));
     }
   }

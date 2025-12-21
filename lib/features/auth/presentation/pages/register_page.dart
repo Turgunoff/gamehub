@@ -56,6 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             context.go('/dashboard');
+          } else if (state is AuthOtpRequired) {
+            // OTP sahifasiga o'tish
+            context.push('/otp-verification', extra: state.email);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

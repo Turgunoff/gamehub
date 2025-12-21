@@ -45,7 +45,14 @@
     "login_link": "Sign In",
     "or": "or",
     "google": "Google",
-    "discord": "Discord"
+    "discord": "Discord",
+    "verify_email": "Verify Email",
+    "otp_sent_to": "Verification code sent to {}",
+    "code_expires_in": "Code expires in {}",
+    "code_expired": "Code has expired",
+    "verify_button": "Verify",
+    "resend_code": "Resend Code",
+    "code_resent": "New code sent"
   },
 
   "dashboard": {

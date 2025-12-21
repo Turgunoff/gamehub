@@ -45,7 +45,14 @@
     "login_link": "Kirish",
     "or": "yoki",
     "google": "Google",
-    "discord": "Discord"
+    "discord": "Discord",
+    "verify_email": "Email tasdiqlash",
+    "otp_sent_to": "{} ga tasdiqlash kodi yuborildi",
+    "code_expires_in": "Kod {} da tugaydi",
+    "code_expired": "Kod muddati tugadi",
+    "verify_button": "Tasdiqlash",
+    "resend_code": "Kodni qayta yuborish",
+    "code_resent": "Yangi kod yuborildi"
   },
 
   "dashboard": {
