@@ -833,7 +833,9 @@ class ApiService {
     try {
       // Token ishlashini tekshirish
       final response = await _dio.get('/auth/me');
-      return response.data['success'] == true;
+      // Backend /auth/me endpoint success field qaytarmaydi
+      // Agar 200 status code bo'lsa va user data mavjud bo'lsa, auth muvaffaqiyatli
+      return response.statusCode == 200 && response.data != null && response.data['id'] != null;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         // Token eskirgan

@@ -15,6 +15,9 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  bool _hasNavigated = false;
+  bool _minSplashTimePassed = false;
+
   @override
   void initState() {
     super.initState();
@@ -25,25 +28,31 @@ class _SplashPageState extends State<SplashPage> {
     // Check auth state
     context.read<AuthBloc>().add(AuthCheckRequested());
 
-    // Wait for splash animation
+    // Minimum splash time (3 seconds)
     await Future.delayed(const Duration(seconds: 3));
-
+    
     if (mounted) {
+      setState(() {
+        _minSplashTimePassed = true;
+      });
       _handleNavigation();
     }
   }
 
   void _handleNavigation() {
+    if (_hasNavigated) return;
+    
     final authState = context.read<AuthBloc>().state;
 
     if (authState is AuthAuthenticated) {
+      _hasNavigated = true;
       context.go('/dashboard');
-    } else if (authState is AuthUnauthenticated) {
+    } else if (authState is AuthUnauthenticated && _minSplashTimePassed) {
+      _hasNavigated = true;
       _checkOnboardingAndNavigate();
-    } else if (authState is AuthError) {
+    } else if (authState is AuthError && _minSplashTimePassed) {
+      _hasNavigated = true;
       context.go('/auth');
-    } else {
-      _checkOnboardingAndNavigate();
     }
   }
 
@@ -64,10 +73,17 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgDark,
-      body: Center(
-        child: Column(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // Auth state o'zgarganda navigation qilish
+        if (_minSplashTimePassed) {
+          _handleNavigation();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.bgDark,
+        body: Center(
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo
@@ -126,6 +142,7 @@ class _SplashPageState extends State<SplashPage> {
               strokeWidth: 2,
             ).animate().fadeIn(delay: 800.ms),
           ],
+        ),
         ),
       ),
     );
