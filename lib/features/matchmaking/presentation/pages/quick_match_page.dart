@@ -5,15 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/widgets/optimized_image.dart';
+import '../../../../core/widgets/cyberpitch_background.dart';
 import '../bloc/matchmaking_bloc.dart';
 
 class QuickMatchPage extends StatefulWidget {
   final String mode; // ranked, friendly
 
-  const QuickMatchPage({
-    super.key,
-    this.mode = 'ranked',
-  });
+  const QuickMatchPage({super.key, this.mode = 'ranked'});
 
   @override
   State<QuickMatchPage> createState() => _QuickMatchPageState();
@@ -82,37 +80,39 @@ class _QuickMatchPageState extends State<QuickMatchPage>
       value: _matchmakingBloc,
       child: Scaffold(
         backgroundColor: const Color(0xFF0A0E1A),
-        body: Stack(
-          children: [
-            _buildBackground(),
-            SafeArea(
-              child: Column(
-                children: [
-                  _buildAppBar(),
-                  Expanded(
-                    child: BlocConsumer<MatchmakingBloc, MatchmakingState>(
-                      listener: (context, state) {
-                        if (state is MatchmakingMatchFound) {
-                          HapticFeedback.heavyImpact();
-                          _showMatchFoundDialog(state);
-                        } else if (state is ChallengeSentSuccess) {
-                          _showSnackBar('Challenge yuborildi!', Colors.green);
-                        } else if (state is MatchmakingError) {
-                          _showSnackBar(state.message, Colors.red);
-                        }
-                      },
-                      builder: (context, state) {
-                        if (state is MatchmakingSearching) {
-                          return _buildSearchingView(state);
-                        }
-                        return _buildMainView();
-                      },
+        body: CyberPitchBackground(
+          opacity: 0.3,
+          child: Stack(
+            children: [
+              SafeArea(
+                child: Column(
+                  children: [
+                    _buildAppBar(),
+                    Expanded(
+                      child: BlocConsumer<MatchmakingBloc, MatchmakingState>(
+                        listener: (context, state) {
+                          if (state is MatchmakingMatchFound) {
+                            HapticFeedback.heavyImpact();
+                            _showMatchFoundDialog(state);
+                          } else if (state is ChallengeSentSuccess) {
+                            _showSnackBar('Challenge yuborildi!', Colors.green);
+                          } else if (state is MatchmakingError) {
+                            _showSnackBar(state.message, Colors.red);
+                          }
+                        },
+                        builder: (context, state) {
+                          if (state is MatchmakingSearching) {
+                            return _buildSearchingView(state);
+                          }
+                          return _buildMainView();
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -372,7 +372,9 @@ class _QuickMatchPageState extends State<QuickMatchPage>
   Widget _buildOnlinePlayersSection() {
     return BlocBuilder<MatchmakingBloc, MatchmakingState>(
       buildWhen: (prev, curr) =>
-          curr is PlayersLoaded || curr is MatchmakingInitial || curr is MatchmakingLoading,
+          curr is PlayersLoaded ||
+          curr is MatchmakingInitial ||
+          curr is MatchmakingLoading,
       builder: (context, state) {
         if (state is MatchmakingLoading) {
           return const Center(
@@ -402,8 +404,10 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   ),
                   const Spacer(),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00FB94).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -444,11 +448,16 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
                       ),
                       child: TextField(
                         controller: _searchController,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Qidirish...',
                           hintStyle: TextStyle(
@@ -461,13 +470,17 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                             size: 20,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                         onSubmitted: (value) {
-                          _matchmakingBloc.add(PlayersRequested(
-                            filter: _currentFilter,
-                            search: value.isNotEmpty ? value : null,
-                          ));
+                          _matchmakingBloc.add(
+                            PlayersRequested(
+                              filter: _currentFilter,
+                              search: value.isNotEmpty ? value : null,
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -512,10 +525,14 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     return GestureDetector(
       onTap: () {
         setState(() => _currentFilter = filter);
-        _matchmakingBloc.add(PlayersRequested(
-          filter: filter,
-          search: _searchController.text.isNotEmpty ? _searchController.text : null,
-        ));
+        _matchmakingBloc.add(
+          PlayersRequested(
+            filter: filter,
+            search: _searchController.text.isNotEmpty
+                ? _searchController.text
+                : null,
+          ),
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -533,7 +550,9 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         child: Text(
           label,
           style: TextStyle(
-            color: isActive ? const Color(0xFF00D9FF) : Colors.white.withOpacity(0.6),
+            color: isActive
+                ? const Color(0xFF00D9FF)
+                : Colors.white.withOpacity(0.6),
             fontSize: 12,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
@@ -584,14 +603,8 @@ class _QuickMatchPageState extends State<QuickMatchPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: player.isOnline
-              ? [
-                  const Color(0xFF1E2D3D),
-                  const Color(0xFF152232),
-                ]
-              : [
-                  const Color(0xFF1A1F2E),
-                  const Color(0xFF12161F),
-                ],
+              ? [const Color(0xFF1E2D3D), const Color(0xFF152232)]
+              : [const Color(0xFF1A1F2E), const Color(0xFF12161F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -670,8 +683,9 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                                   boxShadow: player.isOnline
                                       ? [
                                           BoxShadow(
-                                            color: const Color(0xFF00FB94)
-                                                .withOpacity(0.6),
+                                            color: const Color(
+                                              0xFF00FB94,
+                                            ).withOpacity(0.6),
                                             blurRadius: 6,
                                           ),
                                         ]
@@ -698,7 +712,10 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF6C5CE7), Color(0xFF8B5CF6)],
+                                    colors: [
+                                      Color(0xFF6C5CE7),
+                                      Color(0xFF8B5CF6),
+                                    ],
                                   ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -725,7 +742,10 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                 // Pastki qism: Stats
                 const SizedBox(height: 14),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(12),
@@ -838,10 +858,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                     ? const Color(0xFF00FB94)
                     : const Color(0xFF6B7280),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFF152232),
-                  width: 3,
-                ),
+                border: Border.all(color: const Color(0xFF152232), width: 3),
                 boxShadow: player.isOnline
                     ? [
                         BoxShadow(
@@ -884,10 +901,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-          ),
+          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
         ),
       ],
     );
@@ -909,10 +923,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         decoration: BoxDecoration(
           color: const Color(0xFF2A2F3E),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFF3A3F5A),
-            width: 1,
-          ),
+          border: Border.all(color: const Color(0xFF3A3F5A), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1009,11 +1020,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.bolt_rounded,
-                  size: 18,
-                  color: Color(0xFF3D2800),
-                ),
+                Icon(Icons.bolt_rounded, size: 18, color: Color(0xFF3D2800)),
                 SizedBox(width: 6),
                 Text(
                   'CHALLENGE',
@@ -1042,11 +1049,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.check_circle,
-              color: Color(0xFF00FB94),
-              size: 64,
-            ),
+            const Icon(Icons.check_circle, color: Color(0xFF00FB94), size: 64),
             const SizedBox(height: 16),
             const Text(
               'RAQIB TOPILDI!',
@@ -1131,10 +1134,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                 ),
                 child: const Text(
                   'O\'YINNI BOSHLASH',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1212,7 +1212,10 @@ class _QuickMatchPageState extends State<QuickMatchPage>
     );
   }
 
-  Widget _buildChallengeCard(PendingChallenge challenge, BuildContext dialogContext) {
+  Widget _buildChallengeCard(
+    PendingChallenge challenge,
+    BuildContext dialogContext,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -1239,7 +1242,9 @@ class _QuickMatchPageState extends State<QuickMatchPage>
               Navigator.pop(dialogContext);
               await context.push('/player-profile/${challenge.challenger.id}');
               // Qaytib kelganda faqat shu player ma'lumotini yangilash
-              _matchmakingBloc.add(SinglePlayerRefreshed(challenge.challenger.id));
+              _matchmakingBloc.add(
+                SinglePlayerRefreshed(challenge.challenger.id),
+              );
             },
             borderRadius: BorderRadius.circular(10),
             child: Padding(
@@ -1337,7 +1342,9 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFB800).withOpacity(0.2),
+                                  color: const Color(
+                                    0xFFFFB800,
+                                  ).withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
@@ -1379,9 +1386,13 @@ class _QuickMatchPageState extends State<QuickMatchPage>
             child: OutlinedButton.icon(
               onPressed: () async {
                 Navigator.pop(dialogContext);
-                await context.push('/player-profile/${challenge.challenger.id}');
+                await context.push(
+                  '/player-profile/${challenge.challenger.id}',
+                );
                 // Qaytib kelganda faqat shu player ma'lumotini yangilash
-                _matchmakingBloc.add(SinglePlayerRefreshed(challenge.challenger.id));
+                _matchmakingBloc.add(
+                  SinglePlayerRefreshed(challenge.challenger.id),
+                );
               },
               icon: const Icon(Icons.person_outline, size: 16),
               label: const Text('PROFILNI KO\'RISH'),
@@ -1422,10 +1433,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   ),
                   child: const Text(
                     'RAD ETISH',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -1454,10 +1462,7 @@ class _QuickMatchPageState extends State<QuickMatchPage>
                   ),
                   child: const Text(
                     'QABUL QILISH',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

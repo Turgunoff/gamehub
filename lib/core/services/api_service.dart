@@ -17,6 +17,7 @@ class ApiService {
   String? _accessToken;
   String? _refreshToken;
   bool _isRefreshing = false; // Cheksiz loop oldini olish uchun
+  bool _tokensLoaded = false; // Tokenlar yuklanganligini kuzatish
 
   // ══════════════════════════════════════════════════════════
   // INITIALIZATION
@@ -158,18 +159,13 @@ class ApiService {
   Future<AvatarUploadResponse> uploadAvatar(String filePath) async {
     try {
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          filePath,
-          filename: 'avatar.jpg',
-        ),
+        'file': await MultipartFile.fromFile(filePath, filename: 'avatar.jpg'),
       });
 
       final response = await _dio.post(
         '/upload/avatar',
         data: formData,
-        options: Options(
-          headers: {'Content-Type': 'multipart/form-data'},
-        ),
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       return AvatarUploadResponse(
@@ -178,10 +174,7 @@ class ApiService {
         message: response.data['message'],
       );
     } on DioException catch (e) {
-      return AvatarUploadResponse(
-        success: false,
-        message: _getErrorMessage(e),
-      );
+      return AvatarUploadResponse(success: false, message: _getErrorMessage(e));
     }
   }
 
@@ -200,7 +193,10 @@ class ApiService {
   // ══════════════════════════════════════════════════════════
 
   /// Turnirlar ro'yxati
-  Future<TournamentsResponse> getTournaments({String? status, int limit = 20}) async {
+  Future<TournamentsResponse> getTournaments({
+    String? status,
+    int limit = 20,
+  }) async {
     try {
       final params = <String, dynamic>{'limit': limit};
       if (status != null) params['status'] = status;
@@ -268,7 +264,10 @@ class ApiService {
   /// Leaderboard
   Future<List<LeaderboardItem>> getLeaderboard({int limit = 10}) async {
     try {
-      final response = await _dio.get('/home/leaderboard', queryParameters: {'limit': limit});
+      final response = await _dio.get(
+        '/home/leaderboard',
+        queryParameters: {'limit': limit},
+      );
       final list = response.data['leaderboard'] as List;
       return list.map((e) => LeaderboardItem.fromJson(e)).toList();
     } on DioException catch (e) {
@@ -281,12 +280,15 @@ class ApiService {
   // ══════════════════════════════════════════════════════════
 
   /// Suhbatlar ro'yxatini olish
-  Future<ConversationsResponse> getConversations({int limit = 20, int offset = 0}) async {
+  Future<ConversationsResponse> getConversations({
+    int limit = 20,
+    int offset = 0,
+  }) async {
     try {
-      final response = await _dio.get('/chat/conversations', queryParameters: {
-        'limit': limit,
-        'offset': offset,
-      });
+      final response = await _dio.get(
+        '/chat/conversations',
+        queryParameters: {'limit': limit, 'offset': offset},
+      );
       return ConversationsResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -294,13 +296,20 @@ class ApiService {
   }
 
   /// Foydalanuvchi bilan xabarlarni olish
-  Future<MessagesResponse> getMessages(String userId, {int limit = 50, DateTime? before}) async {
+  Future<MessagesResponse> getMessages(
+    String userId, {
+    int limit = 50,
+    DateTime? before,
+  }) async {
     try {
       final params = <String, dynamic>{'limit': limit};
       if (before != null) {
         params['before'] = before.toIso8601String();
       }
-      final response = await _dio.get('/chat/messages/$userId', queryParameters: params);
+      final response = await _dio.get(
+        '/chat/messages/$userId',
+        queryParameters: params,
+      );
       return MessagesResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -310,10 +319,10 @@ class ApiService {
   /// Xabar yuborish
   Future<ChatMessage> sendChatMessage(String receiverId, String content) async {
     try {
-      final response = await _dio.post('/chat/messages', data: {
-        'receiver_id': receiverId,
-        'content': content,
-      });
+      final response = await _dio.post(
+        '/chat/messages',
+        data: {'receiver_id': receiverId, 'content': content},
+      );
       return ChatMessage.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -335,9 +344,14 @@ class ApiService {
   // ══════════════════════════════════════════════════════════
 
   /// Matchmaking queuega qo'shilish
-  Future<MatchmakingResponse> joinMatchmakingQueue({String mode = 'ranked'}) async {
+  Future<MatchmakingResponse> joinMatchmakingQueue({
+    String mode = 'ranked',
+  }) async {
     try {
-      final response = await _dio.post('/matches/queue/join', queryParameters: {'mode': mode});
+      final response = await _dio.post(
+        '/matches/queue/join',
+        queryParameters: {'mode': mode},
+      );
       return MatchmakingResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -366,7 +380,10 @@ class ApiService {
   /// Online o'yinchilar
   Future<OnlinePlayersResponse> getOnlinePlayers({int limit = 20}) async {
     try {
-      final response = await _dio.get('/matches/online-players', queryParameters: {'limit': limit});
+      final response = await _dio.get(
+        '/matches/online-players',
+        queryParameters: {'limit': limit},
+      );
       return OnlinePlayersResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -380,14 +397,14 @@ class ApiService {
     int limit = 50,
   }) async {
     try {
-      final params = <String, dynamic>{
-        'filter': filter,
-        'limit': limit,
-      };
+      final params = <String, dynamic>{'filter': filter, 'limit': limit};
       if (search != null && search.isNotEmpty) {
         params['search'] = search;
       }
-      final response = await _dio.get('/matches/players', queryParameters: params);
+      final response = await _dio.get(
+        '/matches/players',
+        queryParameters: params,
+      );
       return AllPlayersResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -401,11 +418,14 @@ class ApiService {
     int betAmount = 0,
   }) async {
     try {
-      final response = await _dio.post('/matches/challenge', data: {
-        'opponent_id': opponentId,
-        'mode': mode,
-        'bet_amount': betAmount,
-      });
+      final response = await _dio.post(
+        '/matches/challenge',
+        data: {
+          'opponent_id': opponentId,
+          'mode': mode,
+          'bet_amount': betAmount,
+        },
+      );
       return ChallengeResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
@@ -582,9 +602,7 @@ class ApiService {
   /// OneSignal Player ID ni backendga yuborish
   Future<void> updateOneSignalPlayerId(String playerId) async {
     try {
-      await _dio.patch('/users/me', data: {
-        'onesignal_player_id': playerId,
-      });
+      await _dio.patch('/users/me', data: {'onesignal_player_id': playerId});
     } catch (e) {
       // Ignore errors
     }
@@ -597,9 +615,14 @@ class ApiService {
   Future<void> _loadTokens() async {
     _accessToken = await _storage.read(key: 'access_token');
     _refreshToken = await _storage.read(key: 'refresh_token');
+    _tokensLoaded = true;
 
-    // DEBUG: Tekshirish
-    print('TOKEN LOADED: ${_accessToken?.substring(0, 20) ?? "NULL"}');
+    // DEBUG: Faqat token mavjud bo'lsa print qilish
+    if (_accessToken != null) {
+      print(
+        'TOKEN LOADED: ${_accessToken!.substring(0, _accessToken!.length > 20 ? 20 : _accessToken!.length)}...',
+      );
+    }
   }
 
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
@@ -607,6 +630,7 @@ class ApiService {
     await _storage.write(key: 'refresh_token', value: refreshToken);
     _accessToken = accessToken;
     _refreshToken = refreshToken;
+    _tokensLoaded = true;
 
     // DEBUG: Tekshirish
     print('TOKEN SAVED: ${accessToken.substring(0, 20)}...');
@@ -616,6 +640,7 @@ class ApiService {
     await _storage.deleteAll();
     _accessToken = null;
     _refreshToken = null;
+    _tokensLoaded = false;
   }
 
   Future<bool> _tryRefreshToken() async {
@@ -676,11 +701,7 @@ class ApiService {
     try {
       final response = await _dio.post(
         '/auth/register',
-        data: {
-          'username': username,
-          'email': email,
-          'password': password,
-        },
+        data: {'username': username, 'email': email, 'password': password},
       );
 
       final data = response.data;
@@ -711,10 +732,7 @@ class ApiService {
     try {
       final response = await _dio.post(
         '/auth/verify-registration',
-        data: {
-          'email': email,
-          'code': code,
-        },
+        data: {'email': email, 'code': code},
       );
 
       final data = response.data;
@@ -767,10 +785,7 @@ class ApiService {
     try {
       final response = await _dio.post(
         '/auth/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       final data = response.data;
@@ -808,7 +823,10 @@ class ApiService {
 
   /// Auth tekshirish
   Future<bool> checkAuth() async {
-    await _loadTokens();
+    // Tokenlar yuklanmagan bo'lsa yuklash
+    if (!_tokensLoaded) {
+      await _loadTokens();
+    }
 
     if (_accessToken == null) return false;
 
@@ -959,11 +977,13 @@ class HomeDashboardResponse {
       stats: HomeStats.fromJson(json['stats']),
       onlineUsers: json['online_users'] ?? 0,
       pendingChallenges: json['pending_challenges'] ?? 0,
-      tournaments: (json['tournaments'] as List?)
+      tournaments:
+          (json['tournaments'] as List?)
               ?.map((e) => HomeTournament.fromJson(e))
               .toList() ??
           [],
-      recentMatches: (json['recent_matches'] as List?)
+      recentMatches:
+          (json['recent_matches'] as List?)
               ?.map((e) => HomeMatch.fromJson(e))
               .toList() ??
           [],
@@ -1244,7 +1264,8 @@ class OnlinePlayersResponse {
 
   factory OnlinePlayersResponse.fromJson(Map<String, dynamic> json) {
     return OnlinePlayersResponse(
-      players: (json['players'] as List?)
+      players:
+          (json['players'] as List?)
               ?.map((e) => OnlinePlayer.fromJson(e))
               .toList() ??
           [],
@@ -1262,8 +1283,8 @@ class OnlinePlayer {
   final int wins;
   final int totalMatches;
   final double winRate;
-  final bool hasPendingChallenge;  // Men yuborgan taklif
-  final bool isBusy;  // O'yinchi boshqa o'yinda band
+  final bool hasPendingChallenge; // Men yuborgan taklif
+  final bool isBusy; // O'yinchi boshqa o'yinda band
   final bool isOnline;
   final String? lastOnline;
 
@@ -1338,7 +1359,8 @@ class AllPlayersResponse {
 
   factory AllPlayersResponse.fromJson(Map<String, dynamic> json) {
     return AllPlayersResponse(
-      players: (json['players'] as List?)
+      players:
+          (json['players'] as List?)
               ?.map((e) => OnlinePlayer.fromJson(e))
               .toList() ??
           [],
@@ -1353,14 +1375,12 @@ class PendingChallengesResponse {
   final List<PendingChallenge> challenges;
   final int count;
 
-  PendingChallengesResponse({
-    required this.challenges,
-    required this.count,
-  });
+  PendingChallengesResponse({required this.challenges, required this.count});
 
   factory PendingChallengesResponse.fromJson(Map<String, dynamic> json) {
     return PendingChallengesResponse(
-      challenges: (json['challenges'] as List?)
+      challenges:
+          (json['challenges'] as List?)
               ?.map((e) => PendingChallenge.fromJson(e))
               .toList() ??
           [],
@@ -1459,8 +1479,8 @@ class PlayerProfile {
 
   // Challenge holati
   final bool hasPendingChallenge;
-  final String? pendingChallengeId;  // Bekor qilish uchun
-  final bool isBusy;  // O'yinchi boshqa o'yinda band
+  final String? pendingChallengeId; // Bekor qilish uchun
+  final bool isBusy; // O'yinchi boshqa o'yinda band
 
   // Head-to-head
   final HeadToHead headToHead;
@@ -1531,7 +1551,8 @@ class PlayerProfile {
       pendingChallengeId: json['pending_challenge_id'],
       isBusy: json['is_busy'] ?? false,
       headToHead: HeadToHead.fromJson(json['head_to_head'] ?? {}),
-      recentMatches: (json['recent_matches'] as List?)
+      recentMatches:
+          (json['recent_matches'] as List?)
               ?.map((e) => RecentMatch.fromJson(e))
               .toList() ??
           [],
@@ -1632,11 +1653,7 @@ class MatchOpponent {
   final String nickname;
   final String? avatarUrl;
 
-  MatchOpponent({
-    required this.id,
-    required this.nickname,
-    this.avatarUrl,
-  });
+  MatchOpponent({required this.id, required this.nickname, this.avatarUrl});
 
   factory MatchOpponent.fromJson(Map<String, dynamic> json) {
     return MatchOpponent(
@@ -1660,7 +1677,8 @@ class FriendsListResponse {
 
   factory FriendsListResponse.fromJson(Map<String, dynamic> json) {
     return FriendsListResponse(
-      friends: (json['friends'] as List?)
+      friends:
+          (json['friends'] as List?)
               ?.map((e) => FriendInfo.fromJson(e))
               .toList() ??
           [],
@@ -1706,14 +1724,12 @@ class FriendRequestsResponse {
   final List<FriendRequest> requests;
   final int count;
 
-  FriendRequestsResponse({
-    required this.requests,
-    required this.count,
-  });
+  FriendRequestsResponse({required this.requests, required this.count});
 
   factory FriendRequestsResponse.fromJson(Map<String, dynamic> json) {
     return FriendRequestsResponse(
-      requests: (json['requests'] as List?)
+      requests:
+          (json['requests'] as List?)
               ?.map((e) => FriendRequest.fromJson(e))
               .toList() ??
           [],
@@ -1883,10 +1899,7 @@ class ConversationsResponse {
   final List<Conversation> conversations;
   final int total;
 
-  ConversationsResponse({
-    required this.conversations,
-    required this.total,
-  });
+  ConversationsResponse({required this.conversations, required this.total});
 
   factory ConversationsResponse.fromJson(Map<String, dynamic> json) {
     final list = json['conversations'] as List? ?? [];
@@ -2010,10 +2023,7 @@ class TournamentsResponse {
   final List<TournamentItem> tournaments;
   final int total;
 
-  TournamentsResponse({
-    required this.tournaments,
-    required this.total,
-  });
+  TournamentsResponse({required this.tournaments, required this.total});
 
   factory TournamentsResponse.fromJson(Map<String, dynamic> json) {
     final list = json['tournaments'] as List? ?? [];

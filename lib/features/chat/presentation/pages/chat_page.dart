@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/widgets/cyberpitch_background.dart';
 import '../bloc/chat_bloc.dart';
 import '../widgets/message_bubble.dart';
 
@@ -42,11 +43,14 @@ class _ChatPageState extends State<ChatPage> {
       child: Scaffold(
         backgroundColor: const Color(0xFF0A0E1A),
         appBar: _buildAppBar(),
-        body: Column(
-          children: [
-            Expanded(child: _buildMessagesList()),
-            _buildMessageInput(),
-          ],
+        body: CyberPitchBackground(
+          opacity: 0.3,
+          child: Column(
+            children: [
+              Expanded(child: _buildMessagesList()),
+              _buildMessageInput(),
+            ],
+          ),
         ),
       ),
     );

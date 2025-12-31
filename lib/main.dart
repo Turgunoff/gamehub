@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
           create: (context) => ProfileBloc()..add(ProfileLoadRequested()),
         ),
         BlocProvider<HomeBloc>(
-          create: (context) => HomeBloc()..add(const HomeLoadRequested()),
+          create: (context) => HomeBloc(),
         ),
       ],
       child: MaterialApp.router(

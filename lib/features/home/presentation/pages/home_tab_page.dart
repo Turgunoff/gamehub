@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cyberpitch/core/gen/assets/assets.gen.dart';
 import 'package:cyberpitch/core/widgets/optimized_image.dart';
+import 'package:cyberpitch/core/widgets/cyberpitch_background.dart';
 import 'package:cyberpitch/core/services/api_service.dart';
 import 'package:cyberpitch/core/services/onesignal_service.dart';
 import '../bloc/home_bloc.dart';
@@ -1873,67 +1872,8 @@ class _HomeTabPageState extends State<HomeTabPage>
   }
 
   Widget _buildBackground() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.15,
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.mode(
-                Color(0xFF00D9FF),
-                BlendMode.srcATop,
-              ),
-              child: SvgPicture.asset(
-                Assets.images.cyberpitchBackground.path,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                placeholderBuilder: (context) =>
-                    Container(color: Colors.transparent),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: -100,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 300,
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFF6C5CE7).withOpacity(0.3),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                const Color(0xFF0A0E1A).withOpacity(0.5),
-                const Color(0xFF0A0E1A).withOpacity(0.8),
-              ],
-              stops: const [0.0, 0.5, 1.0],
-            ),
-          ),
-        ),
-      ],
+    return CyberPitchBackground(
+      opacity: 0.3,
     );
   }
 

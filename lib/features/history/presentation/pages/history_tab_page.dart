@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'dart:math' as math;
+import '../../../../core/widgets/cyberpitch_background.dart';
 import '../widgets/history_header.dart';
 import '../widgets/history_stats_overview.dart';
 import '../widgets/history_tab_bar.dart';
@@ -45,15 +46,11 @@ class _HistoryTabPageState extends State<HistoryTabPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
-      body: Stack(
-        children: [
-          // Background
-          _buildBackground(),
-
-          SafeArea(
-            child: _hasData ? _buildWithData() : _buildEmptyState(),
-          ),
-        ],
+      body: CyberPitchBackground(
+        opacity: 0.3,
+        child: SafeArea(
+          child: _hasData ? _buildWithData() : _buildEmptyState(),
+        ),
       ),
     );
   }

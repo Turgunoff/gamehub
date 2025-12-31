@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/models/profile_model.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/widgets/optimized_image.dart';
+import '../../../../core/widgets/cyberpitch_background.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
@@ -100,31 +101,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Scaffold(
           backgroundColor: const Color(0xFF0A0E1A),
           extendBodyBehindAppBar: true,
-          body: Stack(
-            children: [
-              // Background
-              _buildBackground(),
+          body: CyberPitchBackground(
+            opacity: 0.3,
+            child: Stack(
+              children: [
+                // Main Content
+                CustomScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    // App Bar
+                    _buildAppBar(user),
 
-              // Main Content
-              CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  // App Bar
-                  _buildAppBar(user),
+                    // Content
+                    SliverToBoxAdapter(
+                      child: isLoading
+                          ? _buildLoadingIndicator()
+                          : _buildContent(user),
+                    ),
+                  ],
+                ),
 
-                  // Content
-                  SliverToBoxAdapter(
-                    child: isLoading
-                        ? _buildLoadingIndicator()
-                        : _buildContent(user),
-                  ),
-                ],
-              ),
-
-              // Floating Edit Button
-              _buildFloatingEditButton(),
-            ],
+                // Floating Edit Button
+                _buildFloatingEditButton(),
+              ],
+            ),
           ),
         );
       },
@@ -143,9 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return const Center(
       child: Padding(
         padding: EdgeInsets.all(50),
-        child: CircularProgressIndicator(
-          color: Color(0xFF6C5CE7),
-        ),
+        child: CircularProgressIndicator(color: Color(0xFF6C5CE7)),
       ),
     );
   }
@@ -198,20 +197,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0A0E1A),
-                Color(0xFF1A1F3A),
-                Color(0xFF0A0E1A),
-              ],
+              colors: [Color(0xFF0A0E1A), Color(0xFF1A1F3A), Color(0xFF0A0E1A)],
             ),
           ),
         ),
 
         // Mesh Pattern
-        CustomPaint(
-          painter: _MeshPatternPainter(),
-          child: Container(),
-        ),
+        CustomPaint(painter: _MeshPatternPainter(), child: Container()),
 
         // Gradient Overlays
         _buildGradientOverlay(
@@ -247,10 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [
-              color.withOpacity(0.15),
-              Colors.transparent,
-            ],
+            colors: [color.withOpacity(0.15), Colors.transparent],
           ),
         ),
       ),
@@ -307,9 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-              ),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
             ),
             child: const Icon(Icons.settings, size: 20),
           ),
@@ -714,11 +701,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(
-            Icons.fingerprint,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: const Icon(Icons.fingerprint, color: Colors.white, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -761,10 +744,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               );
             },
-            icon: Icon(
-              Icons.copy,
-              color: Colors.white.withOpacity(0.6),
-            ),
+            icon: Icon(Icons.copy, color: Colors.white.withOpacity(0.6)),
           ),
       ],
     );
@@ -785,11 +765,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(
-            Icons.flash_on,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: const Icon(Icons.flash_on, color: Colors.white, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -821,7 +797,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _formatNumber(int number) {
     if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K'.replaceAll('.', ',');
+      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K'
+          .replaceAll('.', ',');
     }
     return number.toString();
   }
@@ -853,7 +830,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00FB94).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
@@ -876,11 +856,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     HapticFeedback.lightImpact();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const FriendsPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const FriendsPage(),
+                      ),
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF6C5CE7).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -917,10 +902,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isFriendsLoading
               ? _buildFriendsLoading()
               : _friendsError != null
-                  ? _buildFriendsError()
-                  : _friends.isEmpty
-                      ? _buildFriendsEmpty()
-                      : _buildFriendsList(),
+              ? _buildFriendsError()
+              : _friends.isEmpty
+              ? _buildFriendsEmpty()
+              : _buildFriendsList(),
         ],
       ),
     );
@@ -957,7 +942,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: _loadFriends,
-            child: const Text('Qayta', style: TextStyle(color: Color(0xFF6C5CE7))),
+            child: const Text(
+              'Qayta',
+              style: TextStyle(color: Color(0xFF6C5CE7)),
+            ),
           ),
         ],
       ),
@@ -1144,7 +1132,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.chat_bubble_outline, size: 10, color: Color(0xFF00D9FF)),
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 10,
+                      color: Color(0xFF00D9FF),
+                    ),
                     SizedBox(width: 3),
                     Text(
                       'Chat',
@@ -1288,9 +1280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFF6C5CE7).withOpacity(0.3),
-        ),
+        border: Border.all(color: const Color(0xFF6C5CE7).withOpacity(0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1331,9 +1321,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildRecentActivity() {
     final activities = [
-      {'title': 'Victory vs ProPlayer', 'time': '1 hours ago', 'points': '+25', 'color': Colors.green, 'icon': Icons.emoji_events},
-      {'title': 'Tournament Started', 'time': '2 hours ago', 'points': '0', 'color': Colors.orange, 'icon': Icons.sports_esports},
-      {'title': 'Defeat vs Champion', 'time': '3 hours ago', 'points': '-15', 'color': Colors.red, 'icon': Icons.close},
+      {
+        'title': 'Victory vs ProPlayer',
+        'time': '1 hours ago',
+        'points': '+25',
+        'color': Colors.green,
+        'icon': Icons.emoji_events,
+      },
+      {
+        'title': 'Tournament Started',
+        'time': '2 hours ago',
+        'points': '0',
+        'color': Colors.orange,
+        'icon': Icons.sports_esports,
+      },
+      {
+        'title': 'Defeat vs Champion',
+        'time': '3 hours ago',
+        'points': '-15',
+        'color': Colors.red,
+        'icon': Icons.close,
+      },
     ];
 
     return Padding(
@@ -1380,10 +1388,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              activity['icon'] as IconData,
-              color: Colors.white,
-            ),
+            child: Icon(activity['icon'] as IconData, color: Colors.white),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -1454,9 +1459,12 @@ class _MeshPatternPainter extends CustomPainter {
     ];
 
     for (final circle in circles) {
-      paint.shader = RadialGradient(
-        colors: [circle.color.withOpacity(0.2), Colors.transparent],
-      ).createShader(Rect.fromCircle(center: circle.offset, radius: circle.radius));
+      paint.shader =
+          RadialGradient(
+            colors: [circle.color.withOpacity(0.2), Colors.transparent],
+          ).createShader(
+            Rect.fromCircle(center: circle.offset, radius: circle.radius),
+          );
       canvas.drawCircle(circle.offset, circle.radius, paint);
     }
   }
@@ -1493,7 +1501,8 @@ class _HexagonPatternPainter extends CustomPainter {
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
         final centerX = col * hexSize * 1.5;
-        final centerY = row * hexSize * math.sqrt(3) +
+        final centerY =
+            row * hexSize * math.sqrt(3) +
             (col % 2 == 1 ? hexSize * math.sqrt(3) / 2 : 0);
 
         _drawHexagon(canvas, Offset(centerX, centerY), hexSize / 2, paint);

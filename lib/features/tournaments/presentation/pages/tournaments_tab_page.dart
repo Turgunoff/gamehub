@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
+import '../../../../core/widgets/cyberpitch_background.dart';
 import '../widgets/tournaments_header.dart';
 import '../widgets/tournaments_tab_bar.dart';
 import '../widgets/tournament_card.dart';
@@ -45,27 +46,12 @@ class _TournamentsPageState extends State<TournamentsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
-      body: Stack(
-        children: [
-          // Background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF1A1F3A),
-                  Color(0xFF0A0E1A),
-                ],
-              ),
-            ),
-          ),
-
-          SafeArea(
+      body: CyberPitchBackground(
+        opacity: 0.3,
+        child:           SafeArea(
             child: _hasParticipated ? _buildWithData() : _buildEmptyState(),
           ),
-        ],
-      ),
+        ),
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cyberpitch_background.dart';
 import '../bloc/auth_bloc.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -52,8 +53,10 @@ class _RegisterPageState extends State<RegisterPage> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
+      body: CyberPitchBackground(
+        opacity: 0.25,
+        child: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
           if (state is AuthAuthenticated) {
             context.go('/dashboard');
           } else if (state is AuthOtpRequired) {
@@ -409,6 +412,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),
