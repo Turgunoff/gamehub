@@ -30,6 +30,8 @@ dependencies:
   # --- 4. UI Components ---
   flutter_screenutil: ^5.9.3 # Responsivlik (Har xil ekranlar uchun)
   flutter_svg: ^2.0.10+1 # SVG Ikonkalar (Phosphor o'rniga)
+  # flutter_svg paketi filter va animate elementlarini to'liq qo'llab-quvvatlamaydi
+  # Xatolarni e'tiborsiz qoldirish uchun CyberPitchBackground widgetida error handling qo'shildi
   cached_network_image: ^3.3.1 # User avatarlari va jamoa logolari uchun
   flutter_animate: ^4.5.0 # Animatsiyalar
   gap: ^3.0.1 # Bo'sh joy tashlash (SizedBox o'rniga)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -18,6 +19,24 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // SVG xatolarini e'tiborsiz qoldirish
+  // flutter_svg paketi <filter/>, <animate/>, <animateTransform/> elementlarini
+  // to'liq qo'llab-quvvatlamaydi, lekin bu xatolar ilova ishlashiga ta'sir qilmaydi
+  if (kDebugMode) {
+    // Debug rejimda SVG xatolarini filter qilish
+    final originalPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null &&
+          (message.contains('unhandled element <filter/>') ||
+           message.contains('unhandled element <animate/>') ||
+           message.contains('unhandled element <animateTransform/>'))) {
+        // Bu xatolarni e'tiborsiz qoldirish
+        return;
+      }
+      originalPrint(message, wrapWidth: wrapWidth);
+    };
+  }
 
   // Initialize localization
   await EasyLocalization.ensureInitialized();
