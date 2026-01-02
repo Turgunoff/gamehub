@@ -335,8 +335,9 @@ class _HomeTabPageState extends State<HomeTabPage>
         return Scaffold(
           backgroundColor: const Color(0xFF0A0E1A),
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
+            // backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 6,
             centerTitle: false,
             titleSpacing: 10,
             leadingWidth: 52,
