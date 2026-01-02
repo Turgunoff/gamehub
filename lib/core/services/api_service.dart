@@ -1244,6 +1244,7 @@ class TaskClaimResponse {
 class HomeDashboardResponse {
   final HomeUser user;
   final HomeStats stats;
+  final HomeRanking? ranking;
   final int onlineUsers;
   final int pendingChallenges;
   final List<HomeTournament> tournaments;
@@ -1252,6 +1253,7 @@ class HomeDashboardResponse {
   HomeDashboardResponse({
     required this.user,
     required this.stats,
+    this.ranking,
     required this.onlineUsers,
     required this.pendingChallenges,
     required this.tournaments,
@@ -1262,6 +1264,9 @@ class HomeDashboardResponse {
     return HomeDashboardResponse(
       user: HomeUser.fromJson(json['user']),
       stats: HomeStats.fromJson(json['stats']),
+      ranking: json['ranking'] != null
+          ? HomeRanking.fromJson(json['ranking'])
+          : null,
       onlineUsers: json['online_users'] ?? 0,
       pendingChallenges: json['pending_challenges'] ?? 0,
       tournaments:
@@ -1274,6 +1279,29 @@ class HomeDashboardResponse {
               ?.map((e) => HomeMatch.fromJson(e))
               .toList() ??
           [],
+    );
+  }
+}
+
+class HomeRanking {
+  final int rating;
+  final int rank;
+  final int totalPlayers;
+  final int pointsToNextRank;
+
+  HomeRanking({
+    required this.rating,
+    required this.rank,
+    required this.totalPlayers,
+    required this.pointsToNextRank,
+  });
+
+  factory HomeRanking.fromJson(Map<String, dynamic> json) {
+    return HomeRanking(
+      rating: json['rating'] ?? 1000,
+      rank: json['rank'] ?? 0,
+      totalPlayers: json['total_players'] ?? 0,
+      pointsToNextRank: json['points_to_next_rank'] ?? 0,
     );
   }
 }
