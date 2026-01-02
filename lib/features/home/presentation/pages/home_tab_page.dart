@@ -23,7 +23,9 @@ class _HomeTabPageState extends State<HomeTabPage>
   int _notificationCount = 0;
   int _unreadMessagesCount = 0;
   int _currentBannerIndex = 0;
-  bool _showDailyReward = true;
+  bool _showDailyReward =
+      false; // Backend'dan kelgan ma'lumotga qarab o'rnatiladi
+  DailyBonusInfo? _dailyBonusInfo; // Backend'dan kelgan bonus ma'lumotlari
   late PageController _bannerController;
   Timer? _bannerTimer;
   StreamSubscription<NotificationEvent>? _notificationSubscription;
@@ -139,22 +141,7 @@ class _HomeTabPageState extends State<HomeTabPage>
     tierIcon: '🥇',
   );
 
-  // NEW: Daily Login Reward Data
-  final DailyLoginReward _dailyReward = DailyLoginReward(
-    day: 5,
-    reward: 100,
-    streakBonus: 50,
-    isClaimed: false,
-    streakDays: [
-      StreakDay(day: 1, reward: 20, isClaimed: true, isToday: false),
-      StreakDay(day: 2, reward: 30, isClaimed: true, isToday: false),
-      StreakDay(day: 3, reward: 50, isClaimed: true, isToday: false),
-      StreakDay(day: 4, reward: 75, isClaimed: true, isToday: false),
-      StreakDay(day: 5, reward: 100, isClaimed: false, isToday: true),
-      StreakDay(day: 6, reward: 150, isClaimed: false, isToday: false),
-      StreakDay(day: 7, reward: 300, isClaimed: false, isToday: false),
-    ],
-  );
+  // Daily bonus ma'lumotlari backend'dan olinadi
 
   @override
   void initState() {
@@ -178,6 +165,7 @@ class _HomeTabPageState extends State<HomeTabPage>
     context.read<HomeBloc>().add(const HomeLoadRequested());
     _loadNotificationCount();
     _loadUnreadMessagesCount();
+    _loadDailyBonusInfo(); // Bonus ma'lumotlarini yuklash
 
     _notificationSubscription = OneSignalService().onNotificationReceived
         .listen((event) {
@@ -241,28 +229,93 @@ class _HomeTabPageState extends State<HomeTabPage>
     }
   }
 
-  void _claimDailyReward() {
+  Future<void> _loadDailyBonusInfo() async {
+    try {
+      final bonusInfo = await ApiService().getDailyBonusInfo();
+      if (mounted) {
+        setState(() {
+          _dailyBonusInfo = bonusInfo;
+          // Agar bonus olish mumkin bo'lsa va olgan bo'lmasa, ekran ko'rsatish
+          _showDailyReward = bonusInfo.canClaim && !bonusInfo.claimed;
+        });
+      }
+    } catch (e) {
+      // Ignore
+      if (mounted) {
+        setState(() {
+          _showDailyReward = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _claimDailyReward() async {
+    if (_dailyBonusInfo == null || !_dailyBonusInfo!.canClaim) {
+      return;
+    }
+
     HapticFeedback.heavyImpact();
-    setState(() {
-      _showDailyReward = false;
-    });
-    // TODO: API call to claim reward
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.monetization_on, color: Color(0xFFFFB800)),
-            const SizedBox(width: 8),
-            Text(
-              '+${_dailyReward.reward + _dailyReward.streakBonus} coin olindi!',
+
+    try {
+      final response = await ApiService().claimDailyBonus();
+
+      if (mounted) {
+        if (response.success) {
+          setState(() {
+            _showDailyReward = false;
+            // Bonus ma'lumotlarini yangilash
+            _dailyBonusInfo = DailyBonusInfo(
+              claimed: true,
+              canClaim: false,
+              streak: response.streak,
+              bonusAmount: 0,
+              longestStreak: response.longestStreak,
+            );
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.monetization_on, color: Color(0xFFFFB800)),
+                  const SizedBox(width: 8),
+                  Text('+${response.bonusAmount} tanga olindi!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF1A1F3A),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF1A1F3A),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message ?? 'Bonus olishda xatolik'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Xatolik: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -294,7 +347,9 @@ class _HomeTabPageState extends State<HomeTabPage>
             ),
           ),
           // Daily Reward Popup
-          if (_showDailyReward && !_dailyReward.isClaimed)
+          if (_showDailyReward &&
+              _dailyBonusInfo != null &&
+              _dailyBonusInfo!.canClaim)
             _buildDailyRewardPopup(),
         ],
       ),
@@ -488,25 +543,12 @@ class _HomeTabPageState extends State<HomeTabPage>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Kun ${_dailyReward.day} — Ketma-ket tashrifingiz uchun!',
+                  _dailyBonusInfo != null
+                      ? '${_dailyBonusInfo!.streak} kun ketma-ket — Bonus oling!'
+                      : 'Kunlik bonus oling!',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Streak days
-                SizedBox(
-                  height: 70,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    shrinkWrap: true,
-                    itemCount: _dailyReward.streakDays.length,
-                    itemBuilder: (context, index) {
-                      final day = _dailyReward.streakDays[index];
-                      return _buildStreakDayItem(day);
-                    },
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -533,27 +575,22 @@ class _HomeTabPageState extends State<HomeTabPage>
                         size: 32,
                       ),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '+${_dailyReward.reward}',
-                            style: const TextStyle(
-                              color: Color(0xFFFFB800),
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (_dailyReward.streakBonus > 0)
-                            Text(
-                              '+${_dailyReward.streakBonus} bonus',
-                              style: const TextStyle(
-                                color: Color(0xFF00FB94),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                        ],
+                      Text(
+                        '+${_dailyBonusInfo?.bonusAmount ?? 0}',
+                        style: const TextStyle(
+                          color: Color(0xFFFFB800),
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'tanga',
+                        style: TextStyle(
+                          color: Color(0xFFFFB800),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -1234,7 +1271,9 @@ class _HomeTabPageState extends State<HomeTabPage>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${_dailyReward.day} kun',
+                      _dailyBonusInfo != null
+                          ? '${_dailyBonusInfo!.streak} kun'
+                          : '0 kun',
                       style: const TextStyle(
                         color: Color(0xFFFF6B6B),
                         fontSize: 12,
@@ -1251,13 +1290,62 @@ class _HomeTabPageState extends State<HomeTabPage>
           // Streak days row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _dailyReward.streakDays.map((day) {
-              return _buildCompactStreakDay(day);
-            }).toList(),
+            children: _buildStreakDaysList(),
           ),
         ],
       ),
     );
+  }
+
+  // Streak days ro'yxatini yaratish (backend ma'lumotlaridan)
+  List<Widget> _buildStreakDaysList() {
+    final currentStreak = _dailyBonusInfo?.streak ?? 0;
+    final claimed = _dailyBonusInfo?.claimed ?? false;
+
+    // 7 kunlik streak days ro'yxati
+    return List.generate(7, (index) {
+      final day = index + 1;
+      final isClaimed = day <= currentStreak && claimed;
+      final isToday = day == currentStreak && !claimed;
+
+      // Bonus miqdorini hisoblash (optimallashtirilgan variant)
+      // 1-kun: 10, 2-kun: 15, 3-kun: 20, 4-kun: 25, 5-kun: 30, 6-kun: 40, 7-kun: 50
+      int reward = 0;
+      switch (day) {
+        case 1:
+          reward = 10;
+          break;
+        case 2:
+          reward = 15;
+          break;
+        case 3:
+          reward = 20;
+          break;
+        case 4:
+          reward = 25;
+          break;
+        case 5:
+          reward = 30;
+          break;
+        case 6:
+          reward = 40;
+          break;
+        case 7:
+          reward = 50; // Maximal bonus
+          break;
+        default:
+          reward = 50;
+      }
+
+      return _buildCompactStreakDay(
+        StreakDay(
+          day: day,
+          reward: reward,
+          isClaimed: isClaimed,
+          isToday: isToday,
+        ),
+      );
+    });
   }
 
   Widget _buildCompactStreakDay(StreakDay day) {
@@ -1872,9 +1960,7 @@ class _HomeTabPageState extends State<HomeTabPage>
   }
 
   Widget _buildBackground() {
-    return CyberPitchBackground(
-      opacity: 0.3,
-    );
+    return CyberPitchBackground(opacity: 0.3);
   }
 
   Widget _buildSliverAppBar(HomeUser user) {
