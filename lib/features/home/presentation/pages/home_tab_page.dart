@@ -325,39 +325,247 @@ class _HomeTabPageState extends State<HomeTabPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
-      body: Stack(
-        children: [
-          _buildBackground(),
-          SafeArea(
-            child: BlocBuilder<HomeBloc, HomeState>(
-              builder: (context, state) {
-                if (state is HomeLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF00D9FF)),
-                  );
-                }
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        HomeUser? user;
+        if (state is HomeLoaded) {
+          user = state.data.user;
+        }
 
-                if (state is HomeError) {
-                  return _buildErrorState(state.message);
-                }
-
-                if (state is HomeLoaded) {
-                  return _buildContent(state.data);
-                }
-
-                return const SizedBox.shrink();
-              },
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A0E1A),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: false,
+            titleSpacing: 10,
+            leadingWidth: 52,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/profile');
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
+                    ),
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF1A1F3A),
+                    ),
+                    child: ClipOval(
+                      child: user?.avatarUrl != null
+                          ? OptimizedImage(
+                              imageUrl: user!.avatarUrl!,
+                              fit: BoxFit.cover,
+                              width: 36,
+                              height: 36,
+                              errorWidget: const Icon(
+                                Icons.person,
+                                color: Color(0xFF6C5CE7),
+                                size: 18,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person,
+                              color: Color(0xFF6C5CE7),
+                              size: 18,
+                            ),
+                    ),
+                  ),
+                ),
+              ),
             ),
+            title: user != null
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Level ${user.level}',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                        ),
+                      ),
+                      ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
+                        ).createShader(bounds),
+                        child: Text(
+                          user.nickname ?? 'Player',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : const Text(
+                    'CyberPitch',
+                    style: TextStyle(color: Colors.white),
+                  ),
+            actions: [
+              // Coins
+              if (user != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  margin: const EdgeInsets.only(right: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFFFB800).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.monetization_on,
+                        color: Color(0xFFFFB800),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatNumber(user.coins),
+                        style: const TextStyle(
+                          color: Color(0xFFFFB800),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              // Chat
+              Stack(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ConversationsPage(),
+                        ),
+                      ).then((_) => _loadUnreadMessagesCount());
+                    },
+                    icon: Icon(
+                      Icons.chat_bubble_outline,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  if (_unreadMessagesCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF00D9FF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          _unreadMessagesCount > 9
+                              ? '9+'
+                              : '$_unreadMessagesCount',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              // Notifications
+              Stack(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      context
+                          .push('/notifications')
+                          .then((_) => _loadNotificationCount());
+                    },
+                    icon: Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  if (_notificationCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF6B6B),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          _notificationCount > 9 ? '9+' : '$_notificationCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 4),
+            ],
           ),
-          // Daily Reward Popup
-          if (_showDailyReward &&
-              _dailyBonusInfo != null &&
-              _dailyBonusInfo!.canClaim)
-            _buildDailyRewardPopup(),
-        ],
-      ),
+          body: Stack(
+            children: [
+              _buildBackground(),
+              if (state is HomeLoading)
+                const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF00D9FF)),
+                )
+              else if (state is HomeError)
+                _buildErrorState(state.message)
+              else if (state is HomeLoaded)
+                _buildContent(state.data)
+              else
+                const SizedBox.shrink(),
+              // Daily Reward Popup
+              if (_showDailyReward &&
+                  _dailyBonusInfo != null &&
+                  _dailyBonusInfo!.canClaim)
+                _buildDailyRewardPopup(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -367,89 +575,82 @@ class _HomeTabPageState extends State<HomeTabPage>
         context.read<HomeBloc>().add(const HomeRefreshRequested());
       },
       color: const Color(0xFF00D9FF),
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: [
-          _buildSliverAppBar(data.user),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
 
-                  // 1. Live Activity Section
-                  _buildLiveActivitySection(data.onlineUsers),
-                  const SizedBox(height: 16),
+              // 1. Live Activity Section
+              _buildLiveActivitySection(data.onlineUsers),
+              const SizedBox(height: 16),
 
-                  // 2. News Banner Slider
-                  _buildNewsBanner(),
-                  const SizedBox(height: 20),
+              // 2. News Banner Slider
+              _buildNewsBanner(),
+              const SizedBox(height: 20),
 
-                  // 3. Your Rank Card (NEW)
-                  if (data.ranking != null) _buildYourRankCard(data.ranking!),
-                  const SizedBox(height: 20),
+              // 3. Your Rank Card (NEW)
+              if (data.ranking != null) _buildYourRankCard(data.ranking!),
+              const SizedBox(height: 20),
 
-                  // 4. Quick Play Section
-                  QuickPlaySection(
-                    onlineUsers: data.onlineUsers,
-                    onQuickMatchTap: () {
-                      context.push('/quick-match', extra: 'ranked');
-                    },
-                    onRankedTap: () {
-                      context.push('/quick-match', extra: 'ranked');
-                    },
-                    onFriendlyTap: () {
-                      context.push('/quick-match', extra: 'friendly');
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 5. Online Friends (NEW)
-                  _buildOnlineFriendsSection(),
-                  const SizedBox(height: 20),
-
-                  // 6. Daily Challenges
-                  _buildDailyChallengesSection(),
-                  const SizedBox(height: 20),
-
-                  // 7. Daily Login Streak (NEW - compact version)
-                  _buildDailyLoginStreakCompact(),
-                  const SizedBox(height: 20),
-
-                  // 8. Top Players
-                  _buildTopPlayersSection(),
-                  const SizedBox(height: 20),
-
-                  // 9. User Stats Section
-                  _buildUserStatsSection(data.stats),
-                  const SizedBox(height: 20),
-
-                  // 10. Active Tournaments
-                  if (data.tournaments.isNotEmpty) ...[
-                    _buildSectionTitle('Aktiv Turnirlar', Icons.emoji_events),
-                    const SizedBox(height: 12),
-                    _buildTournamentsList(data.tournaments),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // 11. Recent Matches
-                  _buildSectionTitle('Oxirgi O\'yinlar', Icons.history),
-                  const SizedBox(height: 12),
-                  if (data.recentMatches.isEmpty)
-                    _buildEmptyMatches()
-                  else
-                    _buildRecentMatchesList(data.recentMatches),
-
-                  const SizedBox(height: 100),
-                ],
+              // 4. Quick Play Section
+              QuickPlaySection(
+                onlineUsers: data.onlineUsers,
+                onQuickMatchTap: () {
+                  context.push('/quick-match', extra: 'ranked');
+                },
+                onRankedTap: () {
+                  context.push('/quick-match', extra: 'ranked');
+                },
+                onFriendlyTap: () {
+                  context.push('/quick-match', extra: 'friendly');
+                },
               ),
-            ),
+              const SizedBox(height: 20),
+
+              // 5. Online Friends (NEW)
+              _buildOnlineFriendsSection(),
+              const SizedBox(height: 20),
+
+              // 6. Daily Challenges
+              _buildDailyChallengesSection(),
+              const SizedBox(height: 20),
+
+              // 7. Daily Login Streak (NEW - compact version)
+              _buildDailyLoginStreakCompact(),
+              const SizedBox(height: 20),
+
+              // 8. Top Players
+              _buildTopPlayersSection(),
+              const SizedBox(height: 20),
+
+              // 9. User Stats Section
+              _buildUserStatsSection(data.stats),
+              const SizedBox(height: 20),
+
+              // 10. Active Tournaments
+              if (data.tournaments.isNotEmpty) ...[
+                _buildSectionTitle('Aktiv Turnirlar', Icons.emoji_events),
+                const SizedBox(height: 12),
+                _buildTournamentsList(data.tournaments),
+                const SizedBox(height: 20),
+              ],
+
+              // 11. Recent Matches
+              _buildSectionTitle('Oxirgi O\'yinlar', Icons.history),
+              const SizedBox(height: 12),
+              if (data.recentMatches.isEmpty)
+                _buildEmptyMatches()
+              else
+                _buildRecentMatchesList(data.recentMatches),
+
+              const SizedBox(height: 100),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1999,203 +2200,6 @@ class _HomeTabPageState extends State<HomeTabPage>
 
   Widget _buildBackground() {
     return CyberPitchBackground(opacity: 0.3);
-  }
-
-  Widget _buildSliverAppBar(HomeUser user) {
-    return SliverAppBar(
-      floating: true,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      title: Row(
-        children: [
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6C5CE7), Color(0xFF00D9FF)],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF6C5CE7).withOpacity(0.5),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Container(
-              margin: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF1A1F3A),
-              ),
-              child: ClipOval(
-                child: user.avatarUrl != null
-                    ? OptimizedImage(
-                        imageUrl: user.avatarUrl!,
-                        fit: BoxFit.cover,
-                        width: 45,
-                        height: 45,
-                        errorWidget: const Icon(
-                          Icons.person,
-                          color: Color(0xFF6C5CE7),
-                          size: 20,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.person,
-                        color: Color(0xFF6C5CE7),
-                        size: 20,
-                      ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Level ${user.level}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-                const SizedBox(height: 2),
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFF00D9FF), Color(0xFF6C5CE7)],
-                  ).createShader(bounds),
-                  child: Text(
-                    user.nickname ?? 'Player',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFFFB800).withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.monetization_on,
-                color: Color(0xFFFFB800),
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _formatNumber(user.coins),
-                style: const TextStyle(
-                  color: Color(0xFFFFB800),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Stack(
-          children: [
-            IconButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ConversationsPage(),
-                  ),
-                ).then((_) => _loadUnreadMessagesCount());
-              },
-              icon: Icon(
-                Icons.chat_bubble_outline,
-                color: Colors.white.withOpacity(0.8),
-              ),
-            ),
-            if (_unreadMessagesCount > 0)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(
-                    minWidth: 18,
-                    minHeight: 18,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF00D9FF),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    _unreadMessagesCount > 9 ? '9+' : '$_unreadMessagesCount',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        Stack(
-          children: [
-            IconButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                context
-                    .push('/notifications')
-                    .then((_) => _loadNotificationCount());
-              },
-              icon: Icon(
-                Icons.notifications_outlined,
-                color: Colors.white.withOpacity(0.8),
-              ),
-            ),
-            if (_notificationCount > 0)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(
-                    minWidth: 18,
-                    minHeight: 18,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFF6B6B),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    _notificationCount > 9 ? '9+' : '$_notificationCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
   }
 
   Widget _buildSectionTitle(String title, IconData icon) {
