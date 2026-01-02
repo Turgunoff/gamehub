@@ -269,10 +269,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             if (value.length < 4) {
                               return 'Username kamida 4 ta belgi bo\'lishi kerak';
                             }
-                            // Check format: only letters, numbers, and dashes
-                            final regex = RegExp(r'^[a-zA-Z0-9-]+$');
+                            // Check format: only letters, numbers, and dashes, but not starting/ending with dash
+                            final regex = RegExp(r'^[a-zA-Z0-9]+([-][a-zA-Z0-9]+)*$');
                             if (!regex.hasMatch(value)) {
-                              return 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak';
+                              return 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak. Boshi va oxiri chiziqcha bilan bo\'lmasligi kerak';
                             }
                             // Check availability
                             if (_isUsernameAvailable == false) {

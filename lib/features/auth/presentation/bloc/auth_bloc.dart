@@ -237,11 +237,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       return;
     }
 
-    // Format validation: only letters, numbers, and dashes
-    final usernameRegex = RegExp(r'^[a-zA-Z0-9-]+$');
+    // Format validation: only letters, numbers, and dashes, but not starting/ending with dash
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9]+([-][a-zA-Z0-9]+)*$');
     if (!usernameRegex.hasMatch(username)) {
       emit(const AuthError(
-        message: 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak',
+        message: 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak. Boshi va oxiri chiziqcha bilan bo\'lmasligi kerak',
         errorCode: 'INVALID_USERNAME_FORMAT',
       ));
       return;
