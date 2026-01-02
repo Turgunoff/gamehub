@@ -20,17 +20,14 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // SVG xatolarini e'tiborsiz qoldirish
-  // flutter_svg paketi <filter/>, <animate/>, <animateTransform/> elementlarini
-  // to'liq qo'llab-quvvatlamaydi, lekin bu xatolar ilova ishlashiga ta'sir qilmaydi
   if (kDebugMode) {
     // Debug rejimda SVG xatolarini filter qilish
     final originalPrint = debugPrint;
     debugPrint = (String? message, {int? wrapWidth}) {
       if (message != null &&
           (message.contains('unhandled element <filter/>') ||
-           message.contains('unhandled element <animate/>') ||
-           message.contains('unhandled element <animateTransform/>'))) {
+              message.contains('unhandled element <animate/>') ||
+              message.contains('unhandled element <animateTransform/>'))) {
         // Bu xatolarni e'tiborsiz qoldirish
         return;
       }
@@ -87,9 +84,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<ProfileBloc>(
           create: (context) => ProfileBloc()..add(ProfileLoadRequested()),
         ),
-        BlocProvider<HomeBloc>(
-          create: (context) => HomeBloc(),
-        ),
+        BlocProvider<HomeBloc>(create: (context) => HomeBloc()),
       ],
       child: MaterialApp.router(
         title: context.locale.toString() == 'uz' ? 'CyberPitch' : 'CyberPitch',
