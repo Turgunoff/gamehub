@@ -1439,6 +1439,7 @@ class LeaderboardItem {
   final String nickname;
   final String? avatarUrl;
   final int level;
+  final int rating;
   final int totalMatches;
   final int wins;
   final double winRate;
@@ -1450,6 +1451,7 @@ class LeaderboardItem {
     required this.nickname,
     this.avatarUrl,
     required this.level,
+    required this.rating,
     required this.totalMatches,
     required this.wins,
     required this.winRate,
@@ -1459,10 +1461,11 @@ class LeaderboardItem {
   factory LeaderboardItem.fromJson(Map<String, dynamic> json) {
     return LeaderboardItem(
       rank: json['rank'] ?? 0,
-      odoserId: json['user_id'] ?? '',
+      odoserId: json['user_id']?.toString() ?? '',
       nickname: json['nickname'] ?? '',
       avatarUrl: json['avatar_url'],
       level: json['level'] ?? 1,
+      rating: json['rating'] ?? 1000,
       totalMatches: json['total_matches'] ?? 0,
       wins: json['wins'] ?? 0,
       winRate: (json['win_rate'] ?? 0).toDouble(),

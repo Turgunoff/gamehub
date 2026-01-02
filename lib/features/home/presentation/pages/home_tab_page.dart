@@ -62,11 +62,7 @@ class _HomeTabPageState extends State<HomeTabPage>
 
   // Daily challenges ma'lumotlari backend'dan keladi
 
-  final List<TopPlayer> _topPlayers = [
-    TopPlayer(rank: 1, nickname: 'ProGamer', rating: 2847, avatarUrl: null),
-    TopPlayer(rank: 2, nickname: 'Legend99', rating: 2756, avatarUrl: null),
-    TopPlayer(rank: 3, nickname: 'Champion', rating: 2701, avatarUrl: null),
-  ];
+  List<TopPlayer> _topPlayers = []; // Backend'dan keladi
 
   // NEW: Online Friends Mock Data
   final List<OnlineFriend> _onlineFriends = [
@@ -145,6 +141,7 @@ class _HomeTabPageState extends State<HomeTabPage>
     _loadUnreadMessagesCount();
     _loadDailyBonusInfo(); // Bonus ma'lumotlarini yuklash
     _loadDailyTasks(); // Kunlik vazifalarni yuklash
+    _loadTopPlayers(); // Top o'yinchilarni yuklash
 
     _notificationSubscription = OneSignalService().onNotificationReceived
         .listen((event) {
@@ -219,6 +216,29 @@ class _HomeTabPageState extends State<HomeTabPage>
       }
     } catch (e) {
       // Ignore
+    }
+  }
+
+  Future<void> _loadTopPlayers() async {
+    try {
+      final leaderboard = await ApiService().getLeaderboard(limit: 3);
+      if (mounted) {
+        setState(() {
+          _topPlayers = leaderboard.map((item) => TopPlayer(
+                rank: item.rank,
+                nickname: item.nickname,
+                rating: item.rating,
+                avatarUrl: item.avatarUrl,
+              )).toList();
+        });
+      }
+    } catch (e) {
+      // Ignore
+      if (mounted) {
+        setState(() {
+          _topPlayers = [];
+        });
+      }
     }
   }
 
@@ -1818,10 +1838,23 @@ class _HomeTabPageState extends State<HomeTabPage>
             ],
           ),
           const SizedBox(height: 16),
-          ...List.generate(_topPlayers.length, (index) {
-            final player = _topPlayers[index];
-            return _buildTopPlayerItem(player, index == _topPlayers.length - 1);
-          }),
+          if (_topPlayers.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Hozircha top o\'yinchilar yo\'q',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            ...List.generate(_topPlayers.length, (index) {
+              final player = _topPlayers[index];
+              return _buildTopPlayerItem(player, index == _topPlayers.length - 1);
+            }),
         ],
       ),
     );
