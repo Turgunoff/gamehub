@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cyberpitch_background.dart';
 import '../bloc/auth_bloc.dart';
+import '../widgets/daily_bonus_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,7 +45,30 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
-              context.go('/dashboard');
+              // Bonus ekranini ko'rsatish (agar mavjud bo'lsa va olish mumkin bo'lsa)
+              if (state.dailyBonus != null &&
+                  state.dailyBonus!.canClaim &&
+                  !state.dailyBonus!.claimed) {
+                // Kichik kechikish bilan dialog ko'rsatish
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (mounted) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => DailyBonusDialog(
+                        bonusInfo: state.dailyBonus!,
+                        onClaimed: () {
+                          // Bonus olgandan keyin dashboard'ga o'tish
+                          context.go('/dashboard');
+                        },
+                      ),
+                    );
+                  }
+                });
+              } else {
+                // Bonus yo'q yoki olgan bo'lsa, darhol dashboard'ga o'tish
+                context.go('/dashboard');
+              }
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

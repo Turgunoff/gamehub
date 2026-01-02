@@ -106,11 +106,12 @@ class AuthLoading extends AuthState {
 /// Tizimga kirgan
 class AuthAuthenticated extends AuthState {
   final bool isNewUser;
+  final DailyBonusInfo? dailyBonus;
 
-  const AuthAuthenticated({this.isNewUser = false});
+  const AuthAuthenticated({this.isNewUser = false, this.dailyBonus});
 
   @override
-  List<Object?> get props => [isNewUser];
+  List<Object?> get props => [isNewUser, dailyBonus];
 }
 
 /// Tizimga kirmagan
@@ -404,7 +405,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (response.success) {
       await OneSignalService().registerPlayerIdAfterLogin();
       await WebSocketService().connect();
-      emit(const AuthAuthenticated());
+      emit(AuthAuthenticated(dailyBonus: response.dailyBonus));
     } else {
       emit(AuthError(
         message: response.message ?? 'Kirish xatosi',

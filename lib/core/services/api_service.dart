@@ -835,6 +835,66 @@ class ApiService {
     }
   }
 
+  /// Kunlik bonus olish
+  Future<BonusClaimResponse> claimDailyBonus() async {
+    try {
+      final response = await _dio.post('/bonus/claim-daily');
+
+      final data = response.data;
+
+      if (data['success'] == true) {
+        return BonusClaimResponse(
+          success: true,
+          message: data['message'],
+          bonusAmount: data['data']['bonus_amount'] ?? 0,
+          newBalance: data['data']['new_balance'] ?? 0,
+          streak: data['data']['streak'] ?? 0,
+          longestStreak: data['data']['longest_streak'] ?? 0,
+          totalBonus: data['data']['total_bonus'] ?? 0,
+        );
+      }
+
+      return BonusClaimResponse(
+        success: false,
+        message: data['message'] ?? 'Bonus olishda xatolik',
+      );
+    } on DioException catch (e) {
+      return BonusClaimResponse(
+        success: false,
+        message: _getErrorMessage(e),
+      );
+    }
+  }
+
+  /// Kunlik bonus ma'lumotlarini olish
+  Future<DailyBonusInfo> getDailyBonusInfo() async {
+    try {
+      final response = await _dio.get('/bonus/daily-info');
+
+      final data = response.data;
+
+      if (data['success'] == true) {
+        return DailyBonusInfo.fromJson(data['data']);
+      }
+
+      return DailyBonusInfo(
+        claimed: true,
+        canClaim: false,
+        streak: 0,
+        bonusAmount: 0,
+        longestStreak: 0,
+      );
+    } on DioException {
+      return DailyBonusInfo(
+        claimed: true,
+        canClaim: false,
+        streak: 0,
+        bonusAmount: 0,
+        longestStreak: 0,
+      );
+    }
+  }
+
   /// Logout
   Future<void> logout() async {
     try {
@@ -964,8 +1024,40 @@ class AuthResponse {
   final bool success;
   final String? message;
   final bool isNewUser;
+  final DailyBonusInfo? dailyBonus;
 
-  AuthResponse({required this.success, this.message, this.isNewUser = false});
+  AuthResponse({
+    required this.success,
+    this.message,
+    this.isNewUser = false,
+    this.dailyBonus,
+  });
+}
+
+class DailyBonusInfo {
+  final bool claimed;
+  final bool canClaim;
+  final int streak;
+  final int bonusAmount;
+  final int longestStreak;
+
+  DailyBonusInfo({
+    required this.claimed,
+    required this.canClaim,
+    required this.streak,
+    required this.bonusAmount,
+    required this.longestStreak,
+  });
+
+  factory DailyBonusInfo.fromJson(Map<String, dynamic> json) {
+    return DailyBonusInfo(
+      claimed: json['claimed'] ?? false,
+      canClaim: json['can_claim'] ?? false,
+      streak: json['streak'] ?? 0,
+      bonusAmount: json['bonus_amount'] ?? 0,
+      longestStreak: json['longest_streak'] ?? 0,
+    );
+  }
 }
 
 class UsernameCheckResponse {
@@ -977,6 +1069,26 @@ class UsernameCheckResponse {
     required this.success,
     required this.available,
     required this.message,
+  });
+}
+
+class BonusClaimResponse {
+  final bool success;
+  final String? message;
+  final int bonusAmount;
+  final int newBalance;
+  final int streak;
+  final int longestStreak;
+  final int totalBonus;
+
+  BonusClaimResponse({
+    required this.success,
+    this.message,
+    this.bonusAmount = 0,
+    this.newBalance = 0,
+    this.streak = 0,
+    this.longestStreak = 0,
+    this.totalBonus = 0,
   });
 }
 
