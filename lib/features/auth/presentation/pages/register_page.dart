@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cyberpitch_background.dart';
+import '../../../../core/services/api_service.dart';
 import '../bloc/auth_bloc.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -22,14 +24,87 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  
+  // Username checking state
+  Timer? _usernameCheckTimer;
+  bool _isCheckingUsername = false;
+  bool? _isUsernameAvailable;
+  String? _usernameErrorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_onUsernameChanged);
+  }
 
   @override
   void dispose() {
+    _usernameCheckTimer?.cancel();
+    _usernameController.removeListener(_onUsernameChanged);
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _onUsernameChanged() {
+    final username = _usernameController.text.trim();
+    
+    // Cancel previous timer
+    _usernameCheckTimer?.cancel();
+    
+    // Reset state
+    setState(() {
+      _isUsernameAvailable = null;
+      _usernameErrorMessage = null;
+    });
+
+    // If username is empty or too short, don't check
+    if (username.isEmpty || username.length < 4) {
+      return;
+    }
+
+    // Validate format first (only letters, numbers, dashes)
+    final regex = RegExp(r'^[a-zA-Z0-9-]+$');
+    if (!regex.hasMatch(username)) {
+      setState(() {
+        _isUsernameAvailable = false;
+        _usernameErrorMessage = 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak';
+      });
+      return;
+    }
+
+    // Debounce: wait 500ms before checking
+    _usernameCheckTimer = Timer(const Duration(milliseconds: 500), () {
+      _checkUsernameAvailability(username);
+    });
+  }
+
+  Future<void> _checkUsernameAvailability(String username) async {
+    if (username.isEmpty) return;
+
+    setState(() {
+      _isCheckingUsername = true;
+      _isUsernameAvailable = null;
+      _usernameErrorMessage = null;
+    });
+
+    try {
+      final response = await ApiService().checkUsername(username: username);
+      
+      setState(() {
+        _isCheckingUsername = false;
+        _isUsernameAvailable = response.available;
+        _usernameErrorMessage = response.available ? null : response.message;
+      });
+    } catch (e) {
+      setState(() {
+        _isCheckingUsername = false;
+        _isUsernameAvailable = null;
+        _usernameErrorMessage = null;
+      });
+    }
   }
 
   Future<void> _register() async {
@@ -110,52 +185,128 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 32),
 
                   // Username Field
-                  TextFormField(
-                    controller: _usernameController,
-                    keyboardType: TextInputType.text,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'auth.username_label'.tr(),
-                      hintText: 'auth.username_hint'.tr(),
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      hintStyle: TextStyle(color: AppColors.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.person_outline,
-                        color: AppColors.textSecondary,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.bgDark,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppColors.primary,
-                          width: 2,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _usernameController,
+                        keyboardType: TextInputType.text,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
                         ),
+                        decoration: InputDecoration(
+                          labelText: 'auth.username_label'.tr(),
+                          hintText: 'auth.username_hint'.tr(),
+                          labelStyle: TextStyle(color: AppColors.textSecondary),
+                          hintStyle: TextStyle(color: AppColors.textTertiary),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: AppColors.textSecondary,
+                          ),
+                          suffixIcon: _isCheckingUsername
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(12.0),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              : _isUsernameAvailable == true
+                                  ? Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                    )
+                                  : _isUsernameAvailable == false
+                                      ? Icon(
+                                          Icons.cancel,
+                                          color: AppColors.error,
+                                        )
+                                      : null,
+                          filled: true,
+                          fillColor: AppColors.bgDark,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: _isUsernameAvailable == false
+                                  ? AppColors.error
+                                  : _isUsernameAvailable == true
+                                      ? Colors.green
+                                      : AppColors.primary,
+                              width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppColors.error,
+                              width: 2,
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppColors.error,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'auth.username_required'.tr();
+                          }
+                          if (value.length < 4) {
+                            return 'Username kamida 4 ta belgi bo\'lishi kerak';
+                          }
+                          // Check format: only letters, numbers, and dashes
+                          final regex = RegExp(r'^[a-zA-Z0-9-]+$');
+                          if (!regex.hasMatch(value)) {
+                            return 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak';
+                          }
+                          // Check availability
+                          if (_isUsernameAvailable == false) {
+                            return _usernameErrorMessage ?? 'Bu username band';
+                          }
+                          return null;
+                        },
+                      ).animate().fadeIn(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 200),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'auth.username_required'.tr();
-                      }
-                      if (value.length < 3) {
-                        return 'auth.username_min_length'.tr();
-                      }
-                      return null;
-                    },
-                  ).animate().fadeIn(
-                    duration: const Duration(milliseconds: 600),
-                    delay: const Duration(milliseconds: 200),
+                      if (_usernameErrorMessage != null && _isUsernameAvailable == false)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+                          child: Text(
+                            _usernameErrorMessage!,
+                            style: TextStyle(
+                              color: AppColors.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      if (_isUsernameAvailable == true && _usernameController.text.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+                          child: Text(
+                            'Username mavjud',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
 
                   const SizedBox(height: 16),

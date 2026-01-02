@@ -692,6 +692,30 @@ class ApiService {
   // AUTH METHODS
   // ══════════════════════════════════════════════════════════
 
+  /// Username mavjudligini tekshirish (realtime)
+  Future<UsernameCheckResponse> checkUsername({required String username}) async {
+    try {
+      final response = await _dio.get(
+        '/auth/check-username',
+        queryParameters: {'username': username},
+      );
+
+      final data = response.data;
+
+      return UsernameCheckResponse(
+        success: data['success'] == true,
+        available: data['available'] == true,
+        message: data['message'] ?? '',
+      );
+    } on DioException catch (e) {
+      return UsernameCheckResponse(
+        success: false,
+        available: false,
+        message: _getErrorMessage(e),
+      );
+    }
+  }
+
   /// Ro'yxatdan o'tish (1-qadam: OTP yuborish)
   Future<AuthResponse> register({
     required String username,
@@ -942,6 +966,18 @@ class AuthResponse {
   final bool isNewUser;
 
   AuthResponse({required this.success, this.message, this.isNewUser = false});
+}
+
+class UsernameCheckResponse {
+  final bool success;
+  final bool available;
+  final String message;
+
+  UsernameCheckResponse({
+    required this.success,
+    required this.available,
+    required this.message,
+  });
 }
 
 class AvatarUploadResponse {

@@ -229,10 +229,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       return;
     }
 
-    if (username.length < 3) {
+    if (username.length < 4) {
       emit(const AuthError(
-        message: 'Username kamida 3 ta belgi bo\'lishi kerak',
+        message: 'Username kamida 4 ta belgi bo\'lishi kerak',
         errorCode: 'SHORT_USERNAME',
+      ));
+      return;
+    }
+
+    // Format validation: only letters, numbers, and dashes
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9-]+$');
+    if (!usernameRegex.hasMatch(username)) {
+      emit(const AuthError(
+        message: 'Username faqat harflar, raqamlar va chiziqchadan iborat bo\'lishi kerak',
+        errorCode: 'INVALID_USERNAME_FORMAT',
       ));
       return;
     }
