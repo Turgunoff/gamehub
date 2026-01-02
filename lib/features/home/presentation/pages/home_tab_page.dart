@@ -103,18 +103,6 @@ class _HomeTabPageState extends State<HomeTabPage>
     ),
   ];
 
-  // NEW: User Rank Data
-  final UserRankData _userRank = UserRankData(
-    currentRank: 45,
-    totalPlayers: 1250,
-    rating: 2156,
-    ratingChange: 45,
-    nextMilestone: 50,
-    pointsToNext: 12,
-    tier: 'Gold',
-    tierIcon: '🥇',
-  );
-
   // Daily bonus ma'lumotlari backend'dan olinadi
 
   @override
@@ -224,12 +212,16 @@ class _HomeTabPageState extends State<HomeTabPage>
       final leaderboard = await ApiService().getLeaderboard(limit: 3);
       if (mounted) {
         setState(() {
-          _topPlayers = leaderboard.map((item) => TopPlayer(
-                rank: item.rank,
-                nickname: item.nickname,
-                rating: item.rating,
-                avatarUrl: item.avatarUrl,
-              )).toList();
+          _topPlayers = leaderboard
+              .map(
+                (item) => TopPlayer(
+                  rank: item.rank,
+                  nickname: item.nickname,
+                  rating: item.rating,
+                  avatarUrl: item.avatarUrl,
+                ),
+              )
+              .toList();
         });
       }
     } catch (e) {
@@ -398,7 +390,7 @@ class _HomeTabPageState extends State<HomeTabPage>
                   const SizedBox(height: 20),
 
                   // 3. Your Rank Card (NEW)
-                  _buildYourRankCard(),
+                  if (data.ranking != null) _buildYourRankCard(data.ranking!),
                   const SizedBox(height: 20),
 
                   // 4. Quick Play Section
@@ -709,7 +701,39 @@ class _HomeTabPageState extends State<HomeTabPage>
   }
 
   /// Your Rank Card
-  Widget _buildYourRankCard() {
+  Widget _buildYourRankCard(HomeRanking ranking) {
+    // Tier'ni rating bo'yicha aniqlash
+    String tier = 'Bronze';
+    String tierIcon = '🥉';
+    int nextMilestone = 50;
+
+    if (ranking.rating >= 2000) {
+      tier = 'Gold';
+      tierIcon = '🥇';
+      nextMilestone = 10;
+    } else if (ranking.rating >= 1500) {
+      tier = 'Silver';
+      tierIcon = '🥈';
+      nextMilestone = 25;
+    } else {
+      tier = 'Bronze';
+      tierIcon = '🥉';
+      nextMilestone = 50;
+    }
+
+    // Keyingi milestone'ni aniqlash
+    if (ranking.rank <= 10) {
+      nextMilestone = 5;
+    } else if (ranking.rank <= 25) {
+      nextMilestone = 10;
+    } else if (ranking.rank <= 50) {
+      nextMilestone = 25;
+    } else if (ranking.rank <= 100) {
+      nextMilestone = 50;
+    } else {
+      nextMilestone = 100;
+    }
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -750,10 +774,7 @@ class _HomeTabPageState extends State<HomeTabPage>
                     ],
                   ),
                   child: Center(
-                    child: Text(
-                      _userRank.tierIcon,
-                      style: const TextStyle(fontSize: 28),
-                    ),
+                    child: Text(tierIcon, style: const TextStyle(fontSize: 28)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -766,40 +787,18 @@ class _HomeTabPageState extends State<HomeTabPage>
                       Row(
                         children: [
                           Text(
-                            '${_userRank.tier} ',
+                            '$tier ',
                             style: const TextStyle(
                               color: Color(0xFFFFD700),
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _userRank.ratingChange >= 0
-                                  ? const Color(0xFF00FB94).withOpacity(0.2)
-                                  : const Color(0xFFFF6B6B).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${_userRank.ratingChange >= 0 ? '+' : ''}${_userRank.ratingChange}',
-                              style: TextStyle(
-                                color: _userRank.ratingChange >= 0
-                                    ? const Color(0xFF00FB94)
-                                    : const Color(0xFFFF6B6B),
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '#${_userRank.currentRank} / ${_userRank.totalPlayers} o\'yinchi',
+                        '#${ranking.rank} / ${ranking.totalPlayers} o\'yinchi',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 14,
@@ -814,7 +813,7 @@ class _HomeTabPageState extends State<HomeTabPage>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${_userRank.rating}',
+                      '${ranking.rating}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -843,14 +842,14 @@ class _HomeTabPageState extends State<HomeTabPage>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'TOP ${_userRank.nextMilestone} ga',
+                      'TOP $nextMilestone ga',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.7),
                         fontSize: 12,
                       ),
                     ),
                     Text(
-                      '${_userRank.pointsToNext} ball kerak',
+                      '${ranking.pointsToNextRank} ball kerak',
                       style: const TextStyle(
                         color: Color(0xFF00D9FF),
                         fontSize: 12,
@@ -863,7 +862,11 @@ class _HomeTabPageState extends State<HomeTabPage>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: 1 - (_userRank.pointsToNext / 50),
+                    value: ranking.pointsToNextRank > 0
+                        ? 1 -
+                              (ranking.pointsToNextRank /
+                                  (nextMilestone * 10).clamp(1, 100))
+                        : 1.0,
                     backgroundColor: Colors.white.withOpacity(0.1),
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       Color(0xFF00D9FF),
@@ -1685,9 +1688,7 @@ class _HomeTabPageState extends State<HomeTabPage>
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: isCompleted
-                  ? const Color(0xFF00FB94)
-                  : Colors.transparent,
+              color: isCompleted ? const Color(0xFF00FB94) : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isCompleted
@@ -1713,9 +1714,7 @@ class _HomeTabPageState extends State<HomeTabPage>
                         : Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    decoration: isCompleted
-                        ? TextDecoration.lineThrough
-                        : null,
+                    decoration: isCompleted ? TextDecoration.lineThrough : null,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1853,7 +1852,10 @@ class _HomeTabPageState extends State<HomeTabPage>
           else
             ...List.generate(_topPlayers.length, (index) {
               final player = _topPlayers[index];
-              return _buildTopPlayerItem(player, index == _topPlayers.length - 1);
+              return _buildTopPlayerItem(
+                player,
+                index == _topPlayers.length - 1,
+              );
             }),
         ],
       ),
