@@ -866,6 +866,61 @@ class ApiService {
     }
   }
 
+  /// Kunlik vazifalar ro'yxatini olish
+  Future<DailyTasksResponse> getDailyTasks() async {
+    try {
+      final response = await _dio.get('/tasks/daily');
+
+      final data = response.data;
+
+      if (data['success'] == true) {
+        return DailyTasksResponse.fromJson(data['data']);
+      }
+
+      return DailyTasksResponse(
+        tasks: [],
+        totalReward: 0,
+        completed: 0,
+        total: 0,
+      );
+    } on DioException {
+      return DailyTasksResponse(
+        tasks: [],
+        totalReward: 0,
+        completed: 0,
+        total: 0,
+      );
+    }
+  }
+
+  /// Vazifa bonusini olish
+  Future<TaskClaimResponse> claimTaskReward(int taskId) async {
+    try {
+      final response = await _dio.post('/tasks/claim/$taskId');
+
+      final data = response.data;
+
+      if (data['success'] == true) {
+        return TaskClaimResponse(
+          success: true,
+          message: data['message'],
+          reward: data['data']['reward'] ?? 0,
+          newBalance: data['data']['new_balance'] ?? 0,
+        );
+      }
+
+      return TaskClaimResponse(
+        success: false,
+        message: data['message'] ?? 'Bonus olishda xatolik',
+      );
+    } on DioException catch (e) {
+      return TaskClaimResponse(
+        success: false,
+        message: _getErrorMessage(e),
+      );
+    }
+  }
+
   /// Kunlik bonus ma'lumotlarini olish
   Future<DailyBonusInfo> getDailyBonusInfo() async {
     try {
@@ -1098,6 +1153,88 @@ class AvatarUploadResponse {
   final String? message;
 
   AvatarUploadResponse({required this.success, this.avatarUrl, this.message});
+}
+
+// ══════════════════════════════════════════════════════════
+// DAILY TASKS RESPONSE MODELS
+// ══════════════════════════════════════════════════════════
+
+class DailyTasksResponse {
+  final List<DailyTask> tasks;
+  final int totalReward;
+  final int completed;
+  final int total;
+
+  DailyTasksResponse({
+    required this.tasks,
+    required this.totalReward,
+    required this.completed,
+    required this.total,
+  });
+
+  factory DailyTasksResponse.fromJson(Map<String, dynamic> json) {
+    return DailyTasksResponse(
+      tasks: (json['tasks'] as List<dynamic>?)
+              ?.map((task) => DailyTask.fromJson(task))
+              .toList() ??
+          [],
+      totalReward: json['total_reward'] ?? 0,
+      completed: json['completed'] ?? 0,
+      total: json['total'] ?? 0,
+    );
+  }
+}
+
+class DailyTask {
+  final int id;
+  final String taskType;
+  final String name;
+  final String description;
+  final int target;
+  final int reward;
+  final int progress;
+  final bool completed;
+  final bool claimed;
+
+  DailyTask({
+    required this.id,
+    required this.taskType,
+    required this.name,
+    required this.description,
+    required this.target,
+    required this.reward,
+    required this.progress,
+    required this.completed,
+    required this.claimed,
+  });
+
+  factory DailyTask.fromJson(Map<String, dynamic> json) {
+    return DailyTask(
+      id: json['id'] ?? 0,
+      taskType: json['task_type'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      target: json['target'] ?? 0,
+      reward: json['reward'] ?? 0,
+      progress: json['progress'] ?? 0,
+      completed: json['completed'] ?? false,
+      claimed: json['claimed'] ?? false,
+    );
+  }
+}
+
+class TaskClaimResponse {
+  final bool success;
+  final String? message;
+  final int reward;
+  final int newBalance;
+
+  TaskClaimResponse({
+    required this.success,
+    this.message,
+    this.reward = 0,
+    this.newBalance = 0,
+  });
 }
 
 // ══════════════════════════════════════════════════════════

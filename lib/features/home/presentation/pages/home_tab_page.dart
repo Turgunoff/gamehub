@@ -7,6 +7,7 @@ import 'package:cyberpitch/core/widgets/optimized_image.dart';
 import 'package:cyberpitch/core/widgets/cyberpitch_background.dart';
 import 'package:cyberpitch/core/services/api_service.dart';
 import 'package:cyberpitch/core/services/onesignal_service.dart';
+import 'package:cyberpitch/core/services/websocket_service.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/quick_play_section.dart';
 import '../../../chat/presentation/pages/conversations_page.dart';
@@ -26,9 +27,11 @@ class _HomeTabPageState extends State<HomeTabPage>
   bool _showDailyReward =
       false; // Backend'dan kelgan ma'lumotga qarab o'rnatiladi
   DailyBonusInfo? _dailyBonusInfo; // Backend'dan kelgan bonus ma'lumotlari
+  DailyTasksResponse? _dailyTasks; // Kunlik vazifalar ma'lumotlari
   late PageController _bannerController;
   Timer? _bannerTimer;
   StreamSubscription<NotificationEvent>? _notificationSubscription;
+  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   late AnimationController _rewardAnimationController;
   late Animation<double> _rewardScaleAnimation;
 
@@ -57,32 +60,7 @@ class _HomeTabPageState extends State<HomeTabPage>
     ),
   ];
 
-  final List<DailyChallenge> _dailyChallenges = [
-    DailyChallenge(
-      id: '1',
-      title: '1 ta o\'yin o\'yna',
-      reward: 50,
-      progress: 1,
-      target: 1,
-      isCompleted: true,
-    ),
-    DailyChallenge(
-      id: '2',
-      title: '3 ta g\'alaba qozon',
-      reward: 150,
-      progress: 1,
-      target: 3,
-      isCompleted: false,
-    ),
-    DailyChallenge(
-      id: '3',
-      title: 'Do\'stingni taklif qil',
-      reward: 100,
-      progress: 0,
-      target: 1,
-      isCompleted: false,
-    ),
-  ];
+  // Daily challenges ma'lumotlari backend'dan keladi
 
   final List<TopPlayer> _topPlayers = [
     TopPlayer(rank: 1, nickname: 'ProGamer', rating: 2847, avatarUrl: null),
@@ -166,6 +144,7 @@ class _HomeTabPageState extends State<HomeTabPage>
     _loadNotificationCount();
     _loadUnreadMessagesCount();
     _loadDailyBonusInfo(); // Bonus ma'lumotlarini yuklash
+    _loadDailyTasks(); // Kunlik vazifalarni yuklash
 
     _notificationSubscription = OneSignalService().onNotificationReceived
         .listen((event) {
@@ -195,6 +174,7 @@ class _HomeTabPageState extends State<HomeTabPage>
     _bannerController.dispose();
     _rewardAnimationController.dispose();
     _notificationSubscription?.cancel();
+    _websocketSubscription?.cancel();
     super.dispose();
   }
 
@@ -222,6 +202,19 @@ class _HomeTabPageState extends State<HomeTabPage>
       if (mounted) {
         setState(() {
           _unreadMessagesCount = count;
+        });
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  Future<void> _loadDailyTasks() async {
+    try {
+      final tasksResponse = await ApiService().getDailyTasks();
+      if (mounted) {
+        setState(() {
+          _dailyTasks = tasksResponse;
         });
       }
     } catch (e) {
@@ -1577,11 +1570,12 @@ class _HomeTabPageState extends State<HomeTabPage>
   }
 
   Widget _buildDailyChallengesSection() {
-    final completedCount = _dailyChallenges.where((c) => c.isCompleted).length;
-    final totalReward = _dailyChallenges.fold<int>(
-      0,
-      (sum, c) => sum + c.reward,
-    );
+    if (_dailyTasks == null) {
+      return const SizedBox.shrink();
+    }
+
+    final completedCount = _dailyTasks!.completed;
+    final totalReward = _dailyTasks!.totalReward;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1628,7 +1622,7 @@ class _HomeTabPageState extends State<HomeTabPage>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$completedCount/${_dailyChallenges.length}',
+                  '$completedCount/${_dailyTasks!.total}',
                   style: const TextStyle(
                     color: Color(0xFF00FB94),
                     fontSize: 12,
@@ -1647,11 +1641,11 @@ class _HomeTabPageState extends State<HomeTabPage>
             ),
           ),
           const SizedBox(height: 16),
-          ...List.generate(_dailyChallenges.length, (index) {
-            final challenge = _dailyChallenges[index];
+          ...List.generate(_dailyTasks!.tasks.length, (index) {
+            final task = _dailyTasks!.tasks[index];
             return _buildChallengeItem(
-              challenge,
-              index == _dailyChallenges.length - 1,
+              task,
+              index == _dailyTasks!.tasks.length - 1,
             );
           }),
         ],
@@ -1659,8 +1653,9 @@ class _HomeTabPageState extends State<HomeTabPage>
     );
   }
 
-  Widget _buildChallengeItem(DailyChallenge challenge, bool isLast) {
-    final progress = challenge.progress / challenge.target;
+  Widget _buildChallengeItem(DailyTask task, bool isLast) {
+    final progress = task.target > 0 ? task.progress / task.target : 0.0;
+    final isCompleted = task.completed;
 
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 12),
@@ -1670,18 +1665,18 @@ class _HomeTabPageState extends State<HomeTabPage>
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: challenge.isCompleted
+              color: isCompleted
                   ? const Color(0xFF00FB94)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: challenge.isCompleted
+                color: isCompleted
                     ? const Color(0xFF00FB94)
                     : Colors.white.withOpacity(0.3),
                 width: 2,
               ),
             ),
-            child: challenge.isCompleted
+            child: isCompleted
                 ? const Icon(Icons.check, color: Colors.black, size: 16)
                 : null,
           ),
@@ -1691,14 +1686,14 @@ class _HomeTabPageState extends State<HomeTabPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  challenge.title,
+                  task.name,
                   style: TextStyle(
-                    color: challenge.isCompleted
+                    color: isCompleted
                         ? Colors.white.withOpacity(0.5)
                         : Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    decoration: challenge.isCompleted
+                    decoration: isCompleted
                         ? TextDecoration.lineThrough
                         : null,
                   ),
@@ -1707,14 +1702,22 @@ class _HomeTabPageState extends State<HomeTabPage>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: progress,
+                    value: progress.clamp(0.0, 1.0),
                     backgroundColor: Colors.white.withOpacity(0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      challenge.isCompleted
+                      isCompleted
                           ? const Color(0xFF00FB94)
                           : const Color(0xFF6C5CE7),
                     ),
                     minHeight: 4,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${task.progress}/${task.target}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 10,
                   ),
                 ),
               ],
@@ -1737,7 +1740,7 @@ class _HomeTabPageState extends State<HomeTabPage>
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${challenge.reward}',
+                  '${task.reward}',
                   style: const TextStyle(
                     color: Color(0xFFFFB800),
                     fontSize: 12,
